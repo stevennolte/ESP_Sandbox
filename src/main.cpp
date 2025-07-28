@@ -20,7 +20,7 @@
 const char* mqtt_user = "steve";     // <-- Set your MQTT username
 const char* mqtt_pass = "Doctor*9";     // <-- Set your MQTT password
 // --- Configuration ---
-const int FIRMWARE_VERSION = 13; // 1.3 becomes 13, 1.4 becomes 14, etc.
+const int FIRMWARE_VERSION = 60; // 1.3 becomes 13, 1.4 becomes 14, etc.
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox"; // Your GitHub repository
 const char* ssid = "SSEI";
 const char* password = "Nd14il!la";
@@ -92,6 +92,7 @@ void performUpdate(const char* url) {
   
   HTTPClient http;
   http.setTimeout(30000); // 30 second timeout for large files
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS); // Follow redirects automatically
   http.begin(url);
   http.addHeader("User-Agent", "ESP32-OTA-Updater");
   
