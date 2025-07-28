@@ -16,9 +16,11 @@ with open("src/main.cpp", "r") as f:
     content = f.read()
 
 # Replace a line like: const int FIRMWARE_VERSION = ...;
-# Use string concatenation instead of f-string to avoid regex group reference issues
-replacement = r'\1' + version + ';'
-content = re.sub(r'(const\s+int\s+FIRMWARE_VERSION\s*=\s*)\d+;', replacement, content)
+# Use lambda function to avoid regex group reference issues
+def replace_version(match):
+    return match.group(1) + version + ';'
+
+content = re.sub(r'(const\s+int\s+FIRMWARE_VERSION\s*=\s*)\d+;', replace_version, content)
 
 with open("src/main.cpp", "w") as f:
     f.write(content)
