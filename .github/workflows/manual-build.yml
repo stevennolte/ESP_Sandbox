@@ -2,6 +2,17 @@ name: Build and Release Firmware
 
 on:
   workflow_dispatch:
+    inputs:
+      major_version:
+        description: 'Major version number'
+        required: true
+        default: '9'
+        type: string
+      minor_version:
+        description: 'Minor version number'
+        required: true
+        default: '1'
+        type: string
 
 jobs:
   build:
@@ -9,6 +20,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -18,6 +31,17 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
+      - name: Update version in firmware.json and main.cpp
+        run: python set_version.py ${{ github.event.inputs.major_version }} ${{ github.event.inputs.minor_version }}
+
+      - name: Commit version update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/main.cpp firmware.json
+          git commit -m "Update firmware version to v${{ github.event.inputs.major_version }}.${{ github.event.inputs.minor_version }}" || echo "No changes to commit"
+          git push
+
       - name: Build firmware
         run: platformio run
 
@@ -26,19 +50,14 @@ jobs:
           mkdir -p Release
           find .pio/build -name "firmware.bin" -exec cp {} Release/ \;
 
-      - name: Update version in firmware.json and main.cpp
-        run: python set_version.py ${{ github.run_number }}
-
       - name: Copy firmware.json to Release folder
         run: cp firmware.json Release/
-
-
 
       - name: Create GitHub Release and Upload Firmware
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}
-          name: Firmware v${{ github.run_number }}
+          tag_name: v${{ github.event.inputs.major_version }}.${{ github.event.inputs.minor_version }}
+          name: Firmware v${{ github.event.inputs.major_version }}.${{ github.event.inputs.minor_version }}
           files: |
             Release/firmware.bin
             Release/firmware.json

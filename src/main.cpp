@@ -170,16 +170,28 @@ void checkForUpdates() {
     return;
   }
 
-  // Extract version from tag_name (e.g., "v1.4" -> 14)
+  // Extract version from tag_name (e.g., "v9.1" -> 91)
   String tagName = doc["tag_name"].as<String>();
   Serial.println("Latest release tag: " + tagName);
   
-  // Convert tag to version number (remove 'v' and convert to integer)
+  // Convert tag to version number (remove 'v' and convert major.minor to integer)
   int newVersion = 0;
   if (tagName.startsWith("v")) {
     String versionStr = tagName.substring(1); // Remove 'v'
-    float versionFloat = versionStr.toFloat();
-    newVersion = (int)(versionFloat * 10); // Convert 1.4 to 14
+    
+    // Parse major.minor format (e.g., "9.1" -> 91)
+    int dotIndex = versionStr.indexOf('.');
+    if (dotIndex > 0) {
+      int major = versionStr.substring(0, dotIndex).toInt();
+      int minor = versionStr.substring(dotIndex + 1).toInt();
+      newVersion = major * 10 + minor; // Convert 9.1 to 91
+      Serial.printf("Parsed version: %d.%d -> %d\n", major, minor, newVersion);
+    } else {
+      // Fallback for old single number format
+      float versionFloat = versionStr.toFloat();
+      newVersion = (int)(versionFloat * 10);
+      Serial.printf("Legacy version format: %f -> %d\n", versionFloat, newVersion);
+    }
   }
   
   // Find the firmware binary in assets
