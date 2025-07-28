@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP Temperature Sensor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #f5f5f5; 
+        }
+        .container { 
+            background-color: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        h1 { color: #333; }
+        h2 { color: #666; }
+        form { margin: 15px 0; }
+        input[type="text"], input[type="range"] { 
+            width: 100%; 
+            padding: 8px; 
+            margin: 5px 0; 
+            box-sizing: border-box; 
+        }
+        input[type="submit"] { 
+            background-color: #4CAF50; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 10px 0; 
+        }
+        input[type="submit"]:hover { background-color: #45a049; }
+        .info { 
+            background-color: #e7f3ff; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0; 
+        }
+        .brightness-control { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        .brightness-control input[type="range"] { 
+            flex: 1; 
+            width: auto; 
+        }
+        .brightness-value { 
+            min-width: 40px; 
+            text-align: center; 
+            font-weight: bold; 
+        }
+        hr { margin: 20px 0; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ESP Temperature Sensor Configuration</h1>
+        
+        <div class="info">
+            <p><strong>Current Client ID:</strong> {{CLIENT_ID}}</p>
+            <p><strong>IP Address:</strong> {{IP_ADDRESS}}</p>
+            <p><strong>mDNS Address:</strong> http://{{CLIENT_ID}}.local</p>
+            <p><strong>MQTT Server:</strong> {{MQTT_SERVER}}:1883</p>
+        </div>
+
+        <h2>Device Configuration</h2>
+        <form action='/set' method='POST'>
+            <label for="client_id">New Client ID:</label>
+            <input type='text' id="client_id" name='client_id' value='{{CLIENT_ID}}' maxlength="32">
+            <input type='submit' value='Update Client ID'>
+        </form>
+
+        <hr>
+
+        <h2>LED Brightness Control</h2>
+        <p>Current Brightness: <strong>{{LED_BRIGHTNESS}}</strong> (0-255)</p>
+        
+        <form action='/brightness' method='POST'>
+            <div class="brightness-control">
+                <label for="brightness">LED Brightness:</label>
+                <input type='range' id="brightness" name='brightness' min='0' max='255' value='{{LED_BRIGHTNESS}}' oninput='updateBrightnessValue(this.value)'>
+                <span class="brightness-value" id="brightnessValue">{{LED_BRIGHTNESS}}</span>
+            </div>
+            <input type='submit' value='Set Brightness'>
+        </form>
+
+        <hr>
+
+        <p><a href='/reboot'>🔄 Reboot Device</a></p>
+    </div>
+
+    <script>
+        function updateBrightnessValue(value) {
+            document.getElementById('brightnessValue').textContent = value;
+        }
+    </script>
+</body>
+</html>

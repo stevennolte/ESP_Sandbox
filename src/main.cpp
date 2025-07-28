@@ -1,0 +1,510 @@
+/*********
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com  
+*********/
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <HTTPClient.h>
+#include <Update.h>
+#include <ArduinoJson.h>
+#include <Preferences.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#include <LittleFS.h>
+
+
+
+const char* mqtt_user = "steve";     // <-- Set your MQTT username
+const char* mqtt_pass = "Doctor*9";     // <-- Set your MQTT password
+// --- Configuration ---
+const int FIRMWARE_VERSION = 13; // 1.3 becomes 13, 1.4 becomes 14, etc.
+const char* GITHUB_REPO = "stevennolte/ESP_Update_Test"; // Your GitHub repository
+const char* ssid = "SSEI";
+const char* password = "Nd14il!la";
+
+// MQTT broker settings (local, e.g., Mosquitto or Home Assistant)
+String mqtt_server_ip = "192.168.1.12"; // Default fallback IP
+const int mqtt_port = 1883;
+String client_id = "ESP_Default"; // Default value, will be loaded from preferences
+const char* topic_temp = "home/esp/temperature_f";
+const char* topic_cpu_temp = "home/esp/cpu_temperature_c";
+const char* topic_reboot = "home/esp/reboot";
+
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = 4;   
+const int powerPin = 21;  
+
+// LED indicator pin
+const int ledPin = 2;  // Built-in LED on most ESP32 boards
+const int ledChannel = 0;  // PWM channel for LED
+const int ledFreq = 5000;  // PWM frequency
+const int ledResolution = 8;  // 8-bit resolution (0-255)
+int ledBrightness = 128;  // Default brightness (0-255, where 255 is brightest)
+
+// Preferences and WebServer objects
+Preferences preferences;
+WebServer server(80);  
+
+
+
+OneWire oneWire(oneWireBus);
+DallasTemperature sensors(&oneWire);
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+unsigned long lastUpdateCheck = 0;
+const unsigned long updateInterval = 5 * 60 * 1000UL; // 5 minutes
+unsigned long lastMQTTDiscovery = 0;
+const unsigned long mqttDiscoveryInterval = 15 * 60 * 1000UL; // 15 minutes
+unsigned long lastTempPublish = 0;
+const unsigned long tempPublishInterval = 30 * 1000UL; // 30 seconds
+
+// Function declarations
+String discoverHomeAssistant();
+String scanForHomeAssistant();
+bool testHomeAssistantConnection(String ip);
+float readCPUTemperature();
+
+// --- Temperature Functions ---
+float readCPUTemperature() {
+  // ESP32 internal temperature sensor
+  // Note: This is not very accurate and is mainly for monitoring purposes
+  return temperatureRead();
+}
+
+// --- OTA Update Functions ---
+void performUpdate(const char* url) {
+  HTTPClient http;
+  http.begin(url);
+  int httpCode = http.GET();
+
+  if (httpCode != HTTP_CODE_OK) {
+    Serial.printf("Failed to download binary, error: %s\n", http.errorToString(httpCode).c_str());
+    http.end();
+    return;
+  }
+  
+  int contentLength = http.getSize();
+  if (contentLength <= 0) {
+    Serial.println("Content-Length header invalid.");
+    http.end();
+    return;
+  }
+
+  bool canBegin = Update.begin(contentLength);
+  if (!canBegin) {
+    Serial.println("Not enough space to begin OTA");
+    http.end();
+    return;
+  }
+
+  WiFiClient& stream = http.getStream();
+  size_t written = Update.writeStream(stream);
+
+  if (written != contentLength) {
+    Serial.printf("Written only %d/%d bytes. Update failed.\n", written, contentLength);
+    http.end();
+    return;
+  }
+  
+  if (!Update.end()) {
+    Serial.println("Error occurred from Update.end(): " + String(Update.getError()));
+    return;
+  }
+
+  Serial.println("Update successful! Rebooting...");
+  ESP.restart();
+}
+
+void checkForUpdates() {
+  Serial.println("Checking for updates from GitHub releases...");
+  HTTPClient http;
+  
+  // Use GitHub API to get latest release
+  String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/releases/latest";
+  http.begin(url);
+  http.addHeader("User-Agent", "ESP32-OTA-Updater"); // GitHub API requires User-Agent
+  
+  int httpCode = http.GET();
+
+  if (httpCode != HTTP_CODE_OK) {
+    Serial.printf("Failed to get GitHub release info, error: %s\n", http.errorToString(httpCode).c_str());
+    http.end();
+    return;
+  }
+
+  String payload = http.getString();
+  http.end();
+
+  // Parse the GitHub API response
+  StaticJsonDocument<2048> doc; // Larger size for GitHub API response
+  DeserializationError error = deserializeJson(doc, payload);
+
+  if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.c_str());
+    return;
+  }
+
+  // Extract version from tag_name (e.g., "v1.4" -> 14)
+  String tagName = doc["tag_name"].as<String>();
+  Serial.println("Latest release tag: " + tagName);
+  
+  // Convert tag to version number (remove 'v' and convert to integer)
+  int newVersion = 0;
+  if (tagName.startsWith("v")) {
+    String versionStr = tagName.substring(1); // Remove 'v'
+    float versionFloat = versionStr.toFloat();
+    newVersion = (int)(versionFloat * 10); // Convert 1.4 to 14
+  }
+  
+  // Find the firmware binary in assets
+  JsonArray assets = doc["assets"];
+  String binaryUrl = "";
+  
+  for (JsonObject asset : assets) {
+    String assetName = asset["name"].as<String>();
+    // Look for .bin file
+    if (assetName.endsWith(".bin")) {
+      binaryUrl = asset["browser_download_url"].as<String>();
+      Serial.println("Found firmware binary: " + assetName);
+      break;
+    }
+  }
+  
+  if (binaryUrl == "") {
+    Serial.println("No firmware binary found in release assets");
+    return;
+  }
+  
+  Serial.printf("Current version: %d, Latest version: %d\n", FIRMWARE_VERSION, newVersion);
+
+  if (newVersion > FIRMWARE_VERSION) {
+    Serial.println("*** NEW FIRMWARE AVAILABLE ***");
+    Serial.println("Download URL: " + binaryUrl);
+    Serial.println("Update will be performed automatically in future versions");
+    // performUpdate(binaryUrl.c_str()); // Commented out for debugging
+  } else if (newVersion == FIRMWARE_VERSION) {
+    Serial.println("Current firmware is up to date.");
+  } else {
+    Serial.println("Current firmware is newer than latest release.");
+  }
+}
+
+// --- MQTT Functions ---
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  if (String(topic) == topic_reboot) {
+    Serial.println("Reboot command received via MQTT!");
+    ESP.restart();
+  }
+}
+
+// Function to discover Home Assistant server via network scan
+String discoverHomeAssistant() {
+  Serial.println("Searching for Home Assistant server...");
+  
+  // Scan network for Home Assistant
+  String foundIP = scanForHomeAssistant();
+  if (foundIP != "") {
+    return foundIP;
+  }
+  
+  Serial.println("Home Assistant server not found, using fallback IP");
+  return mqtt_server_ip; // Return the fallback IP
+}
+
+// Function to scan network for Home Assistant (port 8123)
+String scanForHomeAssistant() {
+  IPAddress localIP = WiFi.localIP();
+  String subnet = String(localIP[0]) + "." + String(localIP[1]) + "." + String(localIP[2]) + ".";
+  
+  Serial.println("Scanning network for Home Assistant on port 8123...");
+  
+  // Scan a limited range to avoid taking too long
+  for (int i = 1; i <= 254; i += 10) { // Check every 10th IP to speed up
+    String testIP = subnet + String(i);
+    if (testHomeAssistantConnection(testIP)) {
+      Serial.printf("Found Home Assistant at: %s\n", testIP.c_str());
+      return testIP;
+    }
+    
+    // Check a few IPs around common router ranges
+    if (i == 1) {
+      // Check common router/server IPs
+      int commonIPs[] = {2, 3, 4, 5, 10, 19, 20, 100, 101, 254};
+      for (int j = 0; j < 10; j++) {
+        String commonIP = subnet + String(commonIPs[j]);
+        if (testHomeAssistantConnection(commonIP)) {
+          Serial.printf("Found Home Assistant at: %s\n", commonIP.c_str());
+          return commonIP;
+        }
+      }
+    }
+  }
+  
+  Serial.println("Network scan completed, no Home Assistant found");
+  return "";
+}
+
+// Function to test if an IP has Home Assistant running
+bool testHomeAssistantConnection(String ip) {
+  HTTPClient http;
+  http.setTimeout(2000); // 2 second timeout
+  http.begin("http://" + ip + ":8123/api/");
+  
+  int httpCode = http.GET();
+  http.end();
+  
+  // Home Assistant API returns 401 Unauthorized when accessed without token
+  // This confirms HA is running on this IP
+  return (httpCode == 401 || httpCode == 200);
+}
+
+void setup_wifi() {
+  delay(10);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected!");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  
+  // Give the network stack time to stabilize
+  delay(2000);
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    if (client.connect(client_id.c_str(), mqtt_user, mqtt_pass)) { // Convert String to const char*
+      client.subscribe(topic_reboot);
+      Serial.println("MQTT connected with Client ID: " + client_id);
+      Serial.println("MQTT server: " + mqtt_server_ip);
+    } else {
+      Serial.print("MQTT connection failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" retrying in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+// Function to load and process HTML template
+String loadHTMLTemplate(const char* filename) {
+  if (!LittleFS.exists(filename)) {
+    return "<!DOCTYPE html><html><body><h1>Error: Template file not found</h1></body></html>";
+  }
+  
+  File file = LittleFS.open(filename, "r");
+  if (!file) {
+    return "<!DOCTYPE html><html><body><h1>Error: Could not open template file</h1></body></html>";
+  }
+  
+  String html = file.readString();
+  file.close();
+  
+  // Replace placeholders with actual values
+  html.replace("{{CLIENT_ID}}", client_id);
+  html.replace("{{IP_ADDRESS}}", WiFi.localIP().toString());
+  html.replace("{{LED_BRIGHTNESS}}", String(ledBrightness));
+  html.replace("{{MQTT_SERVER}}", mqtt_server_ip);
+  
+  return html;
+}
+
+// --- Web Server Functions ---
+void handleRoot() {
+  String html = loadHTMLTemplate("/index.html");
+  server.send(200, "text/html", html);
+}
+
+void handleSetClientId() {
+  if (server.hasArg("client_id")) {
+    String newClientId = server.arg("client_id");
+    if (newClientId.length() > 0 && newClientId.length() <= 32) {
+      client_id = newClientId;
+      preferences.begin("esp-config", false);
+      preferences.putString("client_id", client_id);
+      preferences.end();
+      
+      // Restart mDNS with new hostname
+      MDNS.end();
+      if (!MDNS.begin(client_id.c_str())) {
+        Serial.println("Error restarting mDNS with new hostname");
+      } else {
+        Serial.println("mDNS restarted with new hostname: " + client_id);
+        MDNS.addService("http", "tcp", 80);
+      }
+      
+      String html = "<!DOCTYPE html><html><head><title>Updated</title></head><body>";
+      html += "<h1>Client ID Updated</h1>";
+      html += "<p>New Client ID: <strong>" + client_id + "</strong></p>";
+      html += "<p>New mDNS address: <strong>http://" + client_id + ".local</strong></p>";
+      html += "<p>Device will reconnect to MQTT with new ID.</p>";
+      html += "<p><a href='/'>Back to Home</a></p>";
+      html += "</body></html>";
+      server.send(200, "text/html", html);
+      
+      // Force MQTT reconnection with new client ID
+      client.disconnect();
+    } else {
+      server.send(400, "text/plain", "Invalid client ID. Must be 1-32 characters.");
+    }
+  } else {
+    server.send(400, "text/plain", "Missing client_id parameter");
+  }
+}
+
+void handleBrightness() {
+  if (server.hasArg("brightness")) {
+    int newBrightness = server.arg("brightness").toInt();
+    if (newBrightness >= 0 && newBrightness <= 255) {
+      ledBrightness = newBrightness;
+      preferences.begin("esp-config", false);
+      preferences.putInt("led_brightness", ledBrightness);
+      preferences.end();
+      
+      String html = "<!DOCTYPE html><html><head><title>Brightness Updated</title></head><body>";
+      html += "<h1>LED Brightness Updated</h1>";
+      html += "<p>New Brightness: <strong>" + String(ledBrightness) + "</strong></p>";
+      html += "<p><a href='/'>Back to Home</a></p>";
+      html += "</body></html>";
+      server.send(200, "text/html", html);
+    } else {
+      server.send(400, "text/plain", "Invalid brightness value. Must be 0-255.");
+    }
+  } else {
+    server.send(400, "text/plain", "Missing brightness parameter");
+  }
+}
+
+void handleReboot() {
+  server.send(200, "text/plain", "Rebooting device...");
+  delay(1000);
+  ESP.restart();
+}
+
+void setupWebServer() {
+  // Start mDNS with the client_id as hostname
+  if (!MDNS.begin(client_id.c_str())) {
+    Serial.println("Error starting mDNS");
+  } else {
+    Serial.println("mDNS responder started");
+    // Add service to mDNS
+    MDNS.addService("http", "tcp", 80);
+  }
+  
+  server.on("/", handleRoot);
+  server.on("/set", HTTP_POST, handleSetClientId);
+  server.on("/brightness", HTTP_POST, handleBrightness);
+  server.on("/reboot", handleReboot);
+  server.begin();
+  Serial.println("Web server started on http://" + WiFi.localIP().toString());
+  Serial.println("mDNS address: http://" + client_id + ".local");
+}
+
+void loadClientId() {
+  preferences.begin("esp-config", true); // read-only
+  client_id = preferences.getString("client_id", "ESP_Default");
+  ledBrightness = preferences.getInt("led_brightness", 128); // Default brightness 128
+  preferences.end();
+  Serial.println("Loaded Client ID: " + client_id);
+  Serial.println("Loaded LED Brightness: " + String(ledBrightness));
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(powerPin, OUTPUT);
+  digitalWrite(powerPin, HIGH); // Power on the DS18B20 sensor
+  
+  // Initialize LittleFS
+  if (!LittleFS.begin(true)) {
+    Serial.println("An error has occurred while mounting LittleFS");
+    return;
+  }
+  Serial.println("LittleFS mounted successfully");
+  
+  // Initialize LED PWM channel
+  ledcSetup(ledChannel, ledFreq, ledResolution);
+  ledcAttachPin(ledPin, ledChannel);
+  ledcWrite(ledChannel, 0); // Start with LED off
+  
+  sensors.begin();
+
+  // Load client ID from preferences
+  loadClientId();
+
+  setup_wifi();
+  Serial.println("Connected to WiFi");
+  
+  // Discover Home Assistant server
+  mqtt_server_ip = discoverHomeAssistant();
+  Serial.println("Using MQTT server: " + mqtt_server_ip);
+
+  // Setup web server
+  setupWebServer();
+
+  client.setServer(mqtt_server_ip.c_str(), mqtt_port);
+  client.setCallback(mqttCallback);
+
+  checkForUpdates();
+  lastUpdateCheck = millis();
+}
+
+void loop() {
+  // Flash LED to indicate loop activity with adjustable brightness
+  ledcWrite(ledChannel, ledBrightness);
+  delay(50); // LED on for 50ms
+  ledcWrite(ledChannel, 0);
+  
+  // Handle web server requests
+  server.handleClient();
+  
+  // Ensure MQTT connection
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  // Publish CPU temperature every 30 seconds
+  if (millis() - lastTempPublish > tempPublishInterval) {
+    float cpuTemp = readCPUTemperature();
+    String tempStr = String(cpuTemp, 1); // 1 decimal place
+    
+    if (client.publish(topic_cpu_temp, tempStr.c_str())) {
+      Serial.printf("Published CPU temperature: %s°C\n", tempStr.c_str());
+    } else {
+      Serial.println("Failed to publish CPU temperature");
+    }
+    
+    lastTempPublish = millis();
+  }
+
+  // Check for updates every 5 minutes
+  if (millis() - lastUpdateCheck > updateInterval) {
+    checkForUpdates();
+    lastUpdateCheck = millis();
+  }
+
+  // Re-discover MQTT server every 15 minutes
+  if (millis() - lastMQTTDiscovery > mqttDiscoveryInterval) {
+    Serial.println("Re-discovering MQTT server...");
+    String newMQTTServer = discoverHomeAssistant();
+    if (newMQTTServer != mqtt_server_ip) {
+      Serial.println("MQTT server changed from " + mqtt_server_ip + " to " + newMQTTServer);
+      mqtt_server_ip = newMQTTServer;
+      client.disconnect();
+      client.setServer(mqtt_server_ip.c_str(), mqtt_port);
+    }
+    lastMQTTDiscovery = millis();
+  }
+
+  delay(1000);
+}
+
