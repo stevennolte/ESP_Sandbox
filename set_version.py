@@ -15,8 +15,10 @@ with open("firmware.json", "w") as f:
 with open("src/main.cpp", "r") as f:
     content = f.read()
 
-# Replace a line like: const int VERSION = ...;
-content = re.sub(r'(const\s+int\s+VERSION\s*=\s*)\d+;', rf'\1{version};', content)
+# Replace a line like: const int FIRMWARE_VERSION = ...;
+# Use string concatenation instead of f-string to avoid regex group reference issues
+replacement = r'\1' + version + ';'
+content = re.sub(r'(const\s+int\s+FIRMWARE_VERSION\s*=\s*)\d+;', replacement, content)
 
-with open("main.cpp", "w") as f:
+with open("src/main.cpp", "w") as f:
     f.write(content)
