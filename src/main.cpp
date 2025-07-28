@@ -195,8 +195,8 @@ void checkForUpdates() {
   if (newVersion > FIRMWARE_VERSION) {
     Serial.println("*** NEW FIRMWARE AVAILABLE ***");
     Serial.println("Download URL: " + binaryUrl);
-    Serial.println("Update will be performed automatically in future versions");
-    // performUpdate(binaryUrl.c_str()); // Commented out for debugging
+    Serial.println("Starting OTA update...");
+    performUpdate(binaryUrl.c_str());
   } else if (newVersion == FIRMWARE_VERSION) {
     Serial.println("Current firmware is up to date.");
   } else {
