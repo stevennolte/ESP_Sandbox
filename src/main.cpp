@@ -21,7 +21,7 @@ const char* mqtt_user = "steve";     // <-- Set your MQTT username
 const char* mqtt_pass = "Doctor*9";     // <-- Set your MQTT password
 // --- Configuration ---
 const int FIRMWARE_VERSION = 13; // 1.3 becomes 13, 1.4 becomes 14, etc.
-const char* GITHUB_REPO = "stevennolte/ESP_Update_Test"; // Your GitHub repository
+const char* GITHUB_REPO = "stevennolte/ESP_Sandbox"; // Your GitHub repository
 const char* ssid = "SSEI";
 const char* password = "Nd14il!la";
 
@@ -29,9 +29,18 @@ const char* password = "Nd14il!la";
 String mqtt_server_ip = "192.168.1.12"; // Default fallback IP
 const int mqtt_port = 1883;
 String client_id = "ESP_Default"; // Default value, will be loaded from preferences
-const char* topic_temp = "home/esp/temperature_f";
-const char* topic_cpu_temp = "home/esp/cpu_temperature_c";
-const char* topic_reboot = "home/esp/reboot";
+
+// MQTT topic templates - will be populated with client_id
+String topic_temp = "";
+String topic_cpu_temp = "";
+String topic_reboot = "";
+
+// Function to update MQTT topics with current client_id
+void updateMQTTTopics() {
+  topic_temp = "home/esp/" + client_id + "/temperature_f";
+  topic_cpu_temp = "home/esp/" + client_id + "/cpu_temperature_c";
+  topic_reboot = "home/esp/" + client_id + "/reboot";
+}
 
 // GPIO where the DS18B20 is connected to
 const int oneWireBus = 4;   
@@ -61,7 +70,7 @@ const unsigned long updateInterval = 5 * 60 * 1000UL; // 5 minutes
 unsigned long lastMQTTDiscovery = 0;
 const unsigned long mqttDiscoveryInterval = 15 * 60 * 1000UL; // 15 minutes
 unsigned long lastTempPublish = 0;
-const unsigned long tempPublishInterval = 30 * 1000UL; // 30 seconds
+const unsigned long tempPublishInterval = 10 * 1000UL; // 30 seconds
 
 // Function declarations
 String discoverHomeAssistant();
@@ -283,7 +292,7 @@ void setup_wifi() {
 void reconnect() {
   while (!client.connected()) {
     if (client.connect(client_id.c_str(), mqtt_user, mqtt_pass)) { // Convert String to const char*
-      client.subscribe(topic_reboot);
+      client.subscribe(topic_reboot.c_str());
       Serial.println("MQTT connected with Client ID: " + client_id);
       Serial.println("MQTT server: " + mqtt_server_ip);
     } else {
@@ -332,6 +341,9 @@ void handleSetClientId() {
       preferences.begin("esp-config", false);
       preferences.putString("client_id", client_id);
       preferences.end();
+      
+      // Update MQTT topics with new client_id
+      updateMQTTTopics();
       
       // Restart mDNS with new hostname
       MDNS.end();
@@ -414,6 +426,10 @@ void loadClientId() {
   client_id = preferences.getString("client_id", "ESP_Default");
   ledBrightness = preferences.getInt("led_brightness", 128); // Default brightness 128
   preferences.end();
+  
+  // Update MQTT topics with the loaded client_id
+  updateMQTTTopics();
+  
   Serial.println("Loaded Client ID: " + client_id);
   Serial.println("Loaded LED Brightness: " + String(ledBrightness));
 }
@@ -477,8 +493,8 @@ void loop() {
     float cpuTemp = readCPUTemperature();
     String tempStr = String(cpuTemp, 1); // 1 decimal place
     
-    if (client.publish(topic_cpu_temp, tempStr.c_str())) {
-      Serial.printf("Published CPU temperature: %s°C\n", tempStr.c_str());
+    if (client.publish(topic_cpu_temp.c_str(), tempStr.c_str())) {
+      Serial.printf("Published CPU temperature: %s°C to topic: %s\n", tempStr.c_str(), topic_cpu_temp.c_str());
     } else {
       Serial.println("Failed to publish CPU temperature");
     }
