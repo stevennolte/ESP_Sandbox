@@ -1,4 +1,4 @@
-name: Build and Release Firmware
+name: Manual Build Only
 
 on:
   workflow_dispatch:
@@ -9,38 +9,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-
-      - name: Install PlatformIO
-        run: pip install platformio
-
-      - name: Build firmware
-        run: platformio run
-
-      - name: Copy firmware to Release folder
+      - name: Install ESP-IDF and dependencies
         run: |
-          mkdir -p Release
-          find .pio/build -name "firmware.bin" -exec cp {} Release/ \;
-
-      - name: Update version in firmware.json and main.cpp
-        run: python set_version.py ${{ github.run_number }}
-
-      - name: Copy firmware.json to Release folder
-        run: cp firmware.json Release/
-
-
-
-      - name: Create GitHub Release and Upload Firmware
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.run_number }}
-          name: Firmware v${{ github.run_number }}
-          files: |
-            Release/firmware.bin
-            Release/firmware.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          python -m pip install --upgrade pip
+          pip install esptool
+      - name: Build project
+        run: |
+          idf.py build
