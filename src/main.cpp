@@ -87,45 +87,72 @@ float readCPUTemperature() {
 
 // --- OTA Update Functions ---
 void performUpdate(const char* url) {
+  Serial.println("Starting OTA update process...");
+  Serial.printf("Downloading from: %s\n", url);
+  
   HTTPClient http;
+  http.setTimeout(30000); // 30 second timeout for large files
   http.begin(url);
+  http.addHeader("User-Agent", "ESP32-OTA-Updater");
+  
+  Serial.println("Sending GET request...");
   int httpCode = http.GET();
+  
+  Serial.printf("HTTP response code: %d\n", httpCode);
 
   if (httpCode != HTTP_CODE_OK) {
-    Serial.printf("Failed to download binary, error: %s\n", http.errorToString(httpCode).c_str());
+    Serial.printf("Failed to download binary, HTTP code: %d\n", httpCode);
+    Serial.printf("Error description: %s\n", http.errorToString(httpCode).c_str());
+    
+    // Try to get the response body for more details
+    String response = http.getString();
+    if (response.length() > 0) {
+      Serial.printf("Response body: %s\n", response.c_str());
+    }
+    
     http.end();
     return;
   }
   
   int contentLength = http.getSize();
+  Serial.printf("Content length: %d bytes\n", contentLength);
+  
   if (contentLength <= 0) {
-    Serial.println("Content-Length header invalid.");
+    Serial.println("Content-Length header invalid or missing.");
     http.end();
     return;
   }
 
+  Serial.printf("Available heap before update: %d bytes\n", ESP.getFreeHeap());
+  
   bool canBegin = Update.begin(contentLength);
   if (!canBegin) {
-    Serial.println("Not enough space to begin OTA");
+    Serial.printf("Not enough space to begin OTA. Required: %d bytes\n", contentLength);
+    Serial.printf("Available space: %d bytes\n", Update.size());
     http.end();
     return;
   }
 
+  Serial.println("Starting firmware write...");
   WiFiClient& stream = http.getStream();
   size_t written = Update.writeStream(stream);
 
+  Serial.printf("Bytes written: %d/%d\n", written, contentLength);
+
   if (written != contentLength) {
     Serial.printf("Written only %d/%d bytes. Update failed.\n", written, contentLength);
+    Serial.printf("Update error: %s\n", Update.errorString());
     http.end();
     return;
   }
   
   if (!Update.end()) {
-    Serial.println("Error occurred from Update.end(): " + String(Update.getError()));
+    Serial.printf("Error occurred from Update.end(): %s\n", Update.errorString());
     return;
   }
 
   Serial.println("Update successful! Rebooting...");
+  delay(1000);
   ESP.restart();
 }
 
