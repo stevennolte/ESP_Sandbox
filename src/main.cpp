@@ -20,7 +20,7 @@
 const char* mqtt_user = "steve";     // <-- Set your MQTT username
 const char* mqtt_pass = "Doctor*9";     // <-- Set your MQTT password
 // --- Configuration ---
-const int FIRMWARE_VERSION = 60; // 1.3 becomes 13, 1.4 becomes 14, etc.
+const int FIRMWARE_VERSION = 70; // 1.3 becomes 13, 1.4 becomes 14, etc.
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox"; // Your GitHub repository
 const char* ssid = "SSEI";
 const char* password = "Nd14il!la";
@@ -34,12 +34,14 @@ String client_id = "ESP_Default"; // Default value, will be loaded from preferen
 String topic_temp = "";
 String topic_cpu_temp = "";
 String topic_reboot = "";
+String topic_firmware_version = "";
 
 // Function to update MQTT topics with current client_id
 void updateMQTTTopics() {
   topic_temp = "home/esp/" + client_id + "/temperature_f";
   topic_cpu_temp = "home/esp/" + client_id + "/cpu_temperature_c";
   topic_reboot = "home/esp/" + client_id + "/reboot";
+  topic_firmware_version = "home/esp/" + client_id + "/firmware_version";
 }
 
 // GPIO where the DS18B20 is connected to
@@ -71,6 +73,8 @@ unsigned long lastMQTTDiscovery = 0;
 const unsigned long mqttDiscoveryInterval = 15 * 60 * 1000UL; // 15 minutes
 unsigned long lastTempPublish = 0;
 const unsigned long tempPublishInterval = 10 * 1000UL; // 30 seconds
+unsigned long lastVersionPublish = 0;
+const unsigned long versionPublishInterval = 5 * 60 * 1000UL; // 5 minutes
 
 // Function declarations
 String discoverHomeAssistant();
@@ -323,6 +327,13 @@ void reconnect() {
       client.subscribe(topic_reboot.c_str());
       Serial.println("MQTT connected with Client ID: " + client_id);
       Serial.println("MQTT server: " + mqtt_server_ip);
+      
+      // Publish firmware version immediately upon connection
+      String versionStr = String(FIRMWARE_VERSION);
+      if (client.publish(topic_firmware_version.c_str(), versionStr.c_str(), true)) { // Retain message
+        Serial.printf("Published firmware version: %s to topic: %s\n", versionStr.c_str(), topic_firmware_version.c_str());
+      }
+      lastVersionPublish = millis();
     } else {
       Serial.print("MQTT connection failed, rc=");
       Serial.print(client.state());
@@ -528,6 +539,19 @@ void loop() {
     }
     
     lastTempPublish = millis();
+  }
+
+  // Publish firmware version every 5 minutes
+  if (millis() - lastVersionPublish > versionPublishInterval) {
+    String versionStr = String(FIRMWARE_VERSION);
+    
+    if (client.publish(topic_firmware_version.c_str(), versionStr.c_str(), true)) { // Retain message
+      Serial.printf("Published firmware version: %s to topic: %s\n", versionStr.c_str(), topic_firmware_version.c_str());
+    } else {
+      Serial.println("Failed to publish firmware version");
+    }
+    
+    lastVersionPublish = millis();
   }
 
   // Check for updates every 5 minutes
