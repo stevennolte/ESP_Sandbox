@@ -6,7 +6,6 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <WiFi.h>
-#include <PubSubClient.h>
 #include <HTTPClient.h>
 #include <Update.h>
 #include <ArduinoJson.h>
@@ -14,6 +13,7 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <LittleFS.h>
+#include <ESPMQTTManager.h>
 
 
 
@@ -30,19 +30,8 @@ String mqtt_server_ip = "192.168.1.12"; // Default fallback IP
 const int mqtt_port = 1883;
 String client_id = "ESP_Default"; // Default value, will be loaded from preferences
 
-// MQTT topic templates - will be populated with client_id
-String topic_temp = "";
-String topic_cpu_temp = "";
-String topic_reboot = "";
-String topic_firmware_version = "";
-
-// Function to update MQTT topics with current client_id
-void updateMQTTTopics() {
-  topic_temp = "home/esp/" + client_id + "/temperature_f";
-  topic_cpu_temp = "home/esp/" + client_id + "/cpu_temperature_c";
-  topic_reboot = "home/esp/" + client_id + "/reboot";
-  topic_firmware_version = "home/esp/" + client_id + "/firmware_version";
-}
+// MQTT Manager instance
+ESPMQTTManager mqttManager(mqtt_user, mqtt_pass, "192.168.1.12", mqtt_port);
 
 // GPIO where the DS18B20 is connected to
 const int oneWireBus = 4;   
@@ -65,21 +54,11 @@ OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
 
 WiFiClient espClient;
-PubSubClient client(espClient);
 
 unsigned long lastUpdateCheck = 0;
 const unsigned long updateInterval = 5 * 60 * 1000UL; // 5 minutes
-unsigned long lastMQTTDiscovery = 0;
-const unsigned long mqttDiscoveryInterval = 15 * 60 * 1000UL; // 15 minutes
-unsigned long lastTempPublish = 0;
-const unsigned long tempPublishInterval = 10 * 1000UL; // 30 seconds
-unsigned long lastVersionPublish = 0;
-const unsigned long versionPublishInterval = 5 * 60 * 1000UL; // 5 minutes
 
 // Function declarations
-String discoverHomeAssistant();
-String scanForHomeAssistant();
-bool testHomeAssistantConnection(String ip);
 float readCPUTemperature();
 
 // --- Temperature Functions ---
@@ -236,75 +215,6 @@ void checkForUpdates() {
   }
 }
 
-// --- MQTT Functions ---
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  if (String(topic) == topic_reboot) {
-    Serial.println("Reboot command received via MQTT!");
-    ESP.restart();
-  }
-}
-
-// Function to discover Home Assistant server via network scan
-String discoverHomeAssistant() {
-  Serial.println("Searching for Home Assistant server...");
-  
-  // Scan network for Home Assistant
-  String foundIP = scanForHomeAssistant();
-  if (foundIP != "") {
-    return foundIP;
-  }
-  
-  Serial.println("Home Assistant server not found, using fallback IP");
-  return mqtt_server_ip; // Return the fallback IP
-}
-
-// Function to scan network for Home Assistant (port 8123)
-String scanForHomeAssistant() {
-  IPAddress localIP = WiFi.localIP();
-  String subnet = String(localIP[0]) + "." + String(localIP[1]) + "." + String(localIP[2]) + ".";
-  
-  Serial.println("Scanning network for Home Assistant on port 8123...");
-  
-  // Scan a limited range to avoid taking too long
-  for (int i = 1; i <= 254; i += 10) { // Check every 10th IP to speed up
-    String testIP = subnet + String(i);
-    if (testHomeAssistantConnection(testIP)) {
-      Serial.printf("Found Home Assistant at: %s\n", testIP.c_str());
-      return testIP;
-    }
-    
-    // Check a few IPs around common router ranges
-    if (i == 1) {
-      // Check common router/server IPs
-      int commonIPs[] = {2, 3, 4, 5, 10, 19, 20, 100, 101, 254};
-      for (int j = 0; j < 10; j++) {
-        String commonIP = subnet + String(commonIPs[j]);
-        if (testHomeAssistantConnection(commonIP)) {
-          Serial.printf("Found Home Assistant at: %s\n", commonIP.c_str());
-          return commonIP;
-        }
-      }
-    }
-  }
-  
-  Serial.println("Network scan completed, no Home Assistant found");
-  return "";
-}
-
-// Function to test if an IP has Home Assistant running
-bool testHomeAssistantConnection(String ip) {
-  HTTPClient http;
-  http.setTimeout(2000); // 2 second timeout
-  http.begin("http://" + ip + ":8123/api/");
-  
-  int httpCode = http.GET();
-  http.end();
-  
-  // Home Assistant API returns 401 Unauthorized when accessed without token
-  // This confirms HA is running on this IP
-  return (httpCode == 401 || httpCode == 200);
-}
-
 void setup_wifi() {
   delay(10);
   WiFi.begin(ssid, password);
@@ -319,28 +229,6 @@ void setup_wifi() {
   
   // Give the network stack time to stabilize
   delay(2000);
-}
-
-void reconnect() {
-  while (!client.connected()) {
-    if (client.connect(client_id.c_str(), mqtt_user, mqtt_pass)) { // Convert String to const char*
-      client.subscribe(topic_reboot.c_str());
-      Serial.println("MQTT connected with Client ID: " + client_id);
-      Serial.println("MQTT server: " + mqtt_server_ip);
-      
-      // Publish firmware version immediately upon connection
-      String versionStr = String(FIRMWARE_VERSION);
-      if (client.publish(topic_firmware_version.c_str(), versionStr.c_str(), true)) { // Retain message
-        Serial.printf("Published firmware version: %s to topic: %s\n", versionStr.c_str(), topic_firmware_version.c_str());
-      }
-      lastVersionPublish = millis();
-    } else {
-      Serial.print("MQTT connection failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" retrying in 5 seconds");
-      delay(5000);
-    }
-  }
 }
 
 // Function to load and process HTML template
@@ -382,7 +270,7 @@ void handleSetClientId() {
       preferences.end();
       
       // Update MQTT topics with new client_id
-      updateMQTTTopics();
+      mqttManager.updateTopics(client_id);
       
       // Restart mDNS with new hostname
       MDNS.end();
@@ -403,7 +291,7 @@ void handleSetClientId() {
       server.send(200, "text/html", html);
       
       // Force MQTT reconnection with new client ID
-      client.disconnect();
+      mqttManager.disconnect();
     } else {
       server.send(400, "text/plain", "Invalid client ID. Must be 1-32 characters.");
     }
@@ -467,7 +355,7 @@ void loadClientId() {
   preferences.end();
   
   // Update MQTT topics with the loaded client_id
-  updateMQTTTopics();
+  mqttManager.updateTopics(client_id);
   
   Serial.println("Loaded Client ID: " + client_id);
   Serial.println("Loaded LED Brightness: " + String(ledBrightness));
@@ -498,15 +386,14 @@ void setup() {
   setup_wifi();
   Serial.println("Connected to WiFi");
   
-  // Discover Home Assistant server
-  mqtt_server_ip = discoverHomeAssistant();
+  // Discover Home Assistant server and setup MQTT
+  mqtt_server_ip = mqttManager.discoverServer();
+  mqttManager.updateServerIP(mqtt_server_ip);
+  mqttManager.begin(client_id);
   Serial.println("Using MQTT server: " + mqtt_server_ip);
 
   // Setup web server
   setupWebServer();
-
-  client.setServer(mqtt_server_ip.c_str(), mqtt_port);
-  client.setCallback(mqttCallback);
 
   checkForUpdates();
   lastUpdateCheck = millis();
@@ -521,56 +408,40 @@ void loop() {
   // Handle web server requests
   server.handleClient();
   
-  // Ensure MQTT connection
-  if (!client.connected()) {
-    reconnect();
+  // Ensure MQTT connection and handle messages
+  if (!mqttManager.isConnected()) {
+    mqttManager.connect();
   }
-  client.loop();
+  mqttManager.loop();
 
-  // Publish CPU temperature every 30 seconds
-  if (millis() - lastTempPublish > tempPublishInterval) {
+  unsigned long currentTime = millis();
+
+  // Publish CPU temperature every 10 seconds
+  if (mqttManager.shouldPublishTemperature(currentTime)) {
     float cpuTemp = readCPUTemperature();
-    String tempStr = String(cpuTemp, 1); // 1 decimal place
-    
-    if (client.publish(topic_cpu_temp.c_str(), tempStr.c_str())) {
-      Serial.printf("Published CPU temperature: %s°C to topic: %s\n", tempStr.c_str(), topic_cpu_temp.c_str());
-    } else {
-      Serial.println("Failed to publish CPU temperature");
-    }
-    
-    lastTempPublish = millis();
+    mqttManager.publishCpuTemperature(cpuTemp);
+    mqttManager.updateLastPublishTime(currentTime);
   }
 
   // Publish firmware version every 5 minutes
-  if (millis() - lastVersionPublish > versionPublishInterval) {
-    String versionStr = String(FIRMWARE_VERSION);
-    
-    if (client.publish(topic_firmware_version.c_str(), versionStr.c_str(), true)) { // Retain message
-      Serial.printf("Published firmware version: %s to topic: %s\n", versionStr.c_str(), topic_firmware_version.c_str());
-    } else {
-      Serial.println("Failed to publish firmware version");
-    }
-    
-    lastVersionPublish = millis();
+  if (mqttManager.shouldPublishFirmwareVersion(currentTime)) {
+    mqttManager.publishFirmwareVersion(FIRMWARE_VERSION);
+    mqttManager.updateLastVersionPublishTime(currentTime);
   }
 
   // Check for updates every 5 minutes
-  if (millis() - lastUpdateCheck > updateInterval) {
+  if (currentTime - lastUpdateCheck > updateInterval) {
     checkForUpdates();
-    lastUpdateCheck = millis();
+    lastUpdateCheck = currentTime;
   }
 
   // Re-discover MQTT server every 15 minutes
-  if (millis() - lastMQTTDiscovery > mqttDiscoveryInterval) {
+  if (mqttManager.shouldRediscoverServer(currentTime)) {
     Serial.println("Re-discovering MQTT server...");
-    String newMQTTServer = discoverHomeAssistant();
-    if (newMQTTServer != mqtt_server_ip) {
-      Serial.println("MQTT server changed from " + mqtt_server_ip + " to " + newMQTTServer);
-      mqtt_server_ip = newMQTTServer;
-      client.disconnect();
-      client.setServer(mqtt_server_ip.c_str(), mqtt_port);
-    }
-    lastMQTTDiscovery = millis();
+    String newMQTTServer = mqttManager.discoverServer();
+    mqttManager.updateServerIP(newMQTTServer);
+    mqtt_server_ip = newMQTTServer;
+    mqttManager.updateLastDiscoveryTime(currentTime);
   }
 
   delay(1000);
