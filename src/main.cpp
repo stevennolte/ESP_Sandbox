@@ -60,6 +60,16 @@ const unsigned long updateInterval = 5 * 60 * 1000UL; // 5 minutes
 
 // Function declarations
 float readCPUTemperature();
+String getBoardType();
+
+// --- Board Identification ---
+String getBoardType() {
+  #ifdef BOARD_TYPE
+    return String(BOARD_TYPE);
+  #else
+    return "UNKNOWN";
+  #endif
+}
 
 // --- Temperature Functions ---
 float readCPUTemperature() {
@@ -194,17 +204,42 @@ void checkForUpdates() {
     }
   }
   
-  // Find the firmware binary in assets
+  // Find the firmware binary in assets - look for board-specific file first
   JsonArray assets = doc["assets"];
   String binaryUrl = "";
   
-  for (JsonObject asset : assets) {
-    String assetName = asset["name"].as<String>();
-    // Look for .bin file
-    if (assetName.endsWith(".bin")) {
-      binaryUrl = asset["browser_download_url"].as<String>();
-      Serial.println("Found firmware binary: " + assetName);
-      break;
+  // Determine board-specific filename
+  String boardSpecificFile = "";
+  #ifdef BOARD_TYPE
+    String boardType = String(BOARD_TYPE);
+    if (boardType == "ESP32_DEVKIT") {
+      boardSpecificFile = "firmware-esp32-devkit.bin";
+    } else if (boardType == "XIAO_ESP32S3") {
+      boardSpecificFile = "firmware-xiao-esp32s3.bin";
+    }
+  #endif
+  
+  // First, try to find board-specific firmware
+  if (boardSpecificFile != "") {
+    for (JsonObject asset : assets) {
+      String assetName = asset["name"].as<String>();
+      if (assetName == boardSpecificFile) {
+        binaryUrl = asset["browser_download_url"].as<String>();
+        Serial.println("Found board-specific firmware: " + assetName);
+        break;
+      }
+    }
+  }
+  
+  // If no board-specific firmware found, fall back to generic firmware.bin
+  if (binaryUrl == "") {
+    for (JsonObject asset : assets) {
+      String assetName = asset["name"].as<String>();
+      if (assetName == "firmware.bin") {
+        binaryUrl = asset["browser_download_url"].as<String>();
+        Serial.println("Found generic firmware: " + assetName);
+        break;
+      }
     }
   }
   
@@ -375,6 +410,10 @@ void loadClientId() {
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("ESP32 IoT Device Starting...");
+  Serial.println("Board Type: " + getBoardType());
+  Serial.printf("Firmware Version: %d\n", FIRMWARE_VERSION);
+  
   pinMode(powerPin, OUTPUT);
   digitalWrite(powerPin, HIGH); // Power on the DS18B20 sensor
   
