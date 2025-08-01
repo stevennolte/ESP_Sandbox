@@ -19,7 +19,7 @@
 const char* mqtt_user = "steve";     // <-- Set your MQTT username
 const char* mqtt_pass = "Doctor*9";     // <-- Set your MQTT password
 // --- Configuration ---
-const int FIRMWARE_VERSION = 94; // 1.3 becomes 13, 1.4 becomes 14, etc.
+const int FIRMWARE_VERSION = 95; // 1.3 becomes 13, 1.4 becomes 14, etc.
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox"; // Your GitHub repository
 const unsigned long updateInterval = 5 * 60 * 1000; // Check for updates every 5 minutes
 const char* ssid = "SSEI";
