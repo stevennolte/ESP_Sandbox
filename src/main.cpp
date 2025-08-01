@@ -17,7 +17,7 @@
 // --- Configuration Constants ---
 const char* mqtt_user = "steve";
 const char* mqtt_pass = "Doctor*9";
-const int FIRMWARE_VERSION = 95; // v9.5
+const int FIRMWARE_VERSION = 97; // v9.5
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
 const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
 const char* ssid = "SSEI";
