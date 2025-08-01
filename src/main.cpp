@@ -6,14 +6,13 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
-#include <Update.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <LittleFS.h>
 #include <ESPMQTTManager.h>
+#include <ESPOTAUpdater.h>
 
 
 
@@ -22,6 +21,7 @@ const char* mqtt_pass = "Doctor*9";     // <-- Set your MQTT password
 // --- Configuration ---
 const int FIRMWARE_VERSION = 94; // 1.3 becomes 13, 1.4 becomes 14, etc.
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox"; // Your GitHub repository
+const unsigned long updateInterval = 5 * 60 * 1000; // Check for updates every 5 minutes
 const char* ssid = "SSEI";
 const char* password = "Nd14il!la";
 
@@ -32,6 +32,9 @@ String client_id = "ESP_Default"; // Default value, will be loaded from preferen
 
 // MQTT Manager instance
 ESPMQTTManager mqttManager(mqtt_user, mqtt_pass, "192.168.1.12", mqtt_port);
+
+// OTA Updater instance
+ESPOTAUpdater otaUpdater(GITHUB_REPO, FIRMWARE_VERSION);
 
 // GPIO where the DS18B20 is connected to
 const int oneWireBus = 4;   
@@ -56,19 +59,38 @@ DallasTemperature sensors(&oneWire);
 WiFiClient espClient;
 
 unsigned long lastUpdateCheck = 0;
-const unsigned long updateInterval = 5 * 60 * 1000UL; // 5 minutes
 
 // Function declarations
 float readCPUTemperature();
-String getBoardType();
 
-// --- Board Identification ---
+// --- OTA Update Callback Functions ---
+void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
+  Serial.printf("*** UPDATE AVAILABLE ***\n");
+  Serial.printf("Current version: %d, New version: %d\n", currentVersion, newVersion);
+  Serial.printf("Download URL: %s\n", downloadUrl.c_str());
+}
+
+void onUpdateProgress(size_t progress, size_t total) {
+  Serial.printf("OTA Progress: %d/%d bytes (%d%%)\n", progress, total, (progress * 100) / total);
+}
+
+void onUpdateComplete(bool success, const String& message) {
+  if (success) {
+    Serial.println("*** OTA UPDATE SUCCESSFUL ***");
+    Serial.println("Rebooting...");
+  } else {
+    Serial.println("*** OTA UPDATE FAILED ***");
+    Serial.printf("Error: %s\n", message.c_str());
+  }
+}
+
+// --- Board Type Detection ---
 String getBoardType() {
-  #ifdef BOARD_TYPE
-    return String(BOARD_TYPE);
-  #else
-    return "UNKNOWN";
-  #endif
+#ifdef BOARD_TYPE
+  return String(BOARD_TYPE);
+#else
+  return "Unknown";
+#endif
 }
 
 // --- Temperature Functions ---
@@ -76,190 +98,6 @@ float readCPUTemperature() {
   // ESP32 internal temperature sensor
   // Note: This is not very accurate and is mainly for monitoring purposes
   return temperatureRead();
-}
-
-// --- OTA Update Functions ---
-void performUpdate(const char* url) {
-  Serial.println("Starting OTA update process...");
-  Serial.printf("Downloading from: %s\n", url);
-  
-  HTTPClient http;
-  http.setTimeout(30000); // 30 second timeout for large files
-  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS); // Follow redirects automatically
-  http.begin(url);
-  http.addHeader("User-Agent", "ESP32-OTA-Updater");
-  
-  Serial.println("Sending GET request...");
-  int httpCode = http.GET();
-  
-  Serial.printf("HTTP response code: %d\n", httpCode);
-
-  if (httpCode != HTTP_CODE_OK) {
-    Serial.printf("Failed to download binary, HTTP code: %d\n", httpCode);
-    Serial.printf("Error description: %s\n", http.errorToString(httpCode).c_str());
-    
-    // Try to get the response body for more details
-    String response = http.getString();
-    if (response.length() > 0) {
-      Serial.printf("Response body: %s\n", response.c_str());
-    }
-    
-    http.end();
-    return;
-  }
-  
-  int contentLength = http.getSize();
-  Serial.printf("Content length: %d bytes\n", contentLength);
-  
-  if (contentLength <= 0) {
-    Serial.println("Content-Length header invalid or missing.");
-    http.end();
-    return;
-  }
-
-  Serial.printf("Available heap before update: %d bytes\n", ESP.getFreeHeap());
-  
-  bool canBegin = Update.begin(contentLength);
-  if (!canBegin) {
-    Serial.printf("Not enough space to begin OTA. Required: %d bytes\n", contentLength);
-    Serial.printf("Available space: %d bytes\n", Update.size());
-    http.end();
-    return;
-  }
-
-  Serial.println("Starting firmware write...");
-  WiFiClient& stream = http.getStream();
-  size_t written = Update.writeStream(stream);
-
-  Serial.printf("Bytes written: %d/%d\n", written, contentLength);
-
-  if (written != contentLength) {
-    Serial.printf("Written only %d/%d bytes. Update failed.\n", written, contentLength);
-    Serial.printf("Update error: %s\n", Update.errorString());
-    http.end();
-    return;
-  }
-  
-  if (!Update.end()) {
-    Serial.printf("Error occurred from Update.end(): %s\n", Update.errorString());
-    return;
-  }
-
-  Serial.println("Update successful! Rebooting...");
-  delay(1000);
-  ESP.restart();
-}
-
-void checkForUpdates() {
-  Serial.println("Checking for updates from GitHub releases...");
-  HTTPClient http;
-  
-  // Use GitHub API to get latest release
-  String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/releases/latest";
-  http.begin(url);
-  http.addHeader("User-Agent", "ESP32-OTA-Updater"); // GitHub API requires User-Agent
-  
-  int httpCode = http.GET();
-
-  if (httpCode != HTTP_CODE_OK) {
-    Serial.printf("Failed to get GitHub release info, error: %s\n", http.errorToString(httpCode).c_str());
-    http.end();
-    return;
-  }
-
-  String payload = http.getString();
-  http.end();
-
-  // Parse the GitHub API response
-  StaticJsonDocument<2048> doc; // Larger size for GitHub API response
-  DeserializationError error = deserializeJson(doc, payload);
-
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
-    return;
-  }
-
-  // Extract version from tag_name (e.g., "v9.1" -> 91)
-  String tagName = doc["tag_name"].as<String>();
-  Serial.println("Latest release tag: " + tagName);
-  
-  // Convert tag to version number (remove 'v' and convert major.minor to integer)
-  int newVersion = 0;
-  if (tagName.startsWith("v")) {
-    String versionStr = tagName.substring(1); // Remove 'v'
-    
-    // Parse major.minor format (e.g., "9.1" -> 91)
-    int dotIndex = versionStr.indexOf('.');
-    if (dotIndex > 0) {
-      int major = versionStr.substring(0, dotIndex).toInt();
-      int minor = versionStr.substring(dotIndex + 1).toInt();
-      newVersion = major * 10 + minor; // Convert 9.1 to 91
-      Serial.printf("Parsed version: %d.%d -> %d\n", major, minor, newVersion);
-    } else {
-      // Fallback for old single number format
-      float versionFloat = versionStr.toFloat();
-      newVersion = (int)(versionFloat * 10);
-      Serial.printf("Legacy version format: %f -> %d\n", versionFloat, newVersion);
-    }
-  }
-  
-  // Find the firmware binary in assets - look for board-specific file first
-  JsonArray assets = doc["assets"];
-  String binaryUrl = "";
-  
-  // Determine board-specific filename
-  String boardSpecificFile = "";
-  #ifdef BOARD_TYPE
-    String boardType = String(BOARD_TYPE);
-    if (boardType == "ESP32_DEVKIT") {
-      boardSpecificFile = "firmware-esp32-devkit.bin";
-    } else if (boardType == "XIAO_ESP32S3") {
-      boardSpecificFile = "firmware-xiao-esp32s3.bin";
-    }
-  #endif
-  
-  // First, try to find board-specific firmware
-  if (boardSpecificFile != "") {
-    for (JsonObject asset : assets) {
-      String assetName = asset["name"].as<String>();
-      if (assetName == boardSpecificFile) {
-        binaryUrl = asset["browser_download_url"].as<String>();
-        Serial.println("Found board-specific firmware: " + assetName);
-        break;
-      }
-    }
-  }
-  
-  // If no board-specific firmware found, fall back to generic firmware.bin
-  if (binaryUrl == "") {
-    for (JsonObject asset : assets) {
-      String assetName = asset["name"].as<String>();
-      if (assetName == "firmware.bin") {
-        binaryUrl = asset["browser_download_url"].as<String>();
-        Serial.println("Found generic firmware: " + assetName);
-        break;
-      }
-    }
-  }
-  
-  if (binaryUrl == "") {
-    Serial.println("No firmware binary found in release assets");
-    return;
-  }
-  
-  Serial.printf("Current version: %d, Latest version: %d\n", FIRMWARE_VERSION, newVersion);
-
-  if (newVersion > FIRMWARE_VERSION) {
-    Serial.println("*** NEW FIRMWARE AVAILABLE ***");
-    Serial.println("Download URL: " + binaryUrl);
-    Serial.println("Starting OTA update...");
-    performUpdate(binaryUrl.c_str());
-  } else if (newVersion == FIRMWARE_VERSION) {
-    Serial.println("Current firmware is up to date.");
-  } else {
-    Serial.println("Current firmware is newer than latest release.");
-  }
 }
 
 void setup_wifi() {
@@ -446,7 +284,15 @@ void setup() {
   // Setup web server
   setupWebServer();
 
-  checkForUpdates();
+  // Initialize OTA updater callbacks
+  otaUpdater.setUpdateAvailableCallback(onUpdateAvailable);
+  otaUpdater.setUpdateProgressCallback(onUpdateProgress);
+  otaUpdater.setUpdateCompleteCallback(onUpdateComplete);
+  otaUpdater.setBoardType(getBoardType());
+  otaUpdater.enableAutoUpdate(true);
+
+  // Perform initial update check
+  otaUpdater.checkForUpdates();
   lastUpdateCheck = millis();
 }
 
@@ -482,7 +328,7 @@ void loop() {
 
   // Check for updates every 5 minutes
   if (currentTime - lastUpdateCheck > updateInterval) {
-    checkForUpdates();
+    otaUpdater.checkForUpdates();
     lastUpdateCheck = currentTime;
   }
 
