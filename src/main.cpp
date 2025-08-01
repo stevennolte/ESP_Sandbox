@@ -1,7 +1,7 @@
-/*********
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com  
-*********/
+/*
+ * ESP32 IoT Device with OTA Updates
+ * Features: LED control, MQTT integration, Web interface, OTA updates
+ */
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -14,56 +14,48 @@
 #include <ESPMQTTManager.h>
 #include <ESPOTAUpdater.h>
 
-
-
-const char* mqtt_user = "steve";     // <-- Set your MQTT username
-const char* mqtt_pass = "Doctor*9";     // <-- Set your MQTT password
-// --- Configuration ---
-const int FIRMWARE_VERSION = 95; // 1.3 becomes 13, 1.4 becomes 14, etc.
-const char* GITHUB_REPO = "stevennolte/ESP_Sandbox"; // Your GitHub repository
-const unsigned long updateInterval = 5 * 60 * 1000; // Check for updates every 5 minutes
+// --- Configuration Constants ---
+const char* mqtt_user = "steve";
+const char* mqtt_pass = "Doctor*9";
+const int FIRMWARE_VERSION = 95; // v9.5
+const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
+const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
 const char* ssid = "SSEI";
 const char* password = "Nd14il!la";
 
-// MQTT broker settings (local, e.g., Mosquitto or Home Assistant)
+// --- Hardware Configuration ---
+const int oneWireBus = 4;     // DS18B20 data pin
+const int powerPin = 21;      // DS18B20 power pin
+const int ledPin = 2;         // Built-in LED
+const int ledChannel = 0;     // PWM channel
+const int ledFreq = 5000;     // PWM frequency
+const int ledResolution = 8;  // 8-bit resolution (0-255)
+
+// --- Network Configuration ---
 String mqtt_server_ip = "192.168.1.12"; // Default fallback IP
 const int mqtt_port = 1883;
-String client_id = "ESP_Default"; // Default value, will be loaded from preferences
+String client_id = "ESP_Default"; // Loaded from preferences
 
-// MQTT Manager instance
-ESPMQTTManager mqttManager(mqtt_user, mqtt_pass, "192.168.1.12", mqtt_port);
-
-// OTA Updater instance
-ESPOTAUpdater otaUpdater(GITHUB_REPO, FIRMWARE_VERSION);
-
-// GPIO where the DS18B20 is connected to
-const int oneWireBus = 4;   
-const int powerPin = 21;  
-
-// LED indicator pin
-const int ledPin = 2;  // Built-in LED on most ESP32 boards
-const int ledChannel = 0;  // PWM channel for LED
-const int ledFreq = 5000;  // PWM frequency
-const int ledResolution = 8;  // 8-bit resolution (0-255)
-int ledBrightness = 128;  // Default brightness (0-255, where 255 is brightest)
-
-// Preferences and WebServer objects
-Preferences preferences;
-WebServer server(80);  
-
-
-
-OneWire oneWire(oneWireBus);
-DallasTemperature sensors(&oneWire);
-
-WiFiClient espClient;
-
+// --- Global Variables ---
+int ledBrightness = 128;  // Default brightness (0-255)
 unsigned long lastUpdateCheck = 0;
 
-// Function declarations
-float readCPUTemperature();
+// --- Object Instances ---
+Preferences preferences;
+WebServer server(80);
+OneWire oneWire(oneWireBus);
+DallasTemperature sensors(&oneWire);
+WiFiClient espClient;
+ESPMQTTManager mqttManager(mqtt_user, mqtt_pass, "192.168.1.12", mqtt_port);
+ESPOTAUpdater otaUpdater(GITHUB_REPO, FIRMWARE_VERSION);
 
-// --- OTA Update Callback Functions ---
+// --- Function Declarations ---
+float readCPUTemperature();
+String getBoardType();
+void setup_wifi();
+String loadHTMLTemplate(const char* filename);
+
+// --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
   Serial.printf("*** UPDATE AVAILABLE ***\n");
   Serial.printf("Current version: %d, New version: %d\n", currentVersion, newVersion);
@@ -100,20 +92,27 @@ float readCPUTemperature() {
   return temperatureRead();
 }
 
+// --- WiFi Setup ---
 void setup_wifi() {
-  delay(10);
+  Serial.print("Connecting to WiFi");
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+  
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
     delay(500);
     Serial.print(".");
+    attempts++;
   }
-  Serial.println("");
-  Serial.println("WiFi connected!");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
   
-  // Give the network stack time to stabilize
-  delay(2000);
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi connected!");
+    Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("Signal strength: %d dBm\n", WiFi.RSSI());
+  } else {
+    Serial.println("\nFailed to connect to WiFi!");
+  }
+  
+  delay(2000); // Network stabilization
 }
 
 // Function to load and process HTML template
@@ -214,77 +213,84 @@ void handleReboot() {
   ESP.restart();
 }
 
+// --- Web Server Setup ---
 void setupWebServer() {
-  // Start mDNS with the client_id as hostname
+  // Initialize mDNS
   if (!MDNS.begin(client_id.c_str())) {
-    Serial.println("Error starting mDNS");
+    Serial.println("ERROR: mDNS failed to start");
   } else {
-    Serial.println("mDNS responder started");
-    // Add service to mDNS
     MDNS.addService("http", "tcp", 80);
+    Serial.printf("✓ mDNS: http://%s.local\n", client_id.c_str());
   }
   
+  // Setup routes
   server.on("/", handleRoot);
   server.on("/set", HTTP_POST, handleSetClientId);
   server.on("/brightness", HTTP_POST, handleBrightness);
   server.on("/reboot", handleReboot);
+  
   server.begin();
-  Serial.println("Web server started on http://" + WiFi.localIP().toString());
-  Serial.println("mDNS address: http://" + client_id + ".local");
+  Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
 }
 
+// --- Configuration Management ---
 void loadClientId() {
   preferences.begin("esp-config", true); // read-only
   client_id = preferences.getString("client_id", "ESP_Default");
-  ledBrightness = preferences.getInt("led_brightness", 128); // Default brightness 128
+  ledBrightness = preferences.getInt("led_brightness", 128);
   preferences.end();
   
-  // Update MQTT topics with the loaded client_id
+  // Update MQTT topics with loaded client_id
   mqttManager.updateTopics(client_id);
   
-  Serial.println("Loaded Client ID: " + client_id);
-  Serial.println("Loaded LED Brightness: " + String(ledBrightness));
+  Serial.printf("✓ Client ID: %s\n", client_id.c_str());
+  Serial.printf("✓ LED Brightness: %d\n", ledBrightness);
 }
 
 void setup() {
+  // Initialize serial communication
   Serial.begin(115200);
-  Serial.println("ESP32 IoT Device Starting...");
-  Serial.println("Board Type: " + getBoardType());
-  Serial.printf("Firmware Version: %d\n", FIRMWARE_VERSION);
+  Serial.println("\n=== ESP32 IoT Device Starting ===");
+  Serial.printf("Board Type: %s\n", getBoardType().c_str());
+  Serial.printf("Firmware Version: %d (v%d.%d)\n", FIRMWARE_VERSION, FIRMWARE_VERSION/10, FIRMWARE_VERSION%10);
   
+  // Initialize hardware
   pinMode(powerPin, OUTPUT);
-  digitalWrite(powerPin, HIGH); // Power on the DS18B20 sensor
+  digitalWrite(powerPin, HIGH); // Power on DS18B20 sensor
   
-  // Initialize LittleFS
-  if (!LittleFS.begin(true)) {
-    Serial.println("An error has occurred while mounting LittleFS");
-    return;
-  }
-  Serial.println("LittleFS mounted successfully");
-  
-  // Initialize LED PWM channel
   ledcSetup(ledChannel, ledFreq, ledResolution);
   ledcAttachPin(ledPin, ledChannel);
   ledcWrite(ledChannel, 0); // Start with LED off
   
   sensors.begin();
+  
+  // Initialize filesystem
+  if (!LittleFS.begin(true)) {
+    Serial.println("ERROR: Failed to mount LittleFS");
+    return;
+  }
+  Serial.println("✓ LittleFS mounted");
 
-  // Load client ID from preferences
+  // Load saved configuration
   loadClientId();
 
+  // Connect to WiFi
   setup_wifi();
-  Serial.println("Connected to WiFi");
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("ERROR: Cannot continue without WiFi");
+    return;
+  }
   
-  // Discover Home Assistant server and setup MQTT
+  // Initialize MQTT
   mqtt_server_ip = mqttManager.discoverServer();
   mqttManager.updateServerIP(mqtt_server_ip);
   mqttManager.begin(client_id);
-  Serial.println("Using MQTT server: " + mqtt_server_ip);
+  Serial.printf("✓ MQTT server: %s\n", mqtt_server_ip.c_str());
 
-  // Setup web server
+  // Initialize web server
   setupWebServer();
 
-  // Initialize OTA updater callbacks
+  // Initialize OTA updater
   otaUpdater.setUpdateAvailableCallback(onUpdateAvailable);
   otaUpdater.setUpdateProgressCallback(onUpdateProgress);
   otaUpdater.setUpdateCompleteCallback(onUpdateComplete);
@@ -292,47 +298,52 @@ void setup() {
   otaUpdater.enableAutoUpdate(true);
 
   // Perform initial update check
+  Serial.println("Checking for firmware updates...");
   otaUpdater.checkForUpdates();
   lastUpdateCheck = millis();
+  
+  Serial.println("=== Setup Complete ===\n");
 }
 
 void loop() {
-  // Flash LED to indicate loop activity with adjustable brightness
+  unsigned long currentTime = millis();
+  
+  // LED heartbeat indicator
   ledcWrite(ledChannel, ledBrightness);
-  delay(50); // LED on for 50ms
+  delay(50);
   ledcWrite(ledChannel, 0);
   
   // Handle web server requests
   server.handleClient();
   
-  // Ensure MQTT connection and handle messages
+  // MQTT connection and message handling
   if (!mqttManager.isConnected()) {
     mqttManager.connect();
   }
   mqttManager.loop();
 
-  unsigned long currentTime = millis();
-
-  // Publish CPU temperature every 10 seconds
+  // Periodic tasks with timing
+  
+  // CPU temperature publishing (every 10 seconds)
   if (mqttManager.shouldPublishTemperature(currentTime)) {
     float cpuTemp = readCPUTemperature();
     mqttManager.publishCpuTemperature(cpuTemp);
     mqttManager.updateLastPublishTime(currentTime);
   }
 
-  // Publish firmware version every 5 minutes
+  // Firmware version publishing (every 5 minutes)
   if (mqttManager.shouldPublishFirmwareVersion(currentTime)) {
     mqttManager.publishFirmwareVersion(FIRMWARE_VERSION);
     mqttManager.updateLastVersionPublishTime(currentTime);
   }
 
-  // Check for updates every 5 minutes
+  // OTA update checking (every 5 minutes)
   if (currentTime - lastUpdateCheck > updateInterval) {
     otaUpdater.checkForUpdates();
     lastUpdateCheck = currentTime;
   }
 
-  // Re-discover MQTT server every 15 minutes
+  // MQTT server re-discovery (every 15 minutes)
   if (mqttManager.shouldRediscoverServer(currentTime)) {
     Serial.println("Re-discovering MQTT server...");
     String newMQTTServer = mqttManager.discoverServer();
@@ -341,6 +352,6 @@ void loop() {
     mqttManager.updateLastDiscoveryTime(currentTime);
   }
 
-  delay(1000);
+  delay(1000); // Main loop delay
 }
 
