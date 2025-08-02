@@ -72,8 +72,10 @@ void handleWifiUpdate();
 void handleNetworkScan();
 void handleUpdateTemplate();
 void handleUpdateTemplateAction();
+void handleForceTemplateUpdate();
 void checkForTemplateUpdate();
 bool downloadTemplate();
+void forceTemplateUpdate();
 
 // --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
@@ -533,25 +535,47 @@ void handleUpdateTemplate() {
   html += "<p>This will download the latest index.html template from the GitHub repository and update the web interface.</p>";
   html += "<p><strong>Repository:</strong> " + String(GITHUB_REPO) + "</p>";
   html += "<p><strong>File:</strong> data/index.html</p>";
+  
+  // Show current template info
+  preferences.begin("esp-config", true);
+  String currentCommit = preferences.getString("last_commit", "Unknown");
+  preferences.end();
+  html += "<p><strong>Current Template:</strong> " + (currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit) + "</p>";
   html += "</div>";
   
-  html += "<button onclick='updateTemplate()'>Update Template from GitHub</button>";
+  html += "<button onclick='updateTemplate()'>Check & Update Template</button>";
+  html += "<button onclick='forceUpdate()' style='background-color:#dc3545;margin-left:10px;'>Force Update Template</button>";
   html += "<div id='status'></div>";
   
   html += "<script>";
   html += "function updateTemplate() {";
-  html += "  document.getElementById('status').innerHTML = '<div class=\"status\">Downloading template from GitHub...</div>';";
+  html += "  document.getElementById('status').innerHTML = '<div class=\"status\">Checking for template updates...</div>';";
   html += "  fetch('/update-template-action', {method: 'POST'})";
   html += "    .then(response => response.text())";
   html += "    .then(data => {";
   html += "      if (data.includes('success')) {";
   html += "        document.getElementById('status').innerHTML = '<div class=\"status success\">Template updated successfully! Please refresh the main page to see changes.</div>';";
   html += "      } else {";
-  html += "        document.getElementById('status').innerHTML = '<div class=\"status error\">Update failed: ' + data + '</div>';";
+  html += "        document.getElementById('status').innerHTML = '<div class=\"status error\">Update result: ' + data + '</div>';";
   html += "      }";
   html += "    })";
   html += "    .catch(error => {";
   html += "      document.getElementById('status').innerHTML = '<div class=\"status error\">Update failed: ' + error + '</div>';";
+  html += "    });";
+  html += "}";
+  html += "function forceUpdate() {";
+  html += "  document.getElementById('status').innerHTML = '<div class=\"status\">Force downloading template from GitHub...</div>';";
+  html += "  fetch('/force-template-update', {method: 'POST'})";
+  html += "    .then(response => response.text())";
+  html += "    .then(data => {";
+  html += "      if (data.includes('success')) {";
+  html += "        document.getElementById('status').innerHTML = '<div class=\"status success\">Template force updated successfully! Please refresh the main page to see changes.</div>';";
+  html += "      } else {";
+  html += "        document.getElementById('status').innerHTML = '<div class=\"status error\">Force update result: ' + data + '</div>';";
+  html += "      }";
+  html += "    })";
+  html += "    .catch(error => {";
+  html += "      document.getElementById('status').innerHTML = '<div class=\"status error\">Force update failed: ' + error + '</div>';";
   html += "    });";
   html += "}";
   html += "</script>";
@@ -561,41 +585,55 @@ void handleUpdateTemplate() {
 }
 
 void handleUpdateTemplateAction() {
-  Serial.println("Downloading latest index.html template from GitHub...");
-  
-  if (downloadTemplate()) {
-    Serial.println("✓ Template updated successfully");
-    server.send(200, "text/plain", "Template updated successfully!");
-  } else {
-    Serial.println("✗ Failed to update template");
-    server.send(500, "text/plain", "Failed to update template");
-  }
+  Serial.println("Manual template update requested...");
+  checkForTemplateUpdate();
+  server.send(200, "text/plain", "Template check completed - see serial output for details");
+}
+
+void handleForceTemplateUpdate() {
+  Serial.println("Force template update requested...");
+  forceTemplateUpdate();
+  server.send(200, "text/plain", "Force template update completed - see serial output for details");
 }
 
 bool downloadTemplate() {
+  Serial.println("Starting template download...");
+  
   HTTPClient http;
   String url = "https://raw.githubusercontent.com/" + String(GITHUB_REPO) + "/main/data/index.html";
+  Serial.printf("Download URL: %s\n", url.c_str());
   
   http.begin(url);
   http.addHeader("User-Agent", "ESP32-Template-Updater");
   http.setTimeout(30000); // 30 second timeout
   
   int httpCode = http.GET();
+  Serial.printf("Download response: %d\n", httpCode);
   
   if (httpCode == HTTP_CODE_OK) {
     String payload = http.getString();
     http.end();
     
-    // Save the new template to LittleFS
-    File file = LittleFS.open("/index.html", "w");
-    if (file) {
-      file.print(payload);
-      file.close();
-      return true;
+    Serial.printf("Downloaded %d bytes\n", payload.length());
+    
+    if (payload.length() > 0) {
+      // Save the new template to LittleFS
+      File file = LittleFS.open("/index.html", "w");
+      if (file) {
+        size_t written = file.print(payload);
+        file.close();
+        Serial.printf("Wrote %d bytes to /index.html\n", written);
+        return written > 0;
+      } else {
+        Serial.println("Failed to open /index.html for writing");
+        return false;
+      }
     } else {
+      Serial.println("Downloaded template is empty");
       return false;
     }
   } else {
+    Serial.printf("Download failed: HTTP %d - %s\n", httpCode, http.errorToString(httpCode).c_str());
     http.end();
     return false;
   }
@@ -612,10 +650,13 @@ void checkForTemplateUpdate() {
   http.setTimeout(15000);
   
   int httpCode = http.GET();
+  Serial.printf("GitHub API response: %d\n", httpCode);
   
   if (httpCode == HTTP_CODE_OK) {
     String payload = http.getString();
     http.end();
+    
+    Serial.println("Received GitHub API response");
     
     // Parse JSON to get the latest commit hash
     StaticJsonDocument<1024> doc;
@@ -623,14 +664,16 @@ void checkForTemplateUpdate() {
     
     if (!error) {
       String latestCommit = doc["sha"].as<String>();
+      Serial.printf("Latest commit: %s\n", latestCommit.c_str());
       
       // Load stored commit hash from preferences
       preferences.begin("esp-config", true);
       String storedCommit = preferences.getString("last_commit", "");
       preferences.end();
+      Serial.printf("Stored commit: %s\n", storedCommit.c_str());
       
-      if (storedCommit != latestCommit && storedCommit.length() > 0) {
-        Serial.println("New template version available, auto-updating...");
+      if (storedCommit != latestCommit) {
+        Serial.println("Template update needed, downloading...");
         
         // Download the new template
         if (downloadTemplate()) {
@@ -638,25 +681,59 @@ void checkForTemplateUpdate() {
           preferences.begin("esp-config", false);
           preferences.putString("last_commit", latestCommit);
           preferences.end();
-          Serial.println("✓ Template auto-updated successfully");
+          Serial.println("✓ Template updated successfully");
         } else {
-          Serial.println("✗ Failed to auto-update template");
+          Serial.println("✗ Failed to download template");
         }
-      } else if (storedCommit.length() == 0) {
-        // First time, just store the current commit
-        preferences.begin("esp-config", false);
-        preferences.putString("last_commit", latestCommit);
-        preferences.end();
-        Serial.println("Stored initial template commit hash");
       } else {
         Serial.println("Template is up to date");
       }
     } else {
-      Serial.println("Failed to parse GitHub API response");
+      Serial.printf("Failed to parse GitHub API response: %s\n", error.c_str());
     }
   } else {
     Serial.printf("Failed to check for template updates: HTTP %d\n", httpCode);
+    Serial.printf("Error: %s\n", http.errorToString(httpCode).c_str());
     http.end();
+  }
+}
+
+void forceTemplateUpdate() {
+  Serial.println("Force updating template...");
+  
+  if (downloadTemplate()) {
+    // Update the stored commit hash by checking GitHub
+    HTTPClient http;
+    String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/commits/main";
+    
+    http.begin(url);
+    http.addHeader("User-Agent", "ESP32-Template-Checker");
+    http.setTimeout(15000);
+    
+    int httpCode = http.GET();
+    
+    if (httpCode == HTTP_CODE_OK) {
+      String payload = http.getString();
+      http.end();
+      
+      StaticJsonDocument<1024> doc;
+      DeserializationError error = deserializeJson(doc, payload);
+      
+      if (!error) {
+        String latestCommit = doc["sha"].as<String>();
+        preferences.begin("esp-config", false);
+        preferences.putString("last_commit", latestCommit);
+        preferences.end();
+        Serial.printf("✓ Force update complete, stored commit: %s\n", latestCommit.c_str());
+      } else {
+        Serial.println("✓ Template downloaded but failed to update commit hash");
+      }
+    } else {
+      Serial.println("✓ Template downloaded but failed to get latest commit");
+      http.end();
+    }
+  } else {
+    Serial.println("✗ Force update failed");
   }
 }
 
@@ -710,6 +787,7 @@ void setupWebServer() {
   // Template update routes
   server.on("/update-template", handleUpdateTemplate);
   server.on("/update-template-action", HTTP_POST, handleUpdateTemplateAction);
+  server.on("/force-template-update", HTTP_POST, handleForceTemplateUpdate);
   
   server.begin();
   Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
