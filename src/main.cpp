@@ -13,6 +13,8 @@
 #include <LittleFS.h>
 #include <ESPMQTTManager.h>
 #include <ESPOTAUpdater.h>
+#include <Update.h>
+#include <FS.h>
 
 // --- Configuration Constants ---
 const char* mqtt_user = "steve";
@@ -20,8 +22,8 @@ const char* mqtt_pass = "Doctor*9";
 const int FIRMWARE_VERSION = 97; // v9.5
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
 const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
-const char* ssid = "SSEI";
-const char* password = "Nd14il!la";
+String wifi_ssid = "SSEI";         // Default SSID, can be updated via web interface
+String wifi_password = "Nd14il!la"; // Default password, can be updated via web interface
 
 // --- Hardware Configuration ---
 const int oneWireBus = 4;     // DS18B20 data pin
@@ -39,6 +41,8 @@ String client_id = "ESP_Default"; // Loaded from preferences
 // --- Global Variables ---
 int ledBrightness = 128;  // Default brightness (0-255)
 unsigned long lastUpdateCheck = 0;
+unsigned long lastWiFiCheck = 0;
+const unsigned long wifiCheckInterval = 30 * 1000; // Check WiFi every 30 seconds
 
 // --- Object Instances ---
 Preferences preferences;
@@ -53,7 +57,17 @@ ESPOTAUpdater otaUpdater(GITHUB_REPO, FIRMWARE_VERSION);
 float readCPUTemperature();
 String getBoardType();
 void setup_wifi();
+void checkWiFiConnection();
 String loadHTMLTemplate(const char* filename);
+void handleFileList();
+void handleFileDownload();
+void handleFileUpload();
+void handleFileUploadComplete();
+void handleFirmwareUpload();
+void handleFirmwareUploadComplete();
+void handleWifiConfig();
+void handleWifiUpdate();
+void handleNetworkScan();
 
 // --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
@@ -95,7 +109,13 @@ float readCPUTemperature() {
 // --- WiFi Setup ---
 void setup_wifi() {
   Serial.print("Connecting to WiFi");
-  WiFi.begin(ssid, password);
+  
+  // Configure WiFi for better reconnection behavior
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+  
+  WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
   
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 30) {
@@ -108,11 +128,39 @@ void setup_wifi() {
     Serial.println("\nWiFi connected!");
     Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("Signal strength: %d dBm\n", WiFi.RSSI());
+    Serial.printf("MAC address: %s\n", WiFi.macAddress().c_str());
   } else {
     Serial.println("\nFailed to connect to WiFi!");
   }
   
   delay(2000); // Network stabilization
+}
+
+// --- WiFi Connection Monitor ---
+void checkWiFiConnection() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi connection lost! Attempting to reconnect...");
+    
+    // Try to reconnect
+    WiFi.disconnect();
+    delay(1000);
+    WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
+    
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+      delay(500);
+      Serial.print(".");
+      attempts++;
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("\n✓ WiFi reconnected!");
+      Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
+      Serial.printf("Signal strength: %d dBm\n", WiFi.RSSI());
+    } else {
+      Serial.println("\n✗ Failed to reconnect to WiFi");
+    }
+  }
 }
 
 // Function to load and process HTML template
@@ -134,6 +182,8 @@ String loadHTMLTemplate(const char* filename) {
   html.replace("{{IP_ADDRESS}}", WiFi.localIP().toString());
   html.replace("{{LED_BRIGHTNESS}}", String(ledBrightness));
   html.replace("{{MQTT_SERVER}}", mqtt_server_ip);
+  html.replace("{{WIFI_RSSI}}", String(WiFi.RSSI()));
+  html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
   
   return html;
 }
@@ -213,6 +263,245 @@ void handleReboot() {
   ESP.restart();
 }
 
+// --- File Management Functions ---
+void handleFileList() {
+  String html = "<!DOCTYPE html><html><head><title>File Manager</title>";
+  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+  html += "<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
+  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
+  html += "table{width:100%;border-collapse:collapse;margin:20px 0;}";
+  html += "th,td{padding:10px;text-align:left;border-bottom:1px solid #ddd;}";
+  html += "th{background-color:#f2f2f2;}";
+  html += "a{color:#007bff;text-decoration:none;}a:hover{text-decoration:underline;}";
+  html += ".upload-form{margin:20px 0;padding:20px;background-color:#f8f9fa;border-radius:5px;}";
+  html += "input[type='file']{margin:10px 0;}";
+  html += "input[type='submit']{background-color:#28a745;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;}";
+  html += "</style></head><body><div class='container'>";
+  html += "<h1>File Manager</h1>";
+  html += "<p><a href='/'>← Back to Main</a></p>";
+  
+  html += "<div class='upload-form'>";
+  html += "<h2>Upload File</h2>";
+  html += "<form method='POST' action='/upload' enctype='multipart/form-data'>";
+  html += "<input type='file' name='file' required>";
+  html += "<input type='submit' value='Upload File'>";
+  html += "</form></div>";
+  
+  html += "<h2>Files on Device</h2>";
+  html += "<table><tr><th>Filename</th><th>Size</th><th>Actions</th></tr>";
+  
+  File root = LittleFS.open("/");
+  File file = root.openNextFile();
+  while (file) {
+    String fileName = file.name();
+    html += "<tr><td>" + fileName + "</td>";
+    html += "<td>" + String(file.size()) + " bytes</td>";
+    html += "<td><a href='/download?file=" + fileName + "'>Download</a></td></tr>";
+    file = root.openNextFile();
+  }
+  
+  html += "</table></div></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleFileDownload() {
+  if (!server.hasArg("file")) {
+    server.send(400, "text/plain", "Missing file parameter");
+    return;
+  }
+  
+  String filename = server.arg("file");
+  if (!filename.startsWith("/")) {
+    filename = "/" + filename;
+  }
+  
+  if (!LittleFS.exists(filename)) {
+    server.send(404, "text/plain", "File not found");
+    return;
+  }
+  
+  File file = LittleFS.open(filename, "r");
+  if (!file) {
+    server.send(500, "text/plain", "Failed to open file");
+    return;
+  }
+  
+  server.streamFile(file, "application/octet-stream");
+  file.close();
+}
+
+void handleFileUpload() {
+  HTTPUpload& upload = server.upload();
+  
+  if (upload.status == UPLOAD_FILE_START) {
+    String filename = "/" + upload.filename;
+    Serial.printf("Upload Start: %s\n", filename.c_str());
+    
+    File file = LittleFS.open(filename, "w");
+    if (!file) {
+      Serial.println("Failed to create file");
+      return;
+    }
+    file.close();
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    File file = LittleFS.open("/" + upload.filename, "a");
+    if (file) {
+      file.write(upload.buf, upload.currentSize);
+      file.close();
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    Serial.printf("Upload End: %s, Size: %u\n", upload.filename.c_str(), upload.totalSize);
+  }
+}
+
+void handleFileUploadComplete() {
+  server.send(200, "text/html", "<!DOCTYPE html><html><head><title>Upload Complete</title></head><body>"
+    "<h1>File Upload Complete</h1><p><a href='/files'>Back to File Manager</a></p></body></html>");
+}
+
+// --- Firmware Upload Functions ---
+void handleFirmwareUpload() {
+  HTTPUpload& upload = server.upload();
+  
+  if (upload.status == UPLOAD_FILE_START) {
+    Serial.printf("Firmware Upload Start: %s\n", upload.filename.c_str());
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+      Update.printError(Serial);
+      return;
+    }
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+      Update.printError(Serial);
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    if (Update.end(true)) {
+      Serial.printf("Firmware Update Success: %u bytes\n", upload.totalSize);
+    } else {
+      Update.printError(Serial);
+    }
+  }
+}
+
+void handleFirmwareUploadComplete() {
+  String html = "<!DOCTYPE html><html><head><title>Firmware Update</title></head><body>";
+  if (Update.hasError()) {
+    html += "<h1>Firmware Update Failed</h1>";
+    html += "<p>Error: " + String(Update.getError()) + "</p>";
+    html += "<p><a href='/'>Back to Main</a></p>";
+  } else {
+    html += "<h1>Firmware Update Successful</h1>";
+    html += "<p>Device will reboot in 3 seconds...</p>";
+    html += "<script>setTimeout(function(){window.location.href='/';}, 5000);</script>";
+  }
+  html += "</body></html>";
+  
+  server.send(200, "text/html", html);
+  
+  if (!Update.hasError()) {
+    delay(3000);
+    ESP.restart();
+  }
+}
+
+// --- WiFi Configuration Functions ---
+void handleWifiConfig() {
+  String html = "<!DOCTYPE html><html><head><title>WiFi Configuration</title>";
+  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+  html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
+  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
+  html += "input[type='text'],input[type='password']{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}";
+  html += "input[type='submit']{background-color:#007bff;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;margin:10px 0;}";
+  html += ".info{background-color:#e7f3ff;padding:10px;border-radius:4px;margin:10px 0;}";
+  html += "</style></head><body><div class='container'>";
+  html += "<h1>WiFi Configuration</h1>";
+  html += "<p><a href='/'>← Back to Main</a></p>";
+  
+  html += "<div class='info'>";
+  html += "<p><strong>Current WiFi:</strong> " + WiFi.SSID() + "</p>";
+  html += "<p><strong>Signal Strength:</strong> " + String(WiFi.RSSI()) + " dBm</p>";
+  html += "<p><strong>Status:</strong> " + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "</p>";
+  html += "</div>";
+  
+  html += "<h2>Change WiFi Network</h2>";
+  html += "<form method='POST' action='/wifi-update'>";
+  html += "<label for='ssid'>Network Name (SSID):</label>";
+  html += "<input type='text' id='ssid' name='ssid' value='' required>";
+  html += "<label for='password'>Password:</label>";
+  html += "<input type='password' id='password' name='password' value='' required>";
+  html += "<input type='submit' value='Update WiFi Settings'>";
+  html += "</form>";
+  
+  html += "<h2>Available Networks</h2>";
+  html += "<p>Scanning for networks...</p>";
+  html += "<div id='networks'></div>";
+  
+  html += "<script>";
+  html += "function scanNetworks() {";
+  html += "  fetch('/scan-networks').then(response => response.json()).then(data => {";
+  html += "    let html = '<ul>';";
+  html += "    data.networks.forEach(network => {";
+  html += "      html += '<li><strong>' + network.ssid + '</strong> (' + network.rssi + ' dBm) ';";
+  html += "      html += network.encrypted ? '[Secured]' : '[Open]';";
+  html += "      html += ' <button onclick=\"document.getElementById(\\'ssid\\').value=\\''+network.ssid+'\\'\">Use</button></li>';";
+  html += "    });";
+  html += "    html += '</ul>';";
+  html += "    document.getElementById('networks').innerHTML = html;";
+  html += "  });";
+  html += "}";
+  html += "scanNetworks();";
+  html += "</script>";
+  
+  html += "</div></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleWifiUpdate() {
+  if (!server.hasArg("ssid") || !server.hasArg("password")) {
+    server.send(400, "text/plain", "Missing SSID or password");
+    return;
+  }
+  
+  String newSSID = server.arg("ssid");
+  String newPassword = server.arg("password");
+  
+  // Save new WiFi credentials to preferences
+  preferences.begin("esp-config", false);
+  preferences.putString("wifi_ssid", newSSID);
+  preferences.putString("wifi_password", newPassword);
+  preferences.end();
+  
+  String html = "<!DOCTYPE html><html><head><title>WiFi Updated</title></head><body>";
+  html += "<h1>WiFi Settings Updated</h1>";
+  html += "<p>New SSID: <strong>" + newSSID + "</strong></p>";
+  html += "<p>Device will restart and connect to the new network...</p>";
+  html += "<p>Please connect to the new network to access the device.</p>";
+  html += "</body></html>";
+  
+  server.send(200, "text/html", html);
+  
+  delay(3000);
+  ESP.restart();
+}
+
+// --- Network Scanning ---
+void handleNetworkScan() {
+  WiFi.scanDelete();
+  int n = WiFi.scanNetworks();
+  
+  String json = "{\"networks\":[";
+  for (int i = 0; i < n; i++) {
+    if (i > 0) json += ",";
+    json += "{";
+    json += "\"ssid\":\"" + WiFi.SSID(i) + "\",";
+    json += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
+    json += "\"encrypted\":" + String(WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "true" : "false");
+    json += "}";
+  }
+  json += "]}";
+  
+  server.send(200, "application/json", json);
+}
+
 // --- Web Server Setup ---
 void setupWebServer() {
   // Initialize mDNS
@@ -229,6 +518,37 @@ void setupWebServer() {
   server.on("/brightness", HTTP_POST, handleBrightness);
   server.on("/reboot", handleReboot);
   
+  // File management routes
+  server.on("/files", handleFileList);
+  server.on("/download", handleFileDownload);
+  server.on("/upload", HTTP_POST, handleFileUploadComplete, handleFileUpload);
+  
+  // Firmware upload routes
+  server.on("/firmware", []() {
+    String html = "<!DOCTYPE html><html><head><title>Firmware Update</title>";
+    html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+    html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
+    html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
+    html += "input[type='file']{margin:10px 0;}";
+    html += "input[type='submit']{background-color:#dc3545;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;}";
+    html += ".warning{background-color:#fff3cd;padding:15px;border-radius:4px;margin:10px 0;border-left:4px solid #ffc107;}";
+    html += "</style></head><body><div class='container'>";
+    html += "<h1>Firmware Update</h1>";
+    html += "<p><a href='/'>← Back to Main</a></p>";
+    html += "<div class='warning'><strong>Warning:</strong> Only upload firmware files (.bin). Incorrect files may brick the device!</div>";
+    html += "<form method='POST' action='/firmware-upload' enctype='multipart/form-data'>";
+    html += "<input type='file' name='firmware' accept='.bin' required>";
+    html += "<input type='submit' value='Upload Firmware'>";
+    html += "</form></div></body></html>";
+    server.send(200, "text/html", html);
+  });
+  server.on("/firmware-upload", HTTP_POST, handleFirmwareUploadComplete, handleFirmwareUpload);
+  
+  // WiFi configuration routes
+  server.on("/wifi", handleWifiConfig);
+  server.on("/wifi-update", HTTP_POST, handleWifiUpdate);
+  server.on("/scan-networks", handleNetworkScan);
+  
   server.begin();
   Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
 }
@@ -238,13 +558,27 @@ void loadClientId() {
   preferences.begin("esp-config", true); // read-only
   client_id = preferences.getString("client_id", "ESP_Default");
   ledBrightness = preferences.getInt("led_brightness", 128);
+  
+  // Load WiFi credentials if saved
+  String saved_ssid = preferences.getString("wifi_ssid", "");
+  String saved_password = preferences.getString("wifi_password", "");
+  
   preferences.end();
+  
+  // Update WiFi credentials if they were saved
+  if (saved_ssid.length() > 0) {
+    wifi_ssid = saved_ssid;
+    wifi_password = saved_password;
+  }
   
   // Update MQTT topics with loaded client_id
   mqttManager.updateTopics(client_id);
   
   Serial.printf("✓ Client ID: %s\n", client_id.c_str());
   Serial.printf("✓ LED Brightness: %d\n", ledBrightness);
+  if (saved_ssid.length() > 0) {
+    Serial.printf("✓ Saved WiFi: %s\n", saved_ssid.c_str());
+  }
 }
 
 void setup() {
@@ -323,6 +657,12 @@ void loop() {
   mqttManager.loop();
 
   // Periodic tasks with timing
+  
+  // WiFi connection monitoring (every 30 seconds)
+  if (currentTime - lastWiFiCheck > wifiCheckInterval) {
+    checkWiFiConnection();
+    lastWiFiCheck = currentTime;
+  }
   
   // CPU temperature publishing (every 10 seconds)
   if (mqttManager.shouldPublishTemperature(currentTime)) {
