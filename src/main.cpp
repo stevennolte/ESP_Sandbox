@@ -954,12 +954,6 @@ void setup() {
   
   // Ensure web template exists and is up to date
   ensureTemplateExists();
-  
-  // Initialize MQTT
-  mqtt_server_ip = mqttManager.discoverServer();
-  mqttManager.updateServerIP(mqtt_server_ip);
-  mqttManager.begin(client_id);
-  Serial.printf("✓ MQTT server: %s\n", mqtt_server_ip.c_str());
 
   // Initialize web server
   setupWebServer();
@@ -975,6 +969,12 @@ void setup() {
   Serial.println("Checking for firmware updates...");
   otaUpdater.checkForUpdates();
   lastUpdateCheck = millis();
+  
+  // Initialize MQTT (moved to end for better stability)
+  mqtt_server_ip = mqttManager.discoverServer();
+  mqttManager.updateServerIP(mqtt_server_ip);
+  mqttManager.begin(client_id);
+  Serial.printf("✓ MQTT server: %s\n", mqtt_server_ip.c_str());
   
   Serial.println("=== Setup Complete ===\n");
 }
