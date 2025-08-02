@@ -42,7 +42,9 @@ String client_id = "ESP_Default"; // Loaded from preferences
 int ledBrightness = 128;  // Default brightness (0-255)
 unsigned long lastUpdateCheck = 0;
 unsigned long lastWiFiCheck = 0;
+unsigned long lastTemplateCheck = 0;
 const unsigned long wifiCheckInterval = 30 * 1000; // Check WiFi every 30 seconds
+const unsigned long templateCheckInterval = 24 * 60 * 60 * 1000; // Check template every 24 hours
 
 // --- Object Instances ---
 Preferences preferences;
@@ -68,6 +70,10 @@ void handleFirmwareUploadComplete();
 void handleWifiConfig();
 void handleWifiUpdate();
 void handleNetworkScan();
+void handleUpdateTemplate();
+void handleUpdateTemplateAction();
+void checkForTemplateUpdate();
+bool downloadTemplate();
 
 // --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
@@ -184,6 +190,12 @@ String loadHTMLTemplate(const char* filename) {
   html.replace("{{MQTT_SERVER}}", mqtt_server_ip);
   html.replace("{{WIFI_RSSI}}", String(WiFi.RSSI()));
   html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
+  
+  // Add template version info
+  preferences.begin("esp-config", true);
+  String templateCommit = preferences.getString("last_commit", "Unknown");
+  preferences.end();
+  html.replace("{{TEMPLATE_VERSION}}", templateCommit.length() > 7 ? templateCommit.substring(0, 7) : templateCommit);
   
   return html;
 }
@@ -502,6 +514,152 @@ void handleNetworkScan() {
   server.send(200, "application/json", json);
 }
 
+// --- Template Update Functions ---
+void handleUpdateTemplate() {
+  String html = "<!DOCTYPE html><html><head><title>Update Web Template</title>";
+  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+  html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
+  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
+  html += "button{background-color:#007bff;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;margin:10px 0;}";
+  html += ".status{margin:20px 0;padding:10px;border-radius:4px;}";
+  html += ".success{background-color:#d4edda;color:#155724;border:1px solid #c3e6cb;}";
+  html += ".error{background-color:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}";
+  html += ".info{background-color:#e7f3ff;padding:10px;border-radius:4px;margin:10px 0;}";
+  html += "</style></head><body><div class='container'>";
+  html += "<h1>Update Web Template</h1>";
+  html += "<p><a href='/'>← Back to Main</a></p>";
+  
+  html += "<div class='info'>";
+  html += "<p>This will download the latest index.html template from the GitHub repository and update the web interface.</p>";
+  html += "<p><strong>Repository:</strong> " + String(GITHUB_REPO) + "</p>";
+  html += "<p><strong>File:</strong> data/index.html</p>";
+  html += "</div>";
+  
+  html += "<button onclick='updateTemplate()'>Update Template from GitHub</button>";
+  html += "<div id='status'></div>";
+  
+  html += "<script>";
+  html += "function updateTemplate() {";
+  html += "  document.getElementById('status').innerHTML = '<div class=\"status\">Downloading template from GitHub...</div>';";
+  html += "  fetch('/update-template-action', {method: 'POST'})";
+  html += "    .then(response => response.text())";
+  html += "    .then(data => {";
+  html += "      if (data.includes('success')) {";
+  html += "        document.getElementById('status').innerHTML = '<div class=\"status success\">Template updated successfully! Please refresh the main page to see changes.</div>';";
+  html += "      } else {";
+  html += "        document.getElementById('status').innerHTML = '<div class=\"status error\">Update failed: ' + data + '</div>';";
+  html += "      }";
+  html += "    })";
+  html += "    .catch(error => {";
+  html += "      document.getElementById('status').innerHTML = '<div class=\"status error\">Update failed: ' + error + '</div>';";
+  html += "    });";
+  html += "}";
+  html += "</script>";
+  
+  html += "</div></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleUpdateTemplateAction() {
+  Serial.println("Downloading latest index.html template from GitHub...");
+  
+  if (downloadTemplate()) {
+    Serial.println("✓ Template updated successfully");
+    server.send(200, "text/plain", "Template updated successfully!");
+  } else {
+    Serial.println("✗ Failed to update template");
+    server.send(500, "text/plain", "Failed to update template");
+  }
+}
+
+bool downloadTemplate() {
+  HTTPClient http;
+  String url = "https://raw.githubusercontent.com/" + String(GITHUB_REPO) + "/main/data/index.html";
+  
+  http.begin(url);
+  http.addHeader("User-Agent", "ESP32-Template-Updater");
+  http.setTimeout(30000); // 30 second timeout
+  
+  int httpCode = http.GET();
+  
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+    http.end();
+    
+    // Save the new template to LittleFS
+    File file = LittleFS.open("/index.html", "w");
+    if (file) {
+      file.print(payload);
+      file.close();
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    http.end();
+    return false;
+  }
+}
+
+void checkForTemplateUpdate() {
+  Serial.println("Checking for template updates...");
+  
+  HTTPClient http;
+  String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/commits/main";
+  
+  http.begin(url);
+  http.addHeader("User-Agent", "ESP32-Template-Checker");
+  http.setTimeout(15000);
+  
+  int httpCode = http.GET();
+  
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+    http.end();
+    
+    // Parse JSON to get the latest commit hash
+    StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    
+    if (!error) {
+      String latestCommit = doc["sha"].as<String>();
+      
+      // Load stored commit hash from preferences
+      preferences.begin("esp-config", true);
+      String storedCommit = preferences.getString("last_commit", "");
+      preferences.end();
+      
+      if (storedCommit != latestCommit && storedCommit.length() > 0) {
+        Serial.println("New template version available, auto-updating...");
+        
+        // Download the new template
+        if (downloadTemplate()) {
+          // Store the new commit hash
+          preferences.begin("esp-config", false);
+          preferences.putString("last_commit", latestCommit);
+          preferences.end();
+          Serial.println("✓ Template auto-updated successfully");
+        } else {
+          Serial.println("✗ Failed to auto-update template");
+        }
+      } else if (storedCommit.length() == 0) {
+        // First time, just store the current commit
+        preferences.begin("esp-config", false);
+        preferences.putString("last_commit", latestCommit);
+        preferences.end();
+        Serial.println("Stored initial template commit hash");
+      } else {
+        Serial.println("Template is up to date");
+      }
+    } else {
+      Serial.println("Failed to parse GitHub API response");
+    }
+  } else {
+    Serial.printf("Failed to check for template updates: HTTP %d\n", httpCode);
+    http.end();
+  }
+}
+
 // --- Web Server Setup ---
 void setupWebServer() {
   // Initialize mDNS
@@ -548,6 +706,10 @@ void setupWebServer() {
   server.on("/wifi", handleWifiConfig);
   server.on("/wifi-update", HTTP_POST, handleWifiUpdate);
   server.on("/scan-networks", handleNetworkScan);
+  
+  // Template update routes
+  server.on("/update-template", handleUpdateTemplate);
+  server.on("/update-template-action", HTTP_POST, handleUpdateTemplateAction);
   
   server.begin();
   Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
@@ -636,6 +798,11 @@ void setup() {
   otaUpdater.checkForUpdates();
   lastUpdateCheck = millis();
   
+  // Check for template updates
+  Serial.println("Checking for template updates...");
+  checkForTemplateUpdate();
+  lastTemplateCheck = millis();
+  
   Serial.println("=== Setup Complete ===\n");
 }
 
@@ -681,6 +848,12 @@ void loop() {
   if (currentTime - lastUpdateCheck > updateInterval) {
     otaUpdater.checkForUpdates();
     lastUpdateCheck = currentTime;
+  }
+
+  // Template update checking (every 24 hours)
+  if (currentTime - lastTemplateCheck > templateCheckInterval) {
+    checkForTemplateUpdate();
+    lastTemplateCheck = currentTime;
   }
 
   // MQTT server re-discovery (every 15 minutes)
