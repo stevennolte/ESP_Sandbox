@@ -64,7 +64,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>ESP Temperature Sensor Configuration</h1>
+        <h1>ESP Environmental Sensor Configuration</h1>
         
         <div class="info">
             <p><strong>Current Client ID:</strong> {{CLIENT_ID}}</p>
@@ -73,6 +73,12 @@
             <p><strong>MQTT Server:</strong> {{MQTT_SERVER}}:1883</p>
             <p><strong>WiFi Status:</strong> {{WIFI_STATUS}} ({{WIFI_RSSI}} dBm)</p>
             <p><strong>Template Version:</strong> {{TEMPLATE_VERSION}}</p>
+        </div>
+
+        <h2>Environmental Data</h2>
+        <div class="info">
+            <p><strong>Temperature (DHT22):</strong> {{DHT_TEMPERATURE}}</p>
+            <p><strong>Humidity (DHT22):</strong> {{DHT_HUMIDITY}}</p>
         </div>
 
         <h2>Device Configuration</h2>

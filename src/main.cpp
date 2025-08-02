@@ -3,8 +3,7 @@
  * Features: LED control, MQTT integration, Web interface, OTA updates
  */
 
-#include <OneWire.h>
-#include <DallasTemperature.h>
+#include <DHT.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
@@ -15,6 +14,7 @@
 #include <ESPOTAUpdater.h>
 #include <Update.h>
 #include <FS.h>
+#include <HTTPClient.h>
 
 // --- Configuration Constants ---
 const char* mqtt_user = "steve";
@@ -26,8 +26,8 @@ String wifi_ssid = "SSEI";         // Default SSID, can be updated via web inter
 String wifi_password = "Nd14il!la"; // Default password, can be updated via web interface
 
 // --- Hardware Configuration ---
-const int oneWireBus = 4;     // DS18B20 data pin
-const int powerPin = 21;      // DS18B20 power pin
+#define DHT_PIN 4          // DHT22 data pin
+#define DHT_TYPE DHT22     // DHT sensor type
 const int ledPin = 2;         // Built-in LED
 const int ledChannel = 0;     // PWM channel
 const int ledFreq = 5000;     // PWM frequency
@@ -42,21 +42,20 @@ String client_id = "ESP_Default"; // Loaded from preferences
 int ledBrightness = 128;  // Default brightness (0-255)
 unsigned long lastUpdateCheck = 0;
 unsigned long lastWiFiCheck = 0;
-unsigned long lastTemplateCheck = 0;
 const unsigned long wifiCheckInterval = 30 * 1000; // Check WiFi every 30 seconds
-const unsigned long templateCheckInterval = 24 * 60 * 60 * 1000; // Check template every 24 hours
 
 // --- Object Instances ---
 Preferences preferences;
 WebServer server(80);
-OneWire oneWire(oneWireBus);
-DallasTemperature sensors(&oneWire);
+DHT dht(DHT_PIN, DHT_TYPE);
 WiFiClient espClient;
 ESPMQTTManager mqttManager(mqtt_user, mqtt_pass, "192.168.1.12", mqtt_port);
 ESPOTAUpdater otaUpdater(GITHUB_REPO, FIRMWARE_VERSION);
 
 // --- Function Declarations ---
 float readCPUTemperature();
+float readDHTTemperature();
+float readDHTHumidity();
 String getBoardType();
 void setup_wifi();
 void checkWiFiConnection();
@@ -76,6 +75,7 @@ void handleForceTemplateUpdate();
 void checkForTemplateUpdate();
 bool downloadTemplate();
 void forceTemplateUpdate();
+void ensureTemplateExists();
 
 // --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
@@ -91,6 +91,44 @@ void onUpdateProgress(size_t progress, size_t total) {
 void onUpdateComplete(bool success, const String& message) {
   if (success) {
     Serial.println("*** OTA UPDATE SUCCESSFUL ***");
+    
+    // Download latest template after successful firmware update
+    Serial.println("Downloading latest web template...");
+    if (downloadTemplate()) {
+      // Update the stored commit hash
+      HTTPClient http;
+      String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/commits/main";
+      
+      http.begin(url);
+      http.addHeader("User-Agent", "ESP32-Template-Checker");
+      http.setTimeout(15000);
+      
+      int httpCode = http.GET();
+      
+      if (httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        http.end();
+        
+        StaticJsonDocument<1024> doc;
+        DeserializationError error = deserializeJson(doc, payload);
+        
+        if (!error) {
+          String latestCommit = doc["sha"].as<String>();
+          preferences.begin("esp-config", false);
+          preferences.putString("last_commit", latestCommit);
+          preferences.end();
+          Serial.printf("✓ Template updated with commit: %s\n", latestCommit.c_str());
+        } else {
+          Serial.println("✓ Template downloaded but failed to update commit hash");
+        }
+      } else {
+        Serial.println("✓ Template downloaded but failed to get latest commit");
+        http.end();
+      }
+    } else {
+      Serial.println("✗ Failed to download latest template");
+    }
+    
     Serial.println("Rebooting...");
   } else {
     Serial.println("*** OTA UPDATE FAILED ***");
@@ -112,6 +150,24 @@ float readCPUTemperature() {
   // ESP32 internal temperature sensor
   // Note: This is not very accurate and is mainly for monitoring purposes
   return temperatureRead();
+}
+
+float readDHTTemperature() {
+  float temp = dht.readTemperature();
+  if (isnan(temp)) {
+    Serial.println("Failed to read temperature from DHT sensor!");
+    return -999.0; // Return error value
+  }
+  return temp;
+}
+
+float readDHTHumidity() {
+  float humidity = dht.readHumidity();
+  if (isnan(humidity)) {
+    Serial.println("Failed to read humidity from DHT sensor!");
+    return -999.0; // Return error value
+  }
+  return humidity;
 }
 
 // --- WiFi Setup ---
@@ -192,6 +248,12 @@ String loadHTMLTemplate(const char* filename) {
   html.replace("{{MQTT_SERVER}}", mqtt_server_ip);
   html.replace("{{WIFI_RSSI}}", String(WiFi.RSSI()));
   html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
+  
+  // Add environmental sensor data
+  float dhtTemp = readDHTTemperature();
+  float dhtHumidity = readDHTHumidity();
+  html.replace("{{DHT_TEMPERATURE}}", dhtTemp != -999.0 ? String(dhtTemp, 1) + "°C" : "Error");
+  html.replace("{{DHT_HUMIDITY}}", dhtHumidity != -999.0 ? String(dhtHumidity, 1) + "%" : "Error");
   
   // Add template version info
   preferences.begin("esp-config", true);
@@ -532,18 +594,23 @@ void handleUpdateTemplate() {
   html += "<p><a href='/'>← Back to Main</a></p>";
   
   html += "<div class='info'>";
-  html += "<p>This will download the latest index.html template from the GitHub repository and update the web interface.</p>";
+  html += "<p>Web templates are now automatically updated with each firmware release.</p>";
   html += "<p><strong>Repository:</strong> " + String(GITHUB_REPO) + "</p>";
   html += "<p><strong>File:</strong> data/index.html</p>";
   
   // Show current template info
   preferences.begin("esp-config", true);
   String currentCommit = preferences.getString("last_commit", "Unknown");
+  int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
   preferences.end();
   html += "<p><strong>Current Template:</strong> " + (currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit) + "</p>";
+  html += "<p><strong>Template Firmware Version:</strong> v" + String(storedFirmwareVersion/10) + "." + String(storedFirmwareVersion%10) + "</p>";
+  html += "<p><strong>Current Firmware Version:</strong> v" + String(FIRMWARE_VERSION/10) + "." + String(FIRMWARE_VERSION%10) + "</p>";
   html += "</div>";
   
-  html += "<button onclick='updateTemplate()'>Check & Update Template</button>";
+  html += "<p><strong>Note:</strong> Templates automatically update when new firmware is installed via OTA. Manual updates are only needed for testing or troubleshooting.</p>";
+  
+  html += "<button onclick='updateTemplate()'>Check for Template Updates</button>";
   html += "<button onclick='forceUpdate()' style='background-color:#dc3545;margin-left:10px;'>Force Update Template</button>";
   html += "<div id='status'></div>";
   
@@ -737,6 +804,37 @@ void forceTemplateUpdate() {
   }
 }
 
+void ensureTemplateExists() {
+  // Check if index.html exists
+  if (!LittleFS.exists("/index.html")) {
+    Serial.println("Template file not found, downloading from GitHub...");
+    forceTemplateUpdate();
+    return;
+  }
+  
+  // Check if this is the first boot after a firmware update
+  preferences.begin("esp-config", true);
+  int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
+  preferences.end();
+  
+  if (storedFirmwareVersion != FIRMWARE_VERSION) {
+    Serial.printf("Firmware updated from v%d to v%d, downloading latest template...\n", 
+                  storedFirmwareVersion, FIRMWARE_VERSION);
+    
+    // Download latest template
+    forceTemplateUpdate();
+    
+    // Update stored firmware version
+    preferences.begin("esp-config", false);
+    preferences.putInt("last_firmware_version", FIRMWARE_VERSION);
+    preferences.end();
+    
+    Serial.println("✓ Template synchronized with new firmware");
+  } else {
+    Serial.println("✓ Template exists and firmware version matches");
+  }
+}
+
 // --- Web Server Setup ---
 void setupWebServer() {
   // Initialize mDNS
@@ -829,14 +927,13 @@ void setup() {
   Serial.printf("Firmware Version: %d (v%d.%d)\n", FIRMWARE_VERSION, FIRMWARE_VERSION/10, FIRMWARE_VERSION%10);
   
   // Initialize hardware
-  pinMode(powerPin, OUTPUT);
-  digitalWrite(powerPin, HIGH); // Power on DS18B20 sensor
-  
   ledcSetup(ledChannel, ledFreq, ledResolution);
   ledcAttachPin(ledPin, ledChannel);
   ledcWrite(ledChannel, 0); // Start with LED off
   
-  sensors.begin();
+  // Initialize DHT sensor
+  dht.begin();
+  Serial.println("✓ DHT22 sensor initialized");
   
   // Initialize filesystem
   if (!LittleFS.begin(true)) {
@@ -854,6 +951,9 @@ void setup() {
     Serial.println("ERROR: Cannot continue without WiFi");
     return;
   }
+  
+  // Ensure web template exists and is up to date
+  ensureTemplateExists();
   
   // Initialize MQTT
   mqtt_server_ip = mqttManager.discoverServer();
@@ -875,11 +975,6 @@ void setup() {
   Serial.println("Checking for firmware updates...");
   otaUpdater.checkForUpdates();
   lastUpdateCheck = millis();
-  
-  // Check for template updates
-  Serial.println("Checking for template updates...");
-  checkForTemplateUpdate();
-  lastTemplateCheck = millis();
   
   Serial.println("=== Setup Complete ===\n");
 }
@@ -909,10 +1004,28 @@ void loop() {
     lastWiFiCheck = currentTime;
   }
   
-  // CPU temperature publishing (every 10 seconds)
+  // Environmental data publishing (every 10 seconds)
   if (mqttManager.shouldPublishTemperature(currentTime)) {
     float cpuTemp = readCPUTemperature();
+    float dhtTemp = readDHTTemperature();
+    float dhtHumidity = readDHTHumidity();
+    
+    // Publish CPU temperature (for system monitoring)
     mqttManager.publishCpuTemperature(cpuTemp);
+    
+    // Publish DHT22 data (environmental monitoring)
+    if (dhtTemp != -999.0) {
+      // Use the existing temperature publishing method but for DHT data
+      // You may need to add separate methods for environmental vs CPU temp
+      Serial.printf("DHT Temperature: %.1f°C\n", dhtTemp);
+      // TODO: Add publishEnvironmentalTemperature method to MQTT manager
+    }
+    
+    if (dhtHumidity != -999.0) {
+      Serial.printf("DHT Humidity: %.1f%%\n", dhtHumidity);
+      // TODO: Add publishHumidity method to MQTT manager
+    }
+    
     mqttManager.updateLastPublishTime(currentTime);
   }
 
@@ -926,12 +1039,6 @@ void loop() {
   if (currentTime - lastUpdateCheck > updateInterval) {
     otaUpdater.checkForUpdates();
     lastUpdateCheck = currentTime;
-  }
-
-  // Template update checking (every 24 hours)
-  if (currentTime - lastTemplateCheck > templateCheckInterval) {
-    checkForTemplateUpdate();
-    lastTemplateCheck = currentTime;
   }
 
   // MQTT server re-discovery (every 15 minutes)
