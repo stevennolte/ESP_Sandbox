@@ -46,6 +46,7 @@ jobs:
         run: |
           platformio run --environment esp32doit-devkit-v1
           platformio run --environment seeed_xiao_esp32s3
+          platformio run --environment esp32-s3-devkitc-1
 
       - name: Copy firmware to Release folder
         run: |
@@ -53,6 +54,7 @@ jobs:
           # Copy and rename firmware files with board-specific names
           cp .pio/build/esp32doit-devkit-v1/firmware.bin Release/firmware-esp32-devkit.bin
           cp .pio/build/seeed_xiao_esp32s3/firmware.bin Release/firmware-xiao-esp32s3.bin
+          cp .pio/build/esp32-s3-devkitc-1/firmware.bin Release/firmware-esp32s3-devkitc.bin
           # Also copy a generic firmware.bin (defaulting to devkit for backward compatibility)
           cp .pio/build/esp32doit-devkit-v1/firmware.bin Release/firmware.bin
 
@@ -68,6 +70,7 @@ jobs:
             Release/firmware.bin
             Release/firmware-esp32-devkit.bin
             Release/firmware-xiao-esp32s3.bin
+            Release/firmware-esp32s3-devkitc.bin
             Release/firmware.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
