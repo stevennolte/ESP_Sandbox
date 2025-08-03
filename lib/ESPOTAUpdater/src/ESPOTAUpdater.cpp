@@ -185,7 +185,7 @@ String ESPOTAUpdater::findBoardSpecificFirmware(JsonArray assets) {
         boardSpecificFile = "firmware-esp32-devkit.bin";
     } else if (_boardType == "XIAO_ESP32S3") {
         boardSpecificFile = "firmware-xiao-esp32s3.bin";
-    } else if (_boardType == " ESP32_S3_DEVKITC") {
+    } else if (_boardType == "ESP32_S3_DEVKITC") {
         boardSpecificFile = "firmware-esp32s3-devkitc.bin";
     }
     
