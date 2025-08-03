@@ -19,7 +19,7 @@
 // --- Configuration Constants ---
 const char* mqtt_user = "steve";
 const char* mqtt_pass = "Doctor*9";
-const int FIRMWARE_VERSION = 914; // v9.14
+const int FIRMWARE_VERSION = 915; // v9.14
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
 const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
 String wifi_ssid = "SSEI";         // Default SSID, can be updated via web interface
