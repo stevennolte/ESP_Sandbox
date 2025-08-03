@@ -159,17 +159,19 @@ int ESPOTAUpdater::parseVersionFromTag(const String& tagName) {
     if (tagName.startsWith("v")) {
         String versionStr = tagName.substring(1); // Remove 'v'
         
-        // Parse major.minor format (e.g., "9.1" -> 91)
+        // Parse major.minor format with proper multi-digit support
         int dotIndex = versionStr.indexOf('.');
         if (dotIndex > 0) {
             int major = versionStr.substring(0, dotIndex).toInt();
             int minor = versionStr.substring(dotIndex + 1).toInt();
-            newVersion = major * 10 + minor; // Convert 9.1 to 91
+            // Use a larger multiplier to handle multi-digit minor versions
+            // Format: MMMMNN where MMMM = major, NN = minor (up to 99)
+            newVersion = major * 100 + minor;
             Serial.printf("Parsed version: %d.%d -> %d\n", major, minor, newVersion);
         } else {
             // Fallback for old single number format
             float versionFloat = versionStr.toFloat();
-            newVersion = (int)(versionFloat * 10);
+            newVersion = (int)(versionFloat * 100); // Updated multiplier
             Serial.printf("Legacy version format: %f -> %d\n", versionFloat, newVersion);
         }
     }

@@ -19,7 +19,7 @@
 // --- Configuration Constants ---
 const char* mqtt_user = "steve";
 const char* mqtt_pass = "Doctor*9";
-const int FIRMWARE_VERSION = 104; // v9.5
+const int FIRMWARE_VERSION = 914; // v9.14
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
 const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
 String wifi_ssid = "SSEI";         // Default SSID, can be updated via web interface
@@ -665,8 +665,8 @@ void handleUpdateTemplate() {
   int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
   preferences.end();
   html += "<p><strong>Current Template:</strong> " + (currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit) + "</p>";
-  html += "<p><strong>Template Firmware Version:</strong> v" + String(storedFirmwareVersion/10) + "." + String(storedFirmwareVersion%10) + "</p>";
-  html += "<p><strong>Current Firmware Version:</strong> v" + String(FIRMWARE_VERSION/10) + "." + String(FIRMWARE_VERSION%10) + "</p>";
+  html += "<p><strong>Template Firmware Version:</strong> v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100) + "</p>";
+  html += "<p><strong>Current Firmware Version:</strong> v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100) + "</p>";
   html += "</div>";
   
   html += "<p><strong>Note:</strong> Templates automatically update when new firmware is installed via OTA. Manual updates are only needed for testing or troubleshooting.</p>";
@@ -898,7 +898,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n=== ESP32 IoT Device Starting ===");
   Serial.printf("Board Type: %s\n", getBoardType().c_str());
-  Serial.printf("Firmware Version: %d (v%d.%d)\n", FIRMWARE_VERSION, FIRMWARE_VERSION/10, FIRMWARE_VERSION%10);
+  Serial.printf("Firmware Version: %d (v%d.%d)\n", FIRMWARE_VERSION, FIRMWARE_VERSION/100, FIRMWARE_VERSION%100);
   
   // Initialize hardware
   ledcSetup(ledChannel, ledFreq, ledResolution);

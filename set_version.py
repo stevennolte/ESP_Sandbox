@@ -9,8 +9,9 @@ if len(sys.argv) != 3:
 major_version = sys.argv[1]
 minor_version = sys.argv[2]
 
-# Calculate numeric version for firmware (e.g., 9.1 becomes 91)
-numeric_version = int(major_version) * 10 + int(minor_version)
+# Calculate numeric version for firmware (e.g., 9.14 becomes 914)
+# Format: MMMMNN where MMMM = major, NN = minor (up to 99)
+numeric_version = int(major_version) * 100 + int(minor_version)
 version_string = f"{major_version}.{minor_version}"
 
 print(f"Setting version to {version_string} (numeric: {numeric_version})")
