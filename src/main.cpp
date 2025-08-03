@@ -1126,10 +1126,11 @@ void loop() {
     
     // Publish CPU temperature (for system monitoring)
     mqttManager.publishCpuTemperature(cpuTemp);
-    
+    // mqttManager.publishTemperature(dhtTemp);
     // Publish DHT22 data (environmental monitoring)
     if (dhtTemp != -999.0) {
       Serial.printf("DHT Temperature: %.1f°C\n", dhtTemp);
+      mqttManager.publishTemperature(dhtTemp);
       // TODO: Add publishEnvironmentalTemperature method to MQTT manager
     }
     
