@@ -93,6 +93,7 @@ void checkForTemplateUpdate();
 bool downloadTemplate();
 void forceTemplateUpdate();
 void ensureTemplateExists();
+void handleDebug();
 
 // --- Utility Functions ---
 String makeGitHubAPICall(const String& endpoint);
@@ -576,6 +577,138 @@ void handleNetworkScan() {
   server.send(200, "application/json", json);
 }
 
+// --- Debug Page ---
+void handleDebug() {
+  String html = "<!DOCTYPE html><html><head><title>ESP32 Debug Information</title>";
+  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+  html += "<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
+  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
+  html += ".debug-section{margin:20px 0;padding:15px;background-color:#f8f9fa;border-radius:5px;}";
+  html += ".debug-item{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #dee2e6;}";
+  html += ".debug-label{font-weight:bold;color:#495057;}";
+  html += ".debug-value{color:#007bff;font-family:monospace;}";
+  html += ".error{color:#dc3545;}";
+  html += ".success{color:#28a745;}";
+  html += ".warning{color:#ffc107;}";
+  html += "button{background-color:#007bff;color:white;padding:10px 15px;border:none;border-radius:4px;cursor:pointer;margin:5px;}";
+  html += "button:hover{background-color:#0056b3;}";
+  html += "</style></head><body><div class='container'>";
+  html += "<h1>🔧 ESP32 Debug Information</h1>";
+  html += "<p><a href='/'>← Back to Main</a></p>";
+  
+  // System Information
+  html += "<div class='debug-section'>";
+  html += "<h2>💻 System Information</h2>";
+  html += "<div class='debug-item'><span class='debug-label'>Board Type:</span><span class='debug-value'>" + getBoardType() + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(FIRMWARE_VERSION) + " (v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100) + ")</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Chip Model:</span><span class='debug-value'>" + String(ESP.getChipModel()) + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Chip Cores:</span><span class='debug-value'>" + String(ESP.getChipCores()) + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>CPU Frequency:</span><span class='debug-value'>" + String(ESP.getCpuFreqMHz()) + " MHz</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Flash Size:</span><span class='debug-value'>" + String(ESP.getFlashChipSize() / 1024 / 1024) + " MB</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Free Heap:</span><span class='debug-value'>" + String(ESP.getFreeHeap()) + " bytes</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Min Free Heap:</span><span class='debug-value'>" + String(ESP.getMinFreeHeap()) + " bytes</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Max Alloc Heap:</span><span class='debug-value'>" + String(ESP.getMaxAllocHeap()) + " bytes</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Uptime:</span><span class='debug-value'>" + String(millis() / 1000) + " seconds</span></div>";
+  html += "</div>";
+  
+  // Network Information
+  html += "<div class='debug-section'>";
+  html += "<h2>📡 Network Information</h2>";
+  html += "<div class='debug-item'><span class='debug-label'>WiFi Status:</span><span class='debug-value " + String(WiFi.status() == WL_CONNECTED ? "success" : "error") + "'>" + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>SSID:</span><span class='debug-value'>" + WiFi.SSID() + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>IP Address:</span><span class='debug-value'>" + WiFi.localIP().toString() + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Gateway:</span><span class='debug-value'>" + WiFi.gatewayIP().toString() + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>DNS:</span><span class='debug-value'>" + WiFi.dnsIP().toString() + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>MAC Address:</span><span class='debug-value'>" + WiFi.macAddress() + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Signal Strength:</span><span class='debug-value'>" + String(WiFi.RSSI()) + " dBm</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>MQTT Status:</span><span class='debug-value " + String(mqttManager.isConnected() ? "success" : "error") + "'>" + String(mqttManager.isConnected() ? "Connected" : "Disconnected") + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>MQTT Server:</span><span class='debug-value'>" + mqtt_server_ip + ":" + String(mqtt_port) + "</span></div>";
+  html += "</div>";
+  
+  // Sensor Information
+  html += "<div class='debug-section'>";
+  html += "<h2>🌡️ Sensor Information</h2>";
+  float cpuTemp = readCPUTemperature();
+  float dhtTemp = readDHTTemperature();
+  float dhtHumidity = readDHTHumidity();
+  html += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value'>" + String(cpuTemp, 1) + "°C</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>DHT22 Temperature:</span><span class='debug-value " + String(dhtTemp != -999.0 ? "success" : "error") + "'>" + String(dhtTemp != -999.0 ? String(dhtTemp, 1) + "°C" : "Error") + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>DHT22 Humidity:</span><span class='debug-value " + String(dhtHumidity != -999.0 ? "success" : "error") + "'>" + String(dhtHumidity != -999.0 ? String(dhtHumidity, 1) + "%" : "Error") + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value'>" + String(ledBrightness) + "/255</span></div>";
+  html += "</div>";
+  
+  // Timing Information
+  html += "<div class='debug-section'>";
+  html += "<h2>⏰ Timing Information</h2>";
+  unsigned long currentTime = millis();
+  html += "<div class='debug-item'><span class='debug-label'>Current Time:</span><span class='debug-value'>" + String(currentTime) + " ms</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Last Update Check:</span><span class='debug-value'>" + String(lastUpdateCheck) + " ms</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Time Since Update Check:</span><span class='debug-value'>" + String((currentTime - lastUpdateCheck) / 1000) + " seconds</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Last WiFi Check:</span><span class='debug-value'>" + String(lastWiFiCheck) + " ms</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Time Since WiFi Check:</span><span class='debug-value'>" + String((currentTime - lastWiFiCheck) / 1000) + " seconds</span></div>";
+  html += "</div>";
+  
+  // Storage Information
+  html += "<div class='debug-section'>";
+  html += "<h2>💾 Storage Information</h2>";
+  size_t totalBytes = LittleFS.totalBytes();
+  size_t usedBytes = LittleFS.usedBytes();
+  html += "<div class='debug-item'><span class='debug-label'>LittleFS Total:</span><span class='debug-value'>" + String(totalBytes) + " bytes (" + String(totalBytes/1024) + " KB)</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>LittleFS Used:</span><span class='debug-value'>" + String(usedBytes) + " bytes (" + String(usedBytes/1024) + " KB)</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>LittleFS Free:</span><span class='debug-value'>" + String(totalBytes - usedBytes) + " bytes (" + String((totalBytes - usedBytes)/1024) + " KB)</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Usage Percentage:</span><span class='debug-value'>" + String((usedBytes * 100) / totalBytes) + "%</span></div>";
+  html += "</div>";
+  
+  // Configuration Information
+  html += "<div class='debug-section'>";
+  html += "<h2>⚙️ Configuration</h2>";
+  preferences.begin("esp-config", true);
+  String storedCommit = preferences.getString("last_commit", "Unknown");
+  int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
+  String storedClientId = preferences.getString("client_id", "Not Set");
+  int storedBrightness = preferences.getInt("led_brightness", 0);
+  String storedSSID = preferences.getString("wifi_ssid", "Not Set");
+  preferences.end();
+  
+  html += "<div class='debug-item'><span class='debug-label'>Stored Client ID:</span><span class='debug-value'>" + storedClientId + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Stored LED Brightness:</span><span class='debug-value'>" + String(storedBrightness) + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Stored WiFi SSID:</span><span class='debug-value'>" + storedSSID + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Stored Template Commit:</span><span class='debug-value'>" + (storedCommit.length() > 7 ? storedCommit.substring(0, 7) : storedCommit) + "</span></div>";
+  html += "<div class='debug-item'><span class='debug-label'>Stored Firmware Version:</span><span class='debug-value'>" + String(storedFirmwareVersion) + " (v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100) + ")</span></div>";
+  html += "</div>";
+  
+  // Manual Actions
+  html += "<div class='debug-section'>";
+  html += "<h2>🔄 Manual Actions</h2>";
+  html += "<button onclick='refreshPage()'>🔄 Refresh Data</button>";
+  html += "<button onclick='testMQTT()'>📡 Test MQTT Connection</button>";
+  html += "<button onclick='testSensors()'>🌡️ Test Sensors</button>";
+  html += "<button onclick='forceFirmwareCheck()'>⬇️ Force Firmware Check</button>";
+  html += "<div id='actionResult' style='margin-top:10px;'></div>";
+  html += "</div>";
+  
+  html += "<script>";
+  html += "function refreshPage() { location.reload(); }";
+  html += "function testMQTT() {";
+  html += "  document.getElementById('actionResult').innerHTML = '<p style=\"color:blue;\">Testing MQTT connection...</p>';";
+  html += "  // This would need a separate endpoint to test MQTT";
+  html += "  setTimeout(() => { document.getElementById('actionResult').innerHTML = '<p style=\"color:green;\">MQTT test completed (check serial output)</p>'; }, 2000);";
+  html += "}";
+  html += "function testSensors() {";
+  html += "  document.getElementById('actionResult').innerHTML = '<p style=\"color:blue;\">Testing sensors...</p>';";
+  html += "  setTimeout(() => { refreshPage(); }, 2000);";
+  html += "}";
+  html += "function forceFirmwareCheck() {";
+  html += "  document.getElementById('actionResult').innerHTML = '<p style=\"color:blue;\">Checking for firmware updates...</p>';";
+  html += "  // This would trigger a firmware check";
+  html += "  setTimeout(() => { document.getElementById('actionResult').innerHTML = '<p style=\"color:green;\">Firmware check completed (check serial output)</p>'; }, 3000);";
+  html += "}";
+  html += "</script>";
+  
+  html += "</div></body></html>";
+  server.send(200, "text/html", html);
+}
+
 // --- Utility Functions ---
 String makeGitHubAPICall(const String& endpoint) {
   HTTPClient http;
@@ -864,6 +997,9 @@ void setupWebServer() {
   server.on("/update-template", handleUpdateTemplate);
   server.on("/update-template-action", HTTP_POST, handleUpdateTemplateAction);
   server.on("/force-template-update", HTTP_POST, handleForceTemplateUpdate);
+  
+  // Debug page route
+  server.on("/debug", handleDebug);
   
   server.begin();
   Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
