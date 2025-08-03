@@ -19,7 +19,7 @@
 // --- Configuration Constants ---
 const char* mqtt_user = "steve";
 const char* mqtt_pass = "Doctor*9";
-const int FIRMWARE_VERSION = 914; // v9.14
+const int FIRMWARE_VERSION = 915; // v9.15
 const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
 const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
 String wifi_ssid = "SSEI";         // Default SSID, can be updated via web interface
@@ -104,6 +104,10 @@ void onUpdateAvailable(int currentVersion, int newVersion, const String& downloa
   Serial.printf("*** UPDATE AVAILABLE ***\n");
   Serial.printf("Current version: %d, New version: %d\n", currentVersion, newVersion);
   Serial.printf("Download URL: %s\n", downloadUrl.c_str());
+  
+  // Automatically start the update process
+  Serial.println("Starting automatic firmware update...");
+  otaUpdater.performUpdate(downloadUrl.c_str());
 }
 
 void onUpdateProgress(size_t progress, size_t total) {
@@ -937,7 +941,7 @@ void setup() {
   otaUpdater.setUpdateProgressCallback(onUpdateProgress);
   otaUpdater.setUpdateCompleteCallback(onUpdateComplete);
   otaUpdater.setBoardType(getBoardType());
-  otaUpdater.enableAutoUpdate(true);
+  otaUpdater.enableAutoUpdate(false); // Disable auto-update to prevent duplicates
 
   // Perform initial update check
   Serial.println("Checking for firmware updates...");
