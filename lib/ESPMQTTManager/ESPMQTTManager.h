@@ -70,7 +70,7 @@ private:
     unsigned long _lastVersionPublish;
     unsigned long _lastDiscovery;
     static const unsigned long _tempPublishInterval = 10 * 1000UL; // 10 seconds
-    static const unsigned long _versionPublishInterval = 5 * 60 * 1000UL; // 5 minutes
+    static const unsigned long _versionPublishInterval = 1 * 60 * 1000UL; // 5 minutes
     static const unsigned long _discoveryInterval = 15 * 60 * 1000UL; // 15 minutes
     
     // MQTT client
