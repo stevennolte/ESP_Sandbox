@@ -25,6 +25,12 @@ const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
 String wifi_ssid = "SSEI";         // Default SSID, can be updated via web interface
 String wifi_password = "Nd14il!la"; // Default password, can be updated via web interface
 
+// --- HTTP Constants ---
+const int HTTP_TIMEOUT_SHORT = 15000;  // 15 seconds
+const int HTTP_TIMEOUT_LONG = 30000;   // 30 seconds
+const char* USER_AGENT_TEMPLATE = "ESP32-Template-Updater";
+const char* USER_AGENT_CHECKER = "ESP32-Template-Checker";
+
 // --- Hardware Configuration ---
 #define DHT_PIN 4          // DHT22 data pin
 #define DHT_TYPE DHT22     // DHT sensor type
@@ -43,6 +49,17 @@ int ledBrightness = 128;  // Default brightness (0-255)
 unsigned long lastUpdateCheck = 0;
 unsigned long lastWiFiCheck = 0;
 const unsigned long wifiCheckInterval = 30 * 1000; // Check WiFi every 30 seconds
+
+// --- Timing Constants ---
+const unsigned long LED_PULSE_DURATION = 50;
+const unsigned long MAIN_LOOP_DELAY = 1000;
+const unsigned long NETWORK_STABILIZATION_DELAY = 2000;
+const unsigned long REBOOT_DELAY = 3000;
+
+// --- Network Constants ---
+const int WIFI_MAX_ATTEMPTS = 30;
+const int WIFI_RECONNECT_ATTEMPTS = 20;
+const int WIFI_RETRY_DELAY = 500;
 
 // --- Object Instances ---
 Preferences preferences;
@@ -77,6 +94,11 @@ bool downloadTemplate();
 void forceTemplateUpdate();
 void ensureTemplateExists();
 
+// --- Utility Functions ---
+String makeGitHubAPICall(const String& endpoint);
+bool downloadFileFromGitHub(const String& filePath, const String& localPath);
+void updateStoredCommitHash();
+
 // --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
   Serial.printf("*** UPDATE AVAILABLE ***\n");
@@ -95,36 +117,8 @@ void onUpdateComplete(bool success, const String& message) {
     // Download latest template after successful firmware update
     Serial.println("Downloading latest web template...");
     if (downloadTemplate()) {
-      // Update the stored commit hash
-      HTTPClient http;
-      String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/commits/main";
-      
-      http.begin(url);
-      http.addHeader("User-Agent", "ESP32-Template-Checker");
-      http.setTimeout(15000);
-      
-      int httpCode = http.GET();
-      
-      if (httpCode == HTTP_CODE_OK) {
-        String payload = http.getString();
-        http.end();
-        
-        StaticJsonDocument<1024> doc;
-        DeserializationError error = deserializeJson(doc, payload);
-        
-        if (!error) {
-          String latestCommit = doc["sha"].as<String>();
-          preferences.begin("esp-config", false);
-          preferences.putString("last_commit", latestCommit);
-          preferences.end();
-          Serial.printf("✓ Template updated with commit: %s\n", latestCommit.c_str());
-        } else {
-          Serial.println("✓ Template downloaded but failed to update commit hash");
-        }
-      } else {
-        Serial.println("✓ Template downloaded but failed to get latest commit");
-        http.end();
-      }
+      updateStoredCommitHash();
+      Serial.println("✓ Template updated with firmware");
     } else {
       Serial.println("✗ Failed to download latest template");
     }
@@ -182,8 +176,8 @@ void setup_wifi() {
   WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
   
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    delay(500);
+  while (WiFi.status() != WL_CONNECTED && attempts < WIFI_MAX_ATTEMPTS) {
+    delay(WIFI_RETRY_DELAY);
     Serial.print(".");
     attempts++;
   }
@@ -197,7 +191,7 @@ void setup_wifi() {
     Serial.println("\nFailed to connect to WiFi!");
   }
   
-  delay(2000); // Network stabilization
+  delay(NETWORK_STABILIZATION_DELAY);
 }
 
 // --- WiFi Connection Monitor ---
@@ -211,8 +205,8 @@ void checkWiFiConnection() {
     WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
     
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-      delay(500);
+    while (WiFi.status() != WL_CONNECTED && attempts < WIFI_RECONNECT_ATTEMPTS) {
+      delay(WIFI_RETRY_DELAY);
       Serial.print(".");
       attempts++;
     }
@@ -474,7 +468,7 @@ void handleFirmwareUploadComplete() {
   server.send(200, "text/html", html);
   
   if (!Update.hasError()) {
-    delay(3000);
+    delay(REBOOT_DELAY);
     ESP.restart();
   }
 }
@@ -555,7 +549,7 @@ void handleWifiUpdate() {
   
   server.send(200, "text/html", html);
   
-  delay(3000);
+  delay(REBOOT_DELAY);
   ESP.restart();
 }
 
@@ -576,6 +570,73 @@ void handleNetworkScan() {
   json += "]}";
   
   server.send(200, "application/json", json);
+}
+
+// --- Utility Functions ---
+String makeGitHubAPICall(const String& endpoint) {
+  HTTPClient http;
+  String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/" + endpoint;
+  
+  http.begin(url);
+  http.addHeader("User-Agent", USER_AGENT_CHECKER);
+  http.setTimeout(HTTP_TIMEOUT_SHORT);
+  
+  int httpCode = http.GET();
+  String result = "";
+  
+  if (httpCode == HTTP_CODE_OK) {
+    result = http.getString();
+  } else {
+    Serial.printf("GitHub API call failed: HTTP %d\n", httpCode);
+  }
+  
+  http.end();
+  return result;
+}
+
+bool downloadFileFromGitHub(const String& filePath, const String& localPath) {
+  HTTPClient http;
+  String url = "https://raw.githubusercontent.com/" + String(GITHUB_REPO) + "/main/" + filePath;
+  
+  http.begin(url);
+  http.addHeader("User-Agent", USER_AGENT_TEMPLATE);
+  http.setTimeout(HTTP_TIMEOUT_LONG);
+  
+  int httpCode = http.GET();
+  bool success = false;
+  
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+    
+    if (payload.length() > 0) {
+      File file = LittleFS.open(localPath, "w");
+      if (file) {
+        size_t written = file.print(payload);
+        file.close();
+        success = written > 0;
+        Serial.printf("Downloaded %d bytes to %s\n", written, localPath.c_str());
+      }
+    }
+  } else {
+    Serial.printf("Download failed: HTTP %d\n", httpCode);
+  }
+  
+  http.end();
+  return success;
+}
+
+void updateStoredCommitHash() {
+  String response = makeGitHubAPICall("commits/main");
+  if (response.length() > 0) {
+    StaticJsonDocument<1024> doc;
+    if (deserializeJson(doc, response) == DeserializationError::Ok) {
+      String latestCommit = doc["sha"].as<String>();
+      preferences.begin("esp-config", false);
+      preferences.putString("last_commit", latestCommit);
+      preferences.end();
+      Serial.printf("Updated commit hash: %s\n", latestCommit.c_str());
+    }
+  }
 }
 
 // --- Template Update Functions ---
@@ -665,103 +726,44 @@ void handleForceTemplateUpdate() {
 
 bool downloadTemplate() {
   Serial.println("Starting template download...");
-  
-  HTTPClient http;
-  String url = "https://raw.githubusercontent.com/" + String(GITHUB_REPO) + "/main/data/index.html";
-  Serial.printf("Download URL: %s\n", url.c_str());
-  
-  http.begin(url);
-  http.addHeader("User-Agent", "ESP32-Template-Updater");
-  http.setTimeout(30000); // 30 second timeout
-  
-  int httpCode = http.GET();
-  Serial.printf("Download response: %d\n", httpCode);
-  
-  if (httpCode == HTTP_CODE_OK) {
-    String payload = http.getString();
-    http.end();
-    
-    Serial.printf("Downloaded %d bytes\n", payload.length());
-    
-    if (payload.length() > 0) {
-      // Save the new template to LittleFS
-      File file = LittleFS.open("/index.html", "w");
-      if (file) {
-        size_t written = file.print(payload);
-        file.close();
-        Serial.printf("Wrote %d bytes to /index.html\n", written);
-        return written > 0;
-      } else {
-        Serial.println("Failed to open /index.html for writing");
-        return false;
-      }
-    } else {
-      Serial.println("Downloaded template is empty");
-      return false;
-    }
-  } else {
-    Serial.printf("Download failed: HTTP %d - %s\n", httpCode, http.errorToString(httpCode).c_str());
-    http.end();
-    return false;
-  }
+  return downloadFileFromGitHub("data/index.html", "/index.html");
 }
 
 void checkForTemplateUpdate() {
   Serial.println("Checking for template updates...");
   
-  HTTPClient http;
-  String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/commits/main";
+  String response = makeGitHubAPICall("commits/main");
+  if (response.length() == 0) {
+    Serial.println("Failed to get GitHub API response");
+    return;
+  }
+
+  StaticJsonDocument<1024> doc;
+  if (deserializeJson(doc, response) != DeserializationError::Ok) {
+    Serial.println("Failed to parse GitHub API response");
+    return;
+  }
+
+  String latestCommit = doc["sha"].as<String>();
+  Serial.printf("Latest commit: %s\n", latestCommit.c_str());
   
-  http.begin(url);
-  http.addHeader("User-Agent", "ESP32-Template-Checker");
-  http.setTimeout(15000);
+  preferences.begin("esp-config", true);
+  String storedCommit = preferences.getString("last_commit", "");
+  preferences.end();
+  Serial.printf("Stored commit: %s\n", storedCommit.c_str());
   
-  int httpCode = http.GET();
-  Serial.printf("GitHub API response: %d\n", httpCode);
-  
-  if (httpCode == HTTP_CODE_OK) {
-    String payload = http.getString();
-    http.end();
-    
-    Serial.println("Received GitHub API response");
-    
-    // Parse JSON to get the latest commit hash
-    StaticJsonDocument<1024> doc;
-    DeserializationError error = deserializeJson(doc, payload);
-    
-    if (!error) {
-      String latestCommit = doc["sha"].as<String>();
-      Serial.printf("Latest commit: %s\n", latestCommit.c_str());
-      
-      // Load stored commit hash from preferences
-      preferences.begin("esp-config", true);
-      String storedCommit = preferences.getString("last_commit", "");
+  if (storedCommit != latestCommit) {
+    Serial.println("Template update needed, downloading...");
+    if (downloadTemplate()) {
+      preferences.begin("esp-config", false);
+      preferences.putString("last_commit", latestCommit);
       preferences.end();
-      Serial.printf("Stored commit: %s\n", storedCommit.c_str());
-      
-      if (storedCommit != latestCommit) {
-        Serial.println("Template update needed, downloading...");
-        
-        // Download the new template
-        if (downloadTemplate()) {
-          // Store the new commit hash
-          preferences.begin("esp-config", false);
-          preferences.putString("last_commit", latestCommit);
-          preferences.end();
-          Serial.println("✓ Template updated successfully");
-        } else {
-          Serial.println("✗ Failed to download template");
-        }
-      } else {
-        Serial.println("Template is up to date");
-      }
+      Serial.println("✓ Template updated successfully");
     } else {
-      Serial.printf("Failed to parse GitHub API response: %s\n", error.c_str());
+      Serial.println("✗ Failed to download template");
     }
   } else {
-    Serial.printf("Failed to check for template updates: HTTP %d\n", httpCode);
-    Serial.printf("Error: %s\n", http.errorToString(httpCode).c_str());
-    http.end();
+    Serial.println("Template is up to date");
   }
 }
 
@@ -769,36 +771,8 @@ void forceTemplateUpdate() {
   Serial.println("Force updating template...");
   
   if (downloadTemplate()) {
-    // Update the stored commit hash by checking GitHub
-    HTTPClient http;
-    String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/commits/main";
-    
-    http.begin(url);
-    http.addHeader("User-Agent", "ESP32-Template-Checker");
-    http.setTimeout(15000);
-    
-    int httpCode = http.GET();
-    
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      http.end();
-      
-      StaticJsonDocument<1024> doc;
-      DeserializationError error = deserializeJson(doc, payload);
-      
-      if (!error) {
-        String latestCommit = doc["sha"].as<String>();
-        preferences.begin("esp-config", false);
-        preferences.putString("last_commit", latestCommit);
-        preferences.end();
-        Serial.printf("✓ Force update complete, stored commit: %s\n", latestCommit.c_str());
-      } else {
-        Serial.println("✓ Template downloaded but failed to update commit hash");
-      }
-    } else {
-      Serial.println("✓ Template downloaded but failed to get latest commit");
-      http.end();
-    }
+    updateStoredCommitHash();
+    Serial.println("✓ Force update complete");
   } else {
     Serial.println("✗ Force update failed");
   }
@@ -984,7 +958,7 @@ void loop() {
   
   // LED heartbeat indicator
   ledcWrite(ledChannel, ledBrightness);
-  delay(50);
+  delay(LED_PULSE_DURATION);
   ledcWrite(ledChannel, 0);
   
   // Handle web server requests
@@ -1015,8 +989,6 @@ void loop() {
     
     // Publish DHT22 data (environmental monitoring)
     if (dhtTemp != -999.0) {
-      // Use the existing temperature publishing method but for DHT data
-      // You may need to add separate methods for environmental vs CPU temp
       Serial.printf("DHT Temperature: %.1f°C\n", dhtTemp);
       // TODO: Add publishEnvironmentalTemperature method to MQTT manager
     }
@@ -1050,6 +1022,6 @@ void loop() {
     mqttManager.updateLastDiscoveryTime(currentTime);
   }
 
-  delay(1000); // Main loop delay
+  delay(MAIN_LOOP_DELAY);
 }
 
