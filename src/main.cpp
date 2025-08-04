@@ -120,13 +120,13 @@ void onUpdateComplete(bool success, const String& message) {
   if (success) {
     Serial.println("*** OTA UPDATE SUCCESSFUL ***");
     
-    // Download latest template after successful firmware update
-    Serial.println("Downloading latest web template...");
+    // Download latest templates after successful firmware update
+    Serial.println("Downloading latest web templates...");
     if (downloadTemplate()) {
       updateStoredCommitHash();
-      Serial.println("✓ Template updated with firmware");
+      Serial.println("✓ Templates updated with firmware");
     } else {
-      Serial.println("✗ Failed to download latest template");
+      Serial.println("⚠ Some templates failed to download - device will attempt to download missing templates on next boot");
     }
     
     Serial.println("Rebooting...");
@@ -733,7 +733,65 @@ void handleForceTemplateUpdate() {
 
 bool downloadTemplate() {
   Serial.println("Starting template download...");
-  return downloadFileFromGitHub("data/index.html", "/index.html");
+  
+  // Create templates directory if it doesn't exist
+  if (!LittleFS.exists("/templates")) {
+    Serial.println("Creating /templates directory...");
+  }
+  
+  // List of all template files to download
+  const char* templateFiles[] = {
+    "index.html",
+    "templates/file_manager.html",
+    "templates/wifi_config.html", 
+    "templates/debug.html",
+    "templates/template_update.html",
+    "templates/firmware_upload.html",
+    "templates/simple_response.html",
+    "templates/upload_complete.html",
+    "templates/firmware_complete.html",
+    "templates/wifi_updated.html"
+  };
+  
+  const char* localPaths[] = {
+    "/index.html",
+    "/templates/file_manager.html",
+    "/templates/wifi_config.html",
+    "/templates/debug.html", 
+    "/templates/template_update.html",
+    "/templates/firmware_upload.html",
+    "/templates/simple_response.html",
+    "/templates/upload_complete.html",
+    "/templates/firmware_complete.html",
+    "/templates/wifi_updated.html"
+  };
+  
+  bool allSuccess = true;
+  int fileCount = sizeof(templateFiles) / sizeof(templateFiles[0]);
+  
+  Serial.printf("Downloading %d template files...\n", fileCount);
+  
+  for (int i = 0; i < fileCount; i++) {
+    Serial.printf("Downloading %s...\n", templateFiles[i]);
+    
+    if (downloadFileFromGitHub(String("data/") + templateFiles[i], localPaths[i])) {
+      Serial.printf("✓ Downloaded %s\n", templateFiles[i]);
+    } else {
+      Serial.printf("✗ Failed to download %s\n", templateFiles[i]);
+      allSuccess = false;
+    }
+    
+    // Small delay between downloads to avoid overwhelming the server
+    delay(100);
+  }
+  
+  if (allSuccess) {
+    Serial.println("✓ All template files downloaded successfully");
+  } else {
+    Serial.println("⚠ Some template files failed to download");
+  }
+  
+  return allSuccess;
 }
 
 void checkForTemplateUpdate() {
@@ -760,35 +818,40 @@ void checkForTemplateUpdate() {
   Serial.printf("Stored commit: %s\n", storedCommit.c_str());
   
   if (storedCommit != latestCommit) {
-    Serial.println("Template update needed, downloading...");
+    Serial.println("Template update needed, downloading all template files...");
     if (downloadTemplate()) {
       preferences.begin("esp-config", false);
       preferences.putString("last_commit", latestCommit);
       preferences.end();
-      Serial.println("✓ Template updated successfully");
+      Serial.println("✓ All templates updated successfully");
     } else {
-      Serial.println("✗ Failed to download template");
+      Serial.println("⚠ Some templates failed to download");
     }
   } else {
-    Serial.println("Template is up to date");
+    Serial.println("Templates are up to date");
   }
 }
 
 void forceTemplateUpdate() {
-  Serial.println("Force updating template...");
+  Serial.println("Force updating all templates...");
   
   if (downloadTemplate()) {
     updateStoredCommitHash();
-    Serial.println("✓ Force update complete");
+    Serial.println("✓ Force update of all templates complete");
   } else {
-    Serial.println("✗ Force update failed");
+    Serial.println("⚠ Force update completed with some failures");
   }
 }
 
 void ensureTemplateExists() {
-  // Check if index.html exists
-  if (!LittleFS.exists("/index.html")) {
-    Serial.println("Template file not found, downloading from GitHub...");
+  // Check if main template files exist
+  bool templatesExist = LittleFS.exists("/index.html") && 
+                       LittleFS.exists("/templates") &&
+                       LittleFS.exists("/templates/debug.html") &&
+                       LittleFS.exists("/templates/file_manager.html");
+  
+  if (!templatesExist) {
+    Serial.println("Template files not found, downloading from GitHub...");
     forceTemplateUpdate();
     return;
   }
@@ -799,10 +862,11 @@ void ensureTemplateExists() {
   preferences.end();
   
   if (storedFirmwareVersion != FIRMWARE_VERSION) {
-    Serial.printf("Firmware updated from v%d to v%d, downloading latest template...\n", 
-                  storedFirmwareVersion, FIRMWARE_VERSION);
+    Serial.printf("Firmware updated from v%d.%d to v%d.%d, downloading latest templates...\n", 
+                  storedFirmwareVersion/100, storedFirmwareVersion%100,
+                  FIRMWARE_VERSION/100, FIRMWARE_VERSION%100);
     
-    // Download latest template
+    // Download latest templates
     forceTemplateUpdate();
     
     // Update stored firmware version
@@ -810,9 +874,9 @@ void ensureTemplateExists() {
     preferences.putInt("last_firmware_version", FIRMWARE_VERSION);
     preferences.end();
     
-    Serial.println("✓ Template synchronized with new firmware");
+    Serial.println("✓ Templates synchronized with new firmware");
   } else {
-    Serial.println("✓ Template exists and firmware version matches");
+    Serial.println("✓ Templates exist and firmware version matches");
   }
 }
 
