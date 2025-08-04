@@ -684,19 +684,37 @@ void updateStoredCommitHash() {
 String loadTemplate(const char* templatePath) {
   String fullPath = "/templates/" + String(templatePath);
   
+  Serial.printf("Attempting to load template: %s\n", fullPath.c_str());
+  
   if (!LittleFS.exists(fullPath)) {
     Serial.printf("Template not found: %s\n", fullPath.c_str());
-    return "<!DOCTYPE html><html><body><h1>Error: Template not found</h1></body></html>";
+    
+    // List all files in /templates directory for debugging
+    if (LittleFS.exists("/templates")) {
+      Serial.println("Contents of /templates directory:");
+      File templatesDir = LittleFS.open("/templates");
+      File file = templatesDir.openNextFile();
+      while (file) {
+        Serial.printf("  - %s (%d bytes)\n", file.name(), file.size());
+        file = templatesDir.openNextFile();
+      }
+      templatesDir.close();
+    } else {
+      Serial.println("/templates directory does not exist");
+    }
+    
+    return "<!DOCTYPE html><html><body><h1>Error: Template not found</h1><p>Path: " + fullPath + "</p></body></html>";
   }
   
   File file = LittleFS.open(fullPath, "r");
   if (!file) {
     Serial.printf("Failed to open template: %s\n", fullPath.c_str());
-    return "<!DOCTYPE html><html><body><h1>Error: Could not open template</h1></body></html>";
+    return "<!DOCTYPE html><html><body><h1>Error: Could not open template</h1><p>Path: " + fullPath + "</p></body></html>";
   }
   
   String html = file.readString();
   file.close();
+  Serial.printf("✓ Template loaded successfully: %s (%d bytes)\n", fullPath.c_str(), html.length());
   return html;
 }
 
@@ -737,6 +755,12 @@ bool downloadTemplate() {
   // Create templates directory if it doesn't exist
   if (!LittleFS.exists("/templates")) {
     Serial.println("Creating /templates directory...");
+    LittleFS.mkdir("/templates");
+    if (LittleFS.exists("/templates")) {
+      Serial.println("✓ /templates directory created");
+    } else {
+      Serial.println("✗ Failed to create /templates directory");
+    }
   }
   
   // List of all template files to download
@@ -988,6 +1012,26 @@ void setup() {
   
   // Ensure web template exists and is up to date
   ensureTemplateExists();
+
+  // Debug: List all files in LittleFS
+  Serial.println("=== LittleFS Contents ===");
+  File root = LittleFS.open("/");
+  File file = root.openNextFile();
+  while (file) {
+    if (file.isDirectory()) {
+      Serial.printf("DIR:  %s\n", file.name());
+      File subFile = file.openNextFile();
+      while (subFile) {
+        Serial.printf("  FILE: %s (%d bytes)\n", subFile.name(), subFile.size());
+        subFile = file.openNextFile();
+      }
+    } else {
+      Serial.printf("FILE: %s (%d bytes)\n", file.name(), file.size());
+    }
+    file = root.openNextFile();
+  }
+  root.close();
+  Serial.println("=== End LittleFS Contents ===");
 
   // Initialize web server
   setupWebServer();
