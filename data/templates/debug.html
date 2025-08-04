@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 Debug Information</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .debug-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .debug-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .debug-value {
+            color: #007bff;
+            font-family: monospace;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+        .warning {
+            color: #ffc107;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>🔧 ESP32 Debug Information</h1>
+        <p><a href='/'>← Back to Main</a></p>
+        
+        {{DEBUG_SECTIONS}}
+        
+        <!-- Manual Actions -->
+        <div class='debug-section'>
+            <h2>🔄 Manual Actions</h2>
+            <button onclick='refreshPage()'>🔄 Refresh Data</button>
+            <button onclick='testMQTT()'>📡 Test MQTT Connection</button>
+            <button onclick='testSensors()'>🌡️ Test Sensors</button>
+            <button onclick='forceFirmwareCheck()'>⬇️ Force Firmware Check</button>
+            <div id='actionResult' style='margin-top:10px;'></div>
+        </div>
+        
+        <script>
+            function refreshPage() { location.reload(); }
+            function testMQTT() {
+                document.getElementById('actionResult').innerHTML = '<p style="color:blue;">Testing MQTT connection...</p>';
+                setTimeout(() => { document.getElementById('actionResult').innerHTML = '<p style="color:green;">MQTT test completed (check serial output)</p>'; }, 2000);
+            }
+            function testSensors() {
+                document.getElementById('actionResult').innerHTML = '<p style="color:blue;">Testing sensors...</p>';
+                setTimeout(() => { refreshPage(); }, 2000);
+            }
+            function forceFirmwareCheck() {
+                document.getElementById('actionResult').innerHTML = '<p style="color:blue;">Checking for firmware updates...</p>';
+                setTimeout(() => { document.getElementById('actionResult').innerHTML = '<p style="color:green;">Firmware check completed (check serial output)</p>'; }, 3000);
+            }
+        </script>
+    </div>
+</body>
+</html>

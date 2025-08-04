@@ -99,6 +99,7 @@ void handleDebug();
 String makeGitHubAPICall(const String& endpoint);
 bool downloadFileFromGitHub(const String& filePath, const String& localPath);
 void updateStoredCommitHash();
+String loadTemplate(const char* templatePath);
 
 // --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
@@ -290,13 +291,13 @@ void handleSetClientId() {
         MDNS.addService("http", "tcp", 80);
       }
       
-      String html = "<!DOCTYPE html><html><head><title>Updated</title></head><body>";
-      html += "<h1>Client ID Updated</h1>";
-      html += "<p>New Client ID: <strong>" + client_id + "</strong></p>";
-      html += "<p>New mDNS address: <strong>http://" + client_id + ".local</strong></p>";
-      html += "<p>Device will reconnect to MQTT with new ID.</p>";
-      html += "<p><a href='/'>Back to Home</a></p>";
-      html += "</body></html>";
+      String html = loadTemplate("simple_response.html");
+      html.replace("{{TITLE}}", "Updated");
+      html.replace("{{HEADER}}", "Client ID Updated");
+      html.replace("{{MESSAGE}}", "New Client ID: <strong>" + client_id + "</strong>");
+      html.replace("{{EXTRA_CONTENT}}", 
+        "<p>New mDNS address: <strong>http://" + client_id + ".local</strong></p>"
+        "<p>Device will reconnect to MQTT with new ID.</p>");
       server.send(200, "text/html", html);
       
       // Force MQTT reconnection with new client ID
@@ -318,11 +319,11 @@ void handleBrightness() {
       preferences.putInt("led_brightness", ledBrightness);
       preferences.end();
       
-      String html = "<!DOCTYPE html><html><head><title>Brightness Updated</title></head><body>";
-      html += "<h1>LED Brightness Updated</h1>";
-      html += "<p>New Brightness: <strong>" + String(ledBrightness) + "</strong></p>";
-      html += "<p><a href='/'>Back to Home</a></p>";
-      html += "</body></html>";
+      String html = loadTemplate("simple_response.html");
+      html.replace("{{TITLE}}", "Brightness Updated");
+      html.replace("{{HEADER}}", "LED Brightness Updated");
+      html.replace("{{MESSAGE}}", "New Brightness: <strong>" + String(ledBrightness) + "</strong>");
+      html.replace("{{EXTRA_CONTENT}}", "");
       server.send(200, "text/html", html);
     } else {
       server.send(400, "text/plain", "Invalid brightness value. Must be 0-255.");
@@ -340,42 +341,23 @@ void handleReboot() {
 
 // --- File Management Functions ---
 void handleFileList() {
-  String html = "<!DOCTYPE html><html><head><title>File Manager</title>";
-  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
-  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
-  html += "table{width:100%;border-collapse:collapse;margin:20px 0;}";
-  html += "th,td{padding:10px;text-align:left;border-bottom:1px solid #ddd;}";
-  html += "th{background-color:#f2f2f2;}";
-  html += "a{color:#007bff;text-decoration:none;}a:hover{text-decoration:underline;}";
-  html += ".upload-form{margin:20px 0;padding:20px;background-color:#f8f9fa;border-radius:5px;}";
-  html += "input[type='file']{margin:10px 0;}";
-  html += "input[type='submit']{background-color:#28a745;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;}";
-  html += "</style></head><body><div class='container'>";
-  html += "<h1>File Manager</h1>";
-  html += "<p><a href='/'>← Back to Main</a></p>";
+  String html = loadTemplate("file_manager.html");
   
-  html += "<div class='upload-form'>";
-  html += "<h2>Upload File</h2>";
-  html += "<form method='POST' action='/upload' enctype='multipart/form-data'>";
-  html += "<input type='file' name='file' required>";
-  html += "<input type='submit' value='Upload File'>";
-  html += "</form></div>";
-  
-  html += "<h2>Files on Device</h2>";
-  html += "<table><tr><th>Filename</th><th>Size</th><th>Actions</th></tr>";
-  
+  // Build file list
+  String fileList = "";
   File root = LittleFS.open("/");
   File file = root.openNextFile();
   while (file) {
     String fileName = file.name();
-    html += "<tr><td>" + fileName + "</td>";
-    html += "<td>" + String(file.size()) + " bytes</td>";
-    html += "<td><a href='/download?file=" + fileName + "'>Download</a></td></tr>";
+    fileList += "<tr><td>" + fileName + "</td>";
+    fileList += "<td>" + String(file.size()) + " bytes</td>";
+    fileList += "<td><a href='/download?file=" + fileName + "'>Download</a></td></tr>";
     file = root.openNextFile();
   }
   
-  html += "</table></div></body></html>";
+  // Replace placeholder
+  html.replace("{{FILE_LIST}}", fileList);
+  
   server.send(200, "text/html", html);
 }
 
@@ -430,8 +412,8 @@ void handleFileUpload() {
 }
 
 void handleFileUploadComplete() {
-  server.send(200, "text/html", "<!DOCTYPE html><html><head><title>Upload Complete</title></head><body>"
-    "<h1>File Upload Complete</h1><p><a href='/files'>Back to File Manager</a></p></body></html>");
+  String html = loadTemplate("upload_complete.html");
+  server.send(200, "text/html", html);
 }
 
 // --- Firmware Upload Functions ---
@@ -458,18 +440,22 @@ void handleFirmwareUpload() {
 }
 
 void handleFirmwareUploadComplete() {
-  String html = "<!DOCTYPE html><html><head><title>Firmware Update</title></head><body>";
-  if (Update.hasError()) {
-    html += "<h1>Firmware Update Failed</h1>";
-    html += "<p>Error: " + String(Update.getError()) + "</p>";
-    html += "<p><a href='/'>Back to Main</a></p>";
-  } else {
-    html += "<h1>Firmware Update Successful</h1>";
-    html += "<p>Device will reboot in 3 seconds...</p>";
-    html += "<script>setTimeout(function(){window.location.href='/';}, 5000);</script>";
-  }
-  html += "</body></html>";
+  String html = loadTemplate("firmware_complete.html");
+  String content = "";
   
+  if (Update.hasError()) {
+    content += "<div class='status-icon error'>❌</div>";
+    content += "<h1 class='error'>Firmware Update Failed</h1>";
+    content += "<p>Error: " + String(Update.getError()) + "</p>";
+    content += "<p><a href='/'>← Back to Main</a></p>";
+  } else {
+    content += "<div class='status-icon success'>✅</div>";
+    content += "<h1 class='success'>Firmware Update Successful</h1>";
+    content += "<p>Device will reboot in 3 seconds...</p>";
+    content += "<script>setTimeout(function(){window.location.href='/';}, 5000);</script>";
+  }
+  
+  html.replace("{{FIRMWARE_CONTENT}}", content);
   server.send(200, "text/html", html);
   
   if (!Update.hasError()) {
@@ -480,53 +466,13 @@ void handleFirmwareUploadComplete() {
 
 // --- WiFi Configuration Functions ---
 void handleWifiConfig() {
-  String html = "<!DOCTYPE html><html><head><title>WiFi Configuration</title>";
-  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
-  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
-  html += "input[type='text'],input[type='password']{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}";
-  html += "input[type='submit']{background-color:#007bff;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;margin:10px 0;}";
-  html += ".info{background-color:#e7f3ff;padding:10px;border-radius:4px;margin:10px 0;}";
-  html += "</style></head><body><div class='container'>";
-  html += "<h1>WiFi Configuration</h1>";
-  html += "<p><a href='/'>← Back to Main</a></p>";
+  String html = loadTemplate("wifi_config.html");
   
-  html += "<div class='info'>";
-  html += "<p><strong>Current WiFi:</strong> " + WiFi.SSID() + "</p>";
-  html += "<p><strong>Signal Strength:</strong> " + String(WiFi.RSSI()) + " dBm</p>";
-  html += "<p><strong>Status:</strong> " + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "</p>";
-  html += "</div>";
+  // Replace placeholders with actual values
+  html.replace("{{CURRENT_SSID}}", WiFi.SSID());
+  html.replace("{{SIGNAL_STRENGTH}}", String(WiFi.RSSI()));
+  html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
   
-  html += "<h2>Change WiFi Network</h2>";
-  html += "<form method='POST' action='/wifi-update'>";
-  html += "<label for='ssid'>Network Name (SSID):</label>";
-  html += "<input type='text' id='ssid' name='ssid' value='' required>";
-  html += "<label for='password'>Password:</label>";
-  html += "<input type='password' id='password' name='password' value='' required>";
-  html += "<input type='submit' value='Update WiFi Settings'>";
-  html += "</form>";
-  
-  html += "<h2>Available Networks</h2>";
-  html += "<p>Scanning for networks...</p>";
-  html += "<div id='networks'></div>";
-  
-  html += "<script>";
-  html += "function scanNetworks() {";
-  html += "  fetch('/scan-networks').then(response => response.json()).then(data => {";
-  html += "    let html = '<ul>';";
-  html += "    data.networks.forEach(network => {";
-  html += "      html += '<li><strong>' + network.ssid + '</strong> (' + network.rssi + ' dBm) ';";
-  html += "      html += network.encrypted ? '[Secured]' : '[Open]';";
-  html += "      html += ' <button onclick=\"document.getElementById(\\'ssid\\').value=\\''+network.ssid+'\\'\">Use</button></li>';";
-  html += "    });";
-  html += "    html += '</ul>';";
-  html += "    document.getElementById('networks').innerHTML = html;";
-  html += "  });";
-  html += "}";
-  html += "scanNetworks();";
-  html += "</script>";
-  
-  html += "</div></body></html>";
   server.send(200, "text/html", html);
 }
 
@@ -545,12 +491,8 @@ void handleWifiUpdate() {
   preferences.putString("wifi_password", newPassword);
   preferences.end();
   
-  String html = "<!DOCTYPE html><html><head><title>WiFi Updated</title></head><body>";
-  html += "<h1>WiFi Settings Updated</h1>";
-  html += "<p>New SSID: <strong>" + newSSID + "</strong></p>";
-  html += "<p>Device will restart and connect to the new network...</p>";
-  html += "<p>Please connect to the new network to access the device.</p>";
-  html += "</body></html>";
+  String html = loadTemplate("wifi_updated.html");
+  html.replace("{{NEW_SSID}}", newSSID);
   
   server.send(200, "text/html", html);
   
@@ -579,89 +521,77 @@ void handleNetworkScan() {
 
 // --- Debug Page ---
 void handleDebug() {
-  String html = "<!DOCTYPE html><html><head><title>ESP32 Debug Information</title>";
-  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
-  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
-  html += ".debug-section{margin:20px 0;padding:15px;background-color:#f8f9fa;border-radius:5px;}";
-  html += ".debug-item{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #dee2e6;}";
-  html += ".debug-label{font-weight:bold;color:#495057;}";
-  html += ".debug-value{color:#007bff;font-family:monospace;}";
-  html += ".error{color:#dc3545;}";
-  html += ".success{color:#28a745;}";
-  html += ".warning{color:#ffc107;}";
-  html += "button{background-color:#007bff;color:white;padding:10px 15px;border:none;border-radius:4px;cursor:pointer;margin:5px;}";
-  html += "button:hover{background-color:#0056b3;}";
-  html += "</style></head><body><div class='container'>";
-  html += "<h1>🔧 ESP32 Debug Information</h1>";
-  html += "<p><a href='/'>← Back to Main</a></p>";
+  String html = loadTemplate("debug.html");
+  
+  // Build debug sections
+  String debugSections = "";
   
   // System Information
-  html += "<div class='debug-section'>";
-  html += "<h2>💻 System Information</h2>";
-  html += "<div class='debug-item'><span class='debug-label'>Board Type:</span><span class='debug-value'>" + getBoardType() + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(FIRMWARE_VERSION) + " (v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100) + ")</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Chip Model:</span><span class='debug-value'>" + String(ESP.getChipModel()) + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Chip Cores:</span><span class='debug-value'>" + String(ESP.getChipCores()) + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>CPU Frequency:</span><span class='debug-value'>" + String(ESP.getCpuFreqMHz()) + " MHz</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Flash Size:</span><span class='debug-value'>" + String(ESP.getFlashChipSize() / 1024 / 1024) + " MB</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Free Heap:</span><span class='debug-value'>" + String(ESP.getFreeHeap()) + " bytes</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Min Free Heap:</span><span class='debug-value'>" + String(ESP.getMinFreeHeap()) + " bytes</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Max Alloc Heap:</span><span class='debug-value'>" + String(ESP.getMaxAllocHeap()) + " bytes</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Uptime:</span><span class='debug-value'>" + String(millis() / 1000) + " seconds</span></div>";
-  html += "</div>";
+  debugSections += "<div class='debug-section'>";
+  debugSections += "<h2>💻 System Information</h2>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Board Type:</span><span class='debug-value'>" + getBoardType() + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(FIRMWARE_VERSION) + " (v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100) + ")</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Chip Model:</span><span class='debug-value'>" + String(ESP.getChipModel()) + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Chip Cores:</span><span class='debug-value'>" + String(ESP.getChipCores()) + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>CPU Frequency:</span><span class='debug-value'>" + String(ESP.getCpuFreqMHz()) + " MHz</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Flash Size:</span><span class='debug-value'>" + String(ESP.getFlashChipSize() / 1024 / 1024) + " MB</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Free Heap:</span><span class='debug-value'>" + String(ESP.getFreeHeap()) + " bytes</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Min Free Heap:</span><span class='debug-value'>" + String(ESP.getMinFreeHeap()) + " bytes</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Max Alloc Heap:</span><span class='debug-value'>" + String(ESP.getMaxAllocHeap()) + " bytes</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Uptime:</span><span class='debug-value'>" + String(millis() / 1000) + " seconds</span></div>";
+  debugSections += "</div>";
   
   // Network Information
-  html += "<div class='debug-section'>";
-  html += "<h2>📡 Network Information</h2>";
-  html += "<div class='debug-item'><span class='debug-label'>WiFi Status:</span><span class='debug-value " + String(WiFi.status() == WL_CONNECTED ? "success" : "error") + "'>" + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>SSID:</span><span class='debug-value'>" + WiFi.SSID() + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>IP Address:</span><span class='debug-value'>" + WiFi.localIP().toString() + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Gateway:</span><span class='debug-value'>" + WiFi.gatewayIP().toString() + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>DNS:</span><span class='debug-value'>" + WiFi.dnsIP().toString() + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>MAC Address:</span><span class='debug-value'>" + WiFi.macAddress() + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Signal Strength:</span><span class='debug-value'>" + String(WiFi.RSSI()) + " dBm</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>MQTT Status:</span><span class='debug-value " + String(mqttManager.isConnected() ? "success" : "error") + "'>" + String(mqttManager.isConnected() ? "Connected" : "Disconnected") + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>MQTT Server:</span><span class='debug-value'>" + mqtt_server_ip + ":" + String(mqtt_port) + "</span></div>";
-  html += "</div>";
+  debugSections += "<div class='debug-section'>";
+  debugSections += "<h2>📡 Network Information</h2>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>WiFi Status:</span><span class='debug-value " + String(WiFi.status() == WL_CONNECTED ? "success" : "error") + "'>" + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>SSID:</span><span class='debug-value'>" + WiFi.SSID() + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>IP Address:</span><span class='debug-value'>" + WiFi.localIP().toString() + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Gateway:</span><span class='debug-value'>" + WiFi.gatewayIP().toString() + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>DNS:</span><span class='debug-value'>" + WiFi.dnsIP().toString() + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>MAC Address:</span><span class='debug-value'>" + WiFi.macAddress() + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Signal Strength:</span><span class='debug-value'>" + String(WiFi.RSSI()) + " dBm</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>MQTT Status:</span><span class='debug-value " + String(mqttManager.isConnected() ? "success" : "error") + "'>" + String(mqttManager.isConnected() ? "Connected" : "Disconnected") + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>MQTT Server:</span><span class='debug-value'>" + mqtt_server_ip + ":" + String(mqtt_port) + "</span></div>";
+  debugSections += "</div>";
   
   // Sensor Information
-  html += "<div class='debug-section'>";
-  html += "<h2>🌡️ Sensor Information</h2>";
+  debugSections += "<div class='debug-section'>";
+  debugSections += "<h2>🌡️ Sensor Information</h2>";
   float cpuTemp = readCPUTemperature();
   float dhtTemp = readDHTTemperature();
   float dhtHumidity = readDHTHumidity();
-  html += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value'>" + String(cpuTemp, 1) + "°C</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>DHT22 Temperature:</span><span class='debug-value " + String(dhtTemp != -999.0 ? "success" : "error") + "'>" + String(dhtTemp != -999.0 ? String(dhtTemp, 1) + "°C" : "Error") + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>DHT22 Humidity:</span><span class='debug-value " + String(dhtHumidity != -999.0 ? "success" : "error") + "'>" + String(dhtHumidity != -999.0 ? String(dhtHumidity, 1) + "%" : "Error") + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value'>" + String(ledBrightness) + "/255</span></div>";
-  html += "</div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value'>" + String(cpuTemp, 1) + "°C</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>DHT22 Temperature:</span><span class='debug-value " + String(dhtTemp != -999.0 ? "success" : "error") + "'>" + String(dhtTemp != -999.0 ? String(dhtTemp, 1) + "°C" : "Error") + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>DHT22 Humidity:</span><span class='debug-value " + String(dhtHumidity != -999.0 ? "success" : "error") + "'>" + String(dhtHumidity != -999.0 ? String(dhtHumidity, 1) + "%" : "Error") + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value'>" + String(ledBrightness) + "/255</span></div>";
+  debugSections += "</div>";
   
   // Timing Information
-  html += "<div class='debug-section'>";
-  html += "<h2>⏰ Timing Information</h2>";
+  debugSections += "<div class='debug-section'>";
+  debugSections += "<h2>⏰ Timing Information</h2>";
   unsigned long currentTime = millis();
-  html += "<div class='debug-item'><span class='debug-label'>Current Time:</span><span class='debug-value'>" + String(currentTime) + " ms</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Last Update Check:</span><span class='debug-value'>" + String(lastUpdateCheck) + " ms</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Time Since Update Check:</span><span class='debug-value'>" + String((currentTime - lastUpdateCheck) / 1000) + " seconds</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Last WiFi Check:</span><span class='debug-value'>" + String(lastWiFiCheck) + " ms</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Time Since WiFi Check:</span><span class='debug-value'>" + String((currentTime - lastWiFiCheck) / 1000) + " seconds</span></div>";
-  html += "</div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Current Time:</span><span class='debug-value'>" + String(currentTime) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Last Update Check:</span><span class='debug-value'>" + String(lastUpdateCheck) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since Update Check:</span><span class='debug-value'>" + String((currentTime - lastUpdateCheck) / 1000) + " seconds</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Last WiFi Check:</span><span class='debug-value'>" + String(lastWiFiCheck) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since WiFi Check:</span><span class='debug-value'>" + String((currentTime - lastWiFiCheck) / 1000) + " seconds</span></div>";
+  debugSections += "</div>";
   
   // Storage Information
-  html += "<div class='debug-section'>";
-  html += "<h2>💾 Storage Information</h2>";
+  debugSections += "<div class='debug-section'>";
+  debugSections += "<h2>💾 Storage Information</h2>";
   size_t totalBytes = LittleFS.totalBytes();
   size_t usedBytes = LittleFS.usedBytes();
-  html += "<div class='debug-item'><span class='debug-label'>LittleFS Total:</span><span class='debug-value'>" + String(totalBytes) + " bytes (" + String(totalBytes/1024) + " KB)</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>LittleFS Used:</span><span class='debug-value'>" + String(usedBytes) + " bytes (" + String(usedBytes/1024) + " KB)</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>LittleFS Free:</span><span class='debug-value'>" + String(totalBytes - usedBytes) + " bytes (" + String((totalBytes - usedBytes)/1024) + " KB)</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Usage Percentage:</span><span class='debug-value'>" + String((usedBytes * 100) / totalBytes) + "%</span></div>";
-  html += "</div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Total:</span><span class='debug-value'>" + String(totalBytes) + " bytes (" + String(totalBytes/1024) + " KB)</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Used:</span><span class='debug-value'>" + String(usedBytes) + " bytes (" + String(usedBytes/1024) + " KB)</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Free:</span><span class='debug-value'>" + String(totalBytes - usedBytes) + " bytes (" + String((totalBytes - usedBytes)/1024) + " KB)</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Usage Percentage:</span><span class='debug-value'>" + String((usedBytes * 100) / totalBytes) + "%</span></div>";
+  debugSections += "</div>";
   
   // Configuration Information
-  html += "<div class='debug-section'>";
-  html += "<h2>⚙️ Configuration</h2>";
+  debugSections += "<div class='debug-section'>";
+  debugSections += "<h2>⚙️ Configuration</h2>";
   preferences.begin("esp-config", true);
   String storedCommit = preferences.getString("last_commit", "Unknown");
   int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
@@ -670,42 +600,16 @@ void handleDebug() {
   String storedSSID = preferences.getString("wifi_ssid", "Not Set");
   preferences.end();
   
-  html += "<div class='debug-item'><span class='debug-label'>Stored Client ID:</span><span class='debug-value'>" + storedClientId + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Stored LED Brightness:</span><span class='debug-value'>" + String(storedBrightness) + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Stored WiFi SSID:</span><span class='debug-value'>" + storedSSID + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Stored Template Commit:</span><span class='debug-value'>" + (storedCommit.length() > 7 ? storedCommit.substring(0, 7) : storedCommit) + "</span></div>";
-  html += "<div class='debug-item'><span class='debug-label'>Stored Firmware Version:</span><span class='debug-value'>" + String(storedFirmwareVersion) + " (v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100) + ")</span></div>";
-  html += "</div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Stored Client ID:</span><span class='debug-value'>" + storedClientId + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Stored LED Brightness:</span><span class='debug-value'>" + String(storedBrightness) + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Stored WiFi SSID:</span><span class='debug-value'>" + storedSSID + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Stored Template Commit:</span><span class='debug-value'>" + (storedCommit.length() > 7 ? storedCommit.substring(0, 7) : storedCommit) + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Stored Firmware Version:</span><span class='debug-value'>" + String(storedFirmwareVersion) + " (v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100) + ")</span></div>";
+  debugSections += "</div>";
   
-  // Manual Actions
-  html += "<div class='debug-section'>";
-  html += "<h2>🔄 Manual Actions</h2>";
-  html += "<button onclick='refreshPage()'>🔄 Refresh Data</button>";
-  html += "<button onclick='testMQTT()'>📡 Test MQTT Connection</button>";
-  html += "<button onclick='testSensors()'>🌡️ Test Sensors</button>";
-  html += "<button onclick='forceFirmwareCheck()'>⬇️ Force Firmware Check</button>";
-  html += "<div id='actionResult' style='margin-top:10px;'></div>";
-  html += "</div>";
+  // Replace placeholder
+  html.replace("{{DEBUG_SECTIONS}}", debugSections);
   
-  html += "<script>";
-  html += "function refreshPage() { location.reload(); }";
-  html += "function testMQTT() {";
-  html += "  document.getElementById('actionResult').innerHTML = '<p style=\"color:blue;\">Testing MQTT connection...</p>';";
-  html += "  // This would need a separate endpoint to test MQTT";
-  html += "  setTimeout(() => { document.getElementById('actionResult').innerHTML = '<p style=\"color:green;\">MQTT test completed (check serial output)</p>'; }, 2000);";
-  html += "}";
-  html += "function testSensors() {";
-  html += "  document.getElementById('actionResult').innerHTML = '<p style=\"color:blue;\">Testing sensors...</p>';";
-  html += "  setTimeout(() => { refreshPage(); }, 2000);";
-  html += "}";
-  html += "function forceFirmwareCheck() {";
-  html += "  document.getElementById('actionResult').innerHTML = '<p style=\"color:blue;\">Checking for firmware updates...</p>';";
-  html += "  // This would trigger a firmware check";
-  html += "  setTimeout(() => { document.getElementById('actionResult').innerHTML = '<p style=\"color:green;\">Firmware check completed (check serial output)</p>'; }, 3000);";
-  html += "}";
-  html += "</script>";
-  
-  html += "</div></body></html>";
   server.send(200, "text/html", html);
 }
 
@@ -776,76 +680,42 @@ void updateStoredCommitHash() {
   }
 }
 
+// --- Template Loading Function ---
+String loadTemplate(const char* templatePath) {
+  String fullPath = "/templates/" + String(templatePath);
+  
+  if (!LittleFS.exists(fullPath)) {
+    Serial.printf("Template not found: %s\n", fullPath.c_str());
+    return "<!DOCTYPE html><html><body><h1>Error: Template not found</h1></body></html>";
+  }
+  
+  File file = LittleFS.open(fullPath, "r");
+  if (!file) {
+    Serial.printf("Failed to open template: %s\n", fullPath.c_str());
+    return "<!DOCTYPE html><html><body><h1>Error: Could not open template</h1></body></html>";
+  }
+  
+  String html = file.readString();
+  file.close();
+  return html;
+}
+
 // --- Template Update Functions ---
 void handleUpdateTemplate() {
-  String html = "<!DOCTYPE html><html><head><title>Update Web Template</title>";
-  html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
-  html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
-  html += "button{background-color:#007bff;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;margin:10px 0;}";
-  html += ".status{margin:20px 0;padding:10px;border-radius:4px;}";
-  html += ".success{background-color:#d4edda;color:#155724;border:1px solid #c3e6cb;}";
-  html += ".error{background-color:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}";
-  html += ".info{background-color:#e7f3ff;padding:10px;border-radius:4px;margin:10px 0;}";
-  html += "</style></head><body><div class='container'>";
-  html += "<h1>Update Web Template</h1>";
-  html += "<p><a href='/'>← Back to Main</a></p>";
-  
-  html += "<div class='info'>";
-  html += "<p>Web templates are now automatically updated with each firmware release.</p>";
-  html += "<p><strong>Repository:</strong> " + String(GITHUB_REPO) + "</p>";
-  html += "<p><strong>File:</strong> data/index.html</p>";
+  String html = loadTemplate("template_update.html");
   
   // Show current template info
   preferences.begin("esp-config", true);
   String currentCommit = preferences.getString("last_commit", "Unknown");
   int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
   preferences.end();
-  html += "<p><strong>Current Template:</strong> " + (currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit) + "</p>";
-  html += "<p><strong>Template Firmware Version:</strong> v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100) + "</p>";
-  html += "<p><strong>Current Firmware Version:</strong> v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100) + "</p>";
-  html += "</div>";
   
-  html += "<p><strong>Note:</strong> Templates automatically update when new firmware is installed via OTA. Manual updates are only needed for testing or troubleshooting.</p>";
+  // Replace placeholders
+  html.replace("{{GITHUB_REPO}}", String(GITHUB_REPO));
+  html.replace("{{CURRENT_COMMIT}}", currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit);
+  html.replace("{{TEMPLATE_FIRMWARE_VERSION}}", "v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100));
+  html.replace("{{CURRENT_FIRMWARE_VERSION}}", "v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100));
   
-  html += "<button onclick='updateTemplate()'>Check for Template Updates</button>";
-  html += "<button onclick='forceUpdate()' style='background-color:#dc3545;margin-left:10px;'>Force Update Template</button>";
-  html += "<div id='status'></div>";
-  
-  html += "<script>";
-  html += "function updateTemplate() {";
-  html += "  document.getElementById('status').innerHTML = '<div class=\"status\">Checking for template updates...</div>';";
-  html += "  fetch('/update-template-action', {method: 'POST'})";
-  html += "    .then(response => response.text())";
-  html += "    .then(data => {";
-  html += "      if (data.includes('success')) {";
-  html += "        document.getElementById('status').innerHTML = '<div class=\"status success\">Template updated successfully! Please refresh the main page to see changes.</div>';";
-  html += "      } else {";
-  html += "        document.getElementById('status').innerHTML = '<div class=\"status error\">Update result: ' + data + '</div>';";
-  html += "      }";
-  html += "    })";
-  html += "    .catch(error => {";
-  html += "      document.getElementById('status').innerHTML = '<div class=\"status error\">Update failed: ' + error + '</div>';";
-  html += "    });";
-  html += "}";
-  html += "function forceUpdate() {";
-  html += "  document.getElementById('status').innerHTML = '<div class=\"status\">Force downloading template from GitHub...</div>';";
-  html += "  fetch('/force-template-update', {method: 'POST'})";
-  html += "    .then(response => response.text())";
-  html += "    .then(data => {";
-  html += "      if (data.includes('success')) {";
-  html += "        document.getElementById('status').innerHTML = '<div class=\"status success\">Template force updated successfully! Please refresh the main page to see changes.</div>';";
-  html += "      } else {";
-  html += "        document.getElementById('status').innerHTML = '<div class=\"status error\">Force update result: ' + data + '</div>';";
-  html += "      }";
-  html += "    })";
-  html += "    .catch(error => {";
-  html += "      document.getElementById('status').innerHTML = '<div class=\"status error\">Force update failed: ' + error + '</div>';";
-  html += "    });";
-  html += "}";
-  html += "</script>";
-  
-  html += "</div></body></html>";
   server.send(200, "text/html", html);
 }
 
@@ -969,21 +839,7 @@ void setupWebServer() {
   
   // Firmware upload routes
   server.on("/firmware", []() {
-    String html = "<!DOCTYPE html><html><head><title>Firmware Update</title>";
-    html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-    html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background-color:#f5f5f5;}";
-    html += ".container{background-color:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}";
-    html += "input[type='file']{margin:10px 0;}";
-    html += "input[type='submit']{background-color:#dc3545;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;}";
-    html += ".warning{background-color:#fff3cd;padding:15px;border-radius:4px;margin:10px 0;border-left:4px solid #ffc107;}";
-    html += "</style></head><body><div class='container'>";
-    html += "<h1>Firmware Update</h1>";
-    html += "<p><a href='/'>← Back to Main</a></p>";
-    html += "<div class='warning'><strong>Warning:</strong> Only upload firmware files (.bin). Incorrect files may brick the device!</div>";
-    html += "<form method='POST' action='/firmware-upload' enctype='multipart/form-data'>";
-    html += "<input type='file' name='firmware' accept='.bin' required>";
-    html += "<input type='submit' value='Upload Firmware'>";
-    html += "</form></div></body></html>";
+    String html = loadTemplate("firmware_upload.html");
     server.send(200, "text/html", html);
   });
   server.on("/firmware-upload", HTTP_POST, handleFirmwareUploadComplete, handleFirmwareUpload);

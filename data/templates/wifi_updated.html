@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WiFi Updated</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .success {
+            color: #28a745;
+        }
+        .wifi-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        .ssid {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="wifi-icon">📶</div>
+        <h1 class="success">WiFi Settings Updated</h1>
+        <p>New SSID:</p>
+        <div class="ssid"><strong>{{NEW_SSID}}</strong></div>
+        <p>Device will restart and connect to the new network...</p>
+        <p>Please connect to the new network to access the device.</p>
+    </div>
+</body>
+</html>

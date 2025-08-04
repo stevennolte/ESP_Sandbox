@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WiFi Configuration</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input[type='text'], input[type='password'] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        input[type='submit'] {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .info {
+            background-color: #e7f3ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>WiFi Configuration</h1>
+        <p><a href='/'>← Back to Main</a></p>
+        
+        <div class='info'>
+            <p><strong>Current WiFi:</strong> {{CURRENT_SSID}}</p>
+            <p><strong>Signal Strength:</strong> {{SIGNAL_STRENGTH}} dBm</p>
+            <p><strong>Status:</strong> {{WIFI_STATUS}}</p>
+        </div>
+        
+        <h2>Change WiFi Network</h2>
+        <form method='POST' action='/wifi-update'>
+            <label for='ssid'>Network Name (SSID):</label>
+            <input type='text' id='ssid' name='ssid' value='' required>
+            <label for='password'>Password:</label>
+            <input type='password' id='password' name='password' value='' required>
+            <input type='submit' value='Update WiFi Settings'>
+        </form>
+        
+        <h2>Available Networks</h2>
+        <p>Scanning for networks...</p>
+        <div id='networks'></div>
+        
+        <script>
+            function scanNetworks() {
+                fetch('/scan-networks').then(response => response.json()).then(data => {
+                    let html = '<ul>';
+                    data.networks.forEach(network => {
+                        html += '<li><strong>' + network.ssid + '</strong> (' + network.rssi + ' dBm) ';
+                        html += network.encrypted ? '[Secured]' : '[Open]';
+                        html += ' <button onclick="document.getElementById(\'ssid\').value=\''+network.ssid+'\'">Use</button></li>';
+                    });
+                    html += '</ul>';
+                    document.getElementById('networks').innerHTML = html;
+                });
+            }
+            scanNetworks();
+        </script>
+    </div>
+</body>
+</html>

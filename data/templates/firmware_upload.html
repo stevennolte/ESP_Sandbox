@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firmware Update</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input[type='file'] {
+            margin: 10px 0;
+        }
+        input[type='submit'] {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .warning {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>Firmware Update</h1>
+        <p><a href='/'>← Back to Main</a></p>
+        <div class='warning'>
+            <strong>Warning:</strong> Only upload firmware files (.bin). Incorrect files may brick the device!
+        </div>
+        <form method='POST' action='/firmware-upload' enctype='multipart/form-data'>
+            <input type='file' name='firmware' accept='.bin' required>
+            <input type='submit' value='Upload Firmware'>
+        </form>
+    </div>
+</body>
+</html>
