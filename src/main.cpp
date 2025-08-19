@@ -22,7 +22,7 @@ Config& config = Config::getInstance();
 Preferences preferences;
 WebServer server(80);
 WiFiClient espClient;
-ESPOTAUpdater otaUpdater(Config::GITHUB_REPO, Config::FIRMWARE_VERSION);
+ESPOTAUpdater otaUpdater(ConfigConstants::Firmware::GITHUB_REPO, ConfigConstants::Firmware::VERSION);
 
 // --- Function Declarations ---
 float readCPUTemperature();
@@ -117,8 +117,8 @@ void setup_wifi() {
   WiFi.begin(config.getWiFiSSID(), config.getWiFiPassword());
   
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < Config::WIFI_MAX_ATTEMPTS) {
-    delay(Config::WIFI_RETRY_DELAY);
+  while (WiFi.status() != WL_CONNECTED && attempts < ConfigConstants::WiFi::MAX_ATTEMPTS) {
+    delay(ConfigConstants::WiFi::RETRY_DELAY);
     Serial.print(".");
     attempts++;
   }
@@ -140,8 +140,8 @@ void checkWiFiConnection() {
     WiFi.begin(config.getWiFiSSID(), config.getWiFiPassword());
     
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < Config::WIFI_RECONNECT_ATTEMPTS) {
-      delay(Config::WIFI_RETRY_DELAY);
+    while (WiFi.status() != WL_CONNECTED && attempts < ConfigConstants::WiFi::RECONNECT_ATTEMPTS) {
+      delay(ConfigConstants::WiFi::RETRY_DELAY);
       Serial.print(".");
       attempts++;
     }
@@ -368,7 +368,7 @@ void handleFirmwareUploadComplete() {
   server.send(200, "text/html", html);
   
   if (!Update.hasError()) {
-    delay(Config::REBOOT_DELAY);
+    delay(ConfigConstants::Timing::REBOOT_DELAY);
     ESP.restart();
   }
 }
@@ -402,7 +402,7 @@ void handleWifiUpdate() {
   
   server.send(200, "text/html", html);
   
-  delay(Config::REBOOT_DELAY);
+  delay(ConfigConstants::Timing::REBOOT_DELAY);
   ESP.restart();
 }
 
@@ -436,7 +436,7 @@ void handleDebug() {
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>💻 System Information</h2>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Board Type:</span><span class='debug-value'>" + getBoardType() + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(Config::FIRMWARE_VERSION) + " (v" + String(Config::FIRMWARE_VERSION/100) + "." + String(Config::FIRMWARE_VERSION%100) + ")</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(ConfigConstants::Firmware::VERSION) + " (v" + String(ConfigConstants::Firmware::VERSION/100) + "." + String(ConfigConstants::Firmware::VERSION%100) + ")</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Chip Model:</span><span class='debug-value'>" + String(ESP.getChipModel()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Chip Cores:</span><span class='debug-value'>" + String(ESP.getChipCores()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>CPU Frequency:</span><span class='debug-value'>" + String(ESP.getCpuFreqMHz()) + " MHz</span></div>";
@@ -516,11 +516,11 @@ void handleDebug() {
 // --- Utility Functions ---
 String makeGitHubAPICall(const String& endpoint) {
   HTTPClient http;
-  String url = "https://api.github.com/repos/" + String(Config::GITHUB_REPO) + "/" + endpoint;
+  String url = "https://api.github.com/repos/" + String(ConfigConstants::Firmware::GITHUB_REPO) + "/" + endpoint;
   
   http.begin(url);
-  http.addHeader("User-Agent", Config::USER_AGENT_CHECKER);
-  http.setTimeout(Config::HTTP_TIMEOUT_SHORT);
+  http.addHeader("User-Agent", ConfigConstants::Network::USER_AGENT_CHECKER);
+  http.setTimeout(ConfigConstants::Network::HTTP_TIMEOUT_SHORT);
   
   int httpCode = http.GET();
   String result = "";
@@ -537,11 +537,11 @@ String makeGitHubAPICall(const String& endpoint) {
 
 bool downloadFileFromGitHub(const String& filePath, const String& localPath) {
   HTTPClient http;
-  String url = "https://raw.githubusercontent.com/" + String(Config::GITHUB_REPO) + "/main/" + filePath;
+  String url = "https://raw.githubusercontent.com/" + String(ConfigConstants::Firmware::GITHUB_REPO) + "/main/" + filePath;
   
   http.begin(url);
-  http.addHeader("User-Agent", Config::USER_AGENT_TEMPLATE);
-  http.setTimeout(Config::HTTP_TIMEOUT_LONG);
+  http.addHeader("User-Agent", ConfigConstants::Network::USER_AGENT_TEMPLATE);
+  http.setTimeout(ConfigConstants::Network::HTTP_TIMEOUT_LONG);
   
   int httpCode = http.GET();
   bool success = false;
@@ -630,10 +630,10 @@ void handleUpdateTemplate() {
   preferences.end();
   
   // Replace placeholders
-  html.replace("{{GITHUB_REPO}}", String(Config::GITHUB_REPO));
+  html.replace("{{GITHUB_REPO}}", String(ConfigConstants::Firmware::GITHUB_REPO));
   html.replace("{{CURRENT_COMMIT}}", currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit);
   html.replace("{{TEMPLATE_FIRMWARE_VERSION}}", "v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100));
-  html.replace("{{CURRENT_FIRMWARE_VERSION}}", "v" + String(Config::FIRMWARE_VERSION/100) + "." + String(Config::FIRMWARE_VERSION%100));
+  html.replace("{{CURRENT_FIRMWARE_VERSION}}", "v" + String(ConfigConstants::Firmware::VERSION/100) + "." + String(ConfigConstants::Firmware::VERSION%100));
   
   server.send(200, "text/html", html);
 }
@@ -787,17 +787,17 @@ void ensureTemplateExists() {
   int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
   preferences.end();
   
-  if (storedFirmwareVersion != Config::FIRMWARE_VERSION) {
+  if (storedFirmwareVersion != ConfigConstants::Firmware::VERSION) {
     Serial.printf("Firmware updated from v%d.%d to v%d.%d, downloading latest templates...\n", 
                   storedFirmwareVersion/100, storedFirmwareVersion%100,
-                  Config::FIRMWARE_VERSION/100, Config::FIRMWARE_VERSION%100);
+                  ConfigConstants::Firmware::VERSION/100, ConfigConstants::Firmware::VERSION%100);
     
     // Download latest templates
     forceTemplateUpdate();
     
     // Update stored firmware version
     preferences.begin("esp-config", false);
-    preferences.putInt("last_firmware_version", Config::FIRMWARE_VERSION);
+    preferences.putInt("last_firmware_version", ConfigConstants::Firmware::VERSION);
     preferences.end();
     
     Serial.println("✓ Templates synchronized with new firmware");
@@ -864,12 +864,12 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n=== ESP32 IoT Device Starting ===");
   Serial.printf("Board Type: %s\n", getBoardType().c_str());
-  Serial.printf("Firmware Version: %d (v%d.%d)\n", Config::FIRMWARE_VERSION, Config::FIRMWARE_VERSION/100, Config::FIRMWARE_VERSION%100);
+  Serial.printf("Firmware Version: %d (v%d.%d)\n", ConfigConstants::Firmware::VERSION, ConfigConstants::Firmware::VERSION/100, ConfigConstants::Firmware::VERSION%100);
   
   // Initialize hardware
-  ledcSetup(Config::LED_CHANNEL, Config::LED_FREQ, Config::LED_RESOLUTION);
-  ledcAttachPin(Config::LED_PIN, Config::LED_CHANNEL);
-  ledcWrite(Config::LED_CHANNEL, 0); // Start with LED off
+  ledcSetup(ConfigConstants::Hardware::LED_CHANNEL, ConfigConstants::Hardware::LED_FREQ, ConfigConstants::Hardware::LED_RESOLUTION);
+  ledcAttachPin(ConfigConstants::Hardware::LED_PIN, ConfigConstants::Hardware::LED_CHANNEL);
+  ledcWrite(ConfigConstants::Hardware::LED_CHANNEL, 0); // Start with LED off
   
   // Initialize filesystem
   if (!LittleFS.begin(true)) {
@@ -931,11 +931,11 @@ void setup() {
 
 void loop() {
   unsigned long currentTime = millis();
-  
+
   // LED heartbeat indicator
-  ledcWrite(Config::LED_CHANNEL, config.led_brightness);
-  delay(Config::LED_PULSE_DURATION);
-  ledcWrite(Config::LED_CHANNEL, 0);
+  ledcWrite(ConfigConstants::Hardware::LED_CHANNEL, config.led_brightness);
+  delay(ConfigConstants::Timing::LED_PULSE_DURATION);
+  ledcWrite(ConfigConstants::Hardware::LED_CHANNEL, 0);
   
   // Handle web server requests
   server.handleClient();
@@ -954,6 +954,6 @@ void loop() {
     config.updateUpdateCheckTime(currentTime);
   }
 
-  delay(Config::MAIN_LOOP_DELAY);
+  delay(ConfigConstants::Timing::MAIN_LOOP_DELAY);
 }
 

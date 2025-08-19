@@ -4,94 +4,183 @@
 #include <Arduino.h>
 #include <Preferences.h>
 
-class Config {
+// --- Configuration Constants ---
+namespace ConfigConstants {
+    // WiFi Configuration
+    namespace WiFi {
+        const int MAX_ATTEMPTS = 15;
+        const int RECONNECT_ATTEMPTS = 20;
+        const int RETRY_DELAY = 500;
+        const unsigned long CHECK_INTERVAL = 30 * 1000; // 30 seconds
+        constexpr const char* DEFAULT_SSID = "SSEI";
+        constexpr const char* DEFAULT_PASSWORD = "Nd14il!la";
+    }
+    
+    // Hardware Configuration
+    namespace Hardware {
+        const int LED_PIN = 2;
+        const int LED_CHANNEL = 0;
+        const int LED_FREQ = 5000;
+        const int LED_RESOLUTION = 8;
+        const int DEFAULT_LED_BRIGHTNESS = 128;
+    }
+    
+    // Timing Configuration
+    namespace Timing {
+        const unsigned long LED_PULSE_DURATION = 50;
+        const unsigned long MAIN_LOOP_DELAY = 1000;
+        const unsigned long NETWORK_STABILIZATION_DELAY = 2000;
+        const unsigned long REBOOT_DELAY = 3000;
+    }
+    
+    // Firmware Configuration
+    namespace Firmware {
+        const int VERSION = 928; // v9.28
+        constexpr const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
+        const unsigned long UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    }
+    
+    // Network Configuration
+    namespace Network {
+        const int HTTP_TIMEOUT_SHORT = 15000;  // 15 seconds
+        const int HTTP_TIMEOUT_LONG = 30000;   // 30 seconds
+        constexpr const char* USER_AGENT_TEMPLATE = "ESP32-Template-Updater";
+        constexpr const char* USER_AGENT_CHECKER = "ESP32-Template-Checker";
+        constexpr const char* DEFAULT_CLIENT_ID = "ESP_Default";
+    }
+}
+
+// --- Configuration Submodules ---
+class WiFiConfig {
 public:
-    // Singleton pattern
-    static Config& getInstance() {
-        static Config instance;
-        return instance;
-    }
-
-    // --- Firmware Configuration ---
-    static const int FIRMWARE_VERSION = 928; // v9.28
-    static constexpr const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
-    static const unsigned long UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
-
-    // --- Default Network Configuration ---
-    static constexpr const char* DEFAULT_WIFI_SSID = "SSEI";
-    static constexpr const char* DEFAULT_WIFI_PASSWORD = "Nd14il!la";
-    static constexpr const char* DEFAULT_CLIENT_ID = "ESP_Default";
-
-    // --- HTTP Configuration ---
-    static const int HTTP_TIMEOUT_SHORT = 15000;  // 15 seconds
-    static const int HTTP_TIMEOUT_LONG = 30000;   // 30 seconds
-    static constexpr const char* USER_AGENT_TEMPLATE = "ESP32-Template-Updater";
-    static constexpr const char* USER_AGENT_CHECKER = "ESP32-Template-Checker";
-
-    // --- Hardware Configuration ---
-    static const int LED_PIN = 2;         // Built-in LED
-    static const int LED_CHANNEL = 0;     // PWM channel
-    static const int LED_FREQ = 5000;     // PWM frequency
-    static const int LED_RESOLUTION = 8;  // 8-bit resolution (0-255)
-    static const int DEFAULT_LED_BRIGHTNESS = 128; // Default brightness (0-255)
-
-    // --- Timing Configuration ---
-    static const unsigned long LED_PULSE_DURATION = 50;
-    static const unsigned long MAIN_LOOP_DELAY = 1000;
-    static const unsigned long NETWORK_STABILIZATION_DELAY = 2000;
-    static const unsigned long REBOOT_DELAY = 3000;
-    static const unsigned long WIFI_CHECK_INTERVAL = 30 * 1000; // Check WiFi every 30 seconds
-
-    // --- Network Constants ---
-    static const int WIFI_MAX_ATTEMPTS = 30;
-    static const int WIFI_RECONNECT_ATTEMPTS = 20;
-    static const int WIFI_RETRY_DELAY = 500;
-
-    // --- Runtime Configuration (changeable) ---
-    String wifi_ssid;
-    String wifi_password;
-    String client_id;
-    int led_brightness;
-    unsigned long last_update_check;
-    unsigned long last_wifi_check;
-
-    // --- Configuration Management ---
+    String ssid;
+    String password;
+    unsigned long last_check_time;
+    
+    // Runtime configurable WiFi parameters
+    int max_attempts;
+    int reconnect_attempts;
+    int retry_delay;
+    
     void begin() {
-        // Initialize with defaults
-        wifi_ssid = DEFAULT_WIFI_SSID;
-        wifi_password = DEFAULT_WIFI_PASSWORD;
-        client_id = DEFAULT_CLIENT_ID;
-        led_brightness = DEFAULT_LED_BRIGHTNESS;
-        last_update_check = 0;
-        last_wifi_check = 0;
+        ssid = ConfigConstants::WiFi::DEFAULT_SSID;
+        password = ConfigConstants::WiFi::DEFAULT_PASSWORD;
+        last_check_time = 0;
+        
+        // Initialize with default values from constants
+        max_attempts = ConfigConstants::WiFi::MAX_ATTEMPTS;
+        reconnect_attempts = ConfigConstants::WiFi::RECONNECT_ATTEMPTS;
+        retry_delay = ConfigConstants::WiFi::RETRY_DELAY;
     }
-
-    void loadFromPreferences() {
-        Preferences prefs;
-        prefs.begin("esp-config", true); // read-only
-        
-        client_id = prefs.getString("client_id", DEFAULT_CLIENT_ID);
-        led_brightness = prefs.getInt("led_brightness", DEFAULT_LED_BRIGHTNESS);
-        
-        // Load WiFi credentials if saved
+    
+    void loadFromPreferences(Preferences& prefs) {
         String saved_ssid = prefs.getString("wifi_ssid", "");
         String saved_password = prefs.getString("wifi_password", "");
         
-        prefs.end();
+        // Load WiFi parameters from preferences
+        max_attempts = prefs.getInt("wifi_max_attempts", ConfigConstants::WiFi::MAX_ATTEMPTS);
+        reconnect_attempts = prefs.getInt("wifi_reconnect_attempts", ConfigConstants::WiFi::RECONNECT_ATTEMPTS);
+        retry_delay = prefs.getInt("wifi_retry_delay", ConfigConstants::WiFi::RETRY_DELAY);
         
-        // Update WiFi credentials if they were saved
         if (saved_ssid.length() > 0) {
-            wifi_ssid = saved_ssid;
-            wifi_password = saved_password;
-        }
-        
-        Serial.printf("✓ Config loaded - Client ID: %s, LED Brightness: %d\n", 
-                     client_id.c_str(), led_brightness);
-        if (saved_ssid.length() > 0) {
-            Serial.printf("✓ Saved WiFi: %s\n", saved_ssid.c_str());
+            ssid = saved_ssid;
+            password = saved_password;
+            Serial.printf("✓ WiFi credentials loaded: %s\n", ssid.c_str());
         }
     }
+    
+    void saveCredentials(const String& newSSID, const String& newPassword) {
+        ssid = newSSID;
+        password = newPassword;
+        Preferences prefs;
+        prefs.begin("esp-config", false);
+        prefs.putString("wifi_ssid", ssid);
+        prefs.putString("wifi_password", password);
+        prefs.end();
+        Serial.printf("✓ WiFi credentials saved: %s\n", ssid.c_str());
+    }
+    
+    void saveWiFiParams(int newMaxAttempts, int newReconnectAttempts, int newRetryDelay) {
+        max_attempts = newMaxAttempts;
+        reconnect_attempts = newReconnectAttempts;
+        retry_delay = newRetryDelay;
+        
+        Preferences prefs;
+        prefs.begin("esp-config", false);
+        prefs.putInt("wifi_max_attempts", max_attempts);
+        prefs.putInt("wifi_reconnect_attempts", reconnect_attempts);
+        prefs.putInt("wifi_retry_delay", retry_delay);
+        prefs.end();
+        
+        Serial.printf("✓ WiFi parameters saved: max_attempts=%d, reconnect_attempts=%d, retry_delay=%d\n", 
+                     max_attempts, reconnect_attempts, retry_delay);
+    }
+    
+    bool shouldCheck(unsigned long currentTime) {
+        return (currentTime - last_check_time) > ConfigConstants::WiFi::CHECK_INTERVAL;
+    }
+    
+    void updateCheckTime(unsigned long currentTime) {
+        last_check_time = currentTime;
+    }
+    
+    const char* getSSID() const { return ssid.c_str(); }
+    const char* getPassword() const { return password.c_str(); }
+};
 
+class HardwareConfig {
+public:
+    int led_brightness;
+    
+    void begin() {
+        led_brightness = ConfigConstants::Hardware::DEFAULT_LED_BRIGHTNESS;
+    }
+    
+    void loadFromPreferences(Preferences& prefs) {
+        led_brightness = prefs.getInt("led_brightness", ConfigConstants::Hardware::DEFAULT_LED_BRIGHTNESS);
+        Serial.printf("✓ LED brightness loaded: %d\n", led_brightness);
+    }
+    
+    void saveBrightness(int brightness) {
+        led_brightness = brightness;
+        Preferences prefs;
+        prefs.begin("esp-config", false);
+        prefs.putInt("led_brightness", led_brightness);
+        prefs.end();
+        Serial.printf("✓ LED brightness saved: %d\n", led_brightness);
+    }
+};
+
+class FirmwareConfig {
+public:
+    unsigned long last_update_check;
+    
+    void begin() {
+        last_update_check = 0;
+    }
+    
+    bool shouldCheckUpdates(unsigned long currentTime) {
+        return (currentTime - last_update_check) > ConfigConstants::Firmware::UPDATE_INTERVAL;
+    }
+    
+    void updateCheckTime(unsigned long currentTime) {
+        last_update_check = currentTime;
+    }
+};
+
+class NetworkConfig {
+public:
+    String client_id;
+    
+    void begin() {
+        client_id = ConfigConstants::Network::DEFAULT_CLIENT_ID;
+    }
+    
+    void loadFromPreferences(Preferences& prefs) {
+        client_id = prefs.getString("client_id", ConfigConstants::Network::DEFAULT_CLIENT_ID);
+        Serial.printf("✓ Client ID loaded: %s\n", client_id.c_str());
+    }
+    
     void saveClientId(const String& newClientId) {
         client_id = newClientId;
         Preferences prefs;
@@ -100,48 +189,73 @@ public:
         prefs.end();
         Serial.printf("✓ Client ID saved: %s\n", client_id.c_str());
     }
-
-    void saveLedBrightness(int brightness) {
-        led_brightness = brightness;
-        Preferences prefs;
-        prefs.begin("esp-config", false);
-        prefs.putInt("led_brightness", led_brightness);
-        prefs.end();
-        Serial.printf("✓ LED brightness saved: %d\n", led_brightness);
-    }
-
-    void saveWiFiCredentials(const String& ssid, const String& password) {
-        wifi_ssid = ssid;
-        wifi_password = password;
-        Preferences prefs;
-        prefs.begin("esp-config", false);
-        prefs.putString("wifi_ssid", wifi_ssid);
-        prefs.putString("wifi_password", wifi_password);
-        prefs.end();
-        Serial.printf("✓ WiFi credentials saved: %s\n", wifi_ssid.c_str());
-    }
-
-    // --- Helper Methods ---
-    bool shouldCheckWiFi(unsigned long currentTime) {
-        return (currentTime - last_wifi_check) > WIFI_CHECK_INTERVAL;
-    }
-
-    bool shouldCheckUpdates(unsigned long currentTime) {
-        return (currentTime - last_update_check) > UPDATE_INTERVAL;
-    }
-
-    void updateWiFiCheckTime(unsigned long currentTime) {
-        last_wifi_check = currentTime;
-    }
-
-    void updateUpdateCheckTime(unsigned long currentTime) {
-        last_update_check = currentTime;
-    }
-
-    // --- Getters for const char* compatibility ---
-    const char* getWiFiSSID() const { return wifi_ssid.c_str(); }
-    const char* getWiFiPassword() const { return wifi_password.c_str(); }
+    
     const char* getClientId() const { return client_id.c_str(); }
+};
+
+// --- Main Configuration Class ---
+class Config {
+public:
+    // Configuration submodules
+    WiFiConfig wifi;
+    HardwareConfig hardware;
+    FirmwareConfig firmware;
+    NetworkConfig network;
+    
+    // Singleton pattern
+    static Config& getInstance() {
+        static Config instance;
+        return instance;
+    }
+    
+    void begin() {
+        wifi.begin();
+        hardware.begin();
+        firmware.begin();
+        network.begin();
+    }
+    
+    void loadFromPreferences() {
+        Preferences prefs;
+        prefs.begin("esp-config", true); // read-only
+        
+        wifi.loadFromPreferences(prefs);
+        hardware.loadFromPreferences(prefs);
+        network.loadFromPreferences(prefs);
+        
+        prefs.end();
+        
+        Serial.println("✓ All configuration loaded from preferences");
+    }
+    
+    // Convenience methods for backward compatibility
+    const char* getWiFiSSID() const { return wifi.getSSID(); }
+    const char* getWiFiPassword() const { return wifi.getPassword(); }
+    const char* getClientId() const { return network.getClientId(); }
+    
+    void saveClientId(const String& newClientId) { network.saveClientId(newClientId); }
+    void saveLedBrightness(int brightness) { hardware.saveBrightness(brightness); }
+    void saveWiFiCredentials(const String& ssid, const String& password) { 
+        wifi.saveCredentials(ssid, password); 
+    }
+    void saveWiFiParams(int maxAttempts, int reconnectAttempts, int retryDelay) {
+        wifi.saveWiFiParams(maxAttempts, reconnectAttempts, retryDelay);
+    }
+    
+    // Timing helper methods
+    bool shouldCheckWiFi(unsigned long currentTime) { return wifi.shouldCheck(currentTime); }
+    bool shouldCheckUpdates(unsigned long currentTime) { return firmware.shouldCheckUpdates(currentTime); }
+    
+    void updateWiFiCheckTime(unsigned long currentTime) { wifi.updateCheckTime(currentTime); }
+    void updateUpdateCheckTime(unsigned long currentTime) { firmware.updateCheckTime(currentTime); }
+    
+    // Legacy property access for backward compatibility
+    String& wifi_ssid = wifi.ssid;
+    String& wifi_password = wifi.password;
+    String& client_id = network.client_id;
+    int& led_brightness = hardware.led_brightness;
+    unsigned long& last_update_check = firmware.last_update_check;
+    unsigned long& last_wifi_check = wifi.last_check_time;
 
 private:
     Config() = default;

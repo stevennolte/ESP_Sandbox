@@ -13,6 +13,15 @@
 			"problemMatcher": [
 				"$platformio"
 			]
+		},
+		{
+			"label": "Build ESP32 Project",
+			"type": "shell",
+			"command": "platformio run",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
 		}
 	]
 }
