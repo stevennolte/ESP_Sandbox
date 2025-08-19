@@ -1,78 +1,31 @@
 /*
  * ESP32 IoT Device with OTA Updates
- * Features: LED control, MQTT integration, Web interface, OTA updates
+ * Features: LED control, Web interface, OTA updates
  */
 
-#include <DHT.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <LittleFS.h>
-#include <ESPMQTTManager.h>
 #include <ESPOTAUpdater.h>
 #include <Update.h>
 #include <FS.h>
 #include <HTTPClient.h>
+#include "Config.h"
 
-// --- Configuration Constants ---
-const char* mqtt_user = "steve";
-const char* mqtt_pass = "Doctor*9";
-const int FIRMWARE_VERSION = 928; // v9.14
-const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
-const unsigned long updateInterval = 5 * 60 * 1000; // 5 minutes
-String wifi_ssid = "SSEI";         // Default SSID, can be updated via web interface
-String wifi_password = "Nd14il!la"; // Default password, can be updated via web interface
-
-// --- HTTP Constants ---
-const int HTTP_TIMEOUT_SHORT = 15000;  // 15 seconds
-const int HTTP_TIMEOUT_LONG = 30000;   // 30 seconds
-const char* USER_AGENT_TEMPLATE = "ESP32-Template-Updater";
-const char* USER_AGENT_CHECKER = "ESP32-Template-Checker";
-
-// --- Hardware Configuration ---
-#define DHT_PIN 4          // DHT22 data pin
-#define DHT_TYPE DHT22     // DHT sensor type
-const int ledPin = 2;         // Built-in LED
-const int ledChannel = 0;     // PWM channel
-const int ledFreq = 5000;     // PWM frequency
-const int ledResolution = 8;  // 8-bit resolution (0-255)
-
-// --- Network Configuration ---
-String mqtt_server_ip = "192.168.1.12"; // Default fallback IP
-const int mqtt_port = 1883;
-String client_id = "ESP_Default"; // Loaded from preferences
-
-// --- Global Variables ---
-int ledBrightness = 128;  // Default brightness (0-255)
-unsigned long lastUpdateCheck = 0;
-unsigned long lastWiFiCheck = 0;
-const unsigned long wifiCheckInterval = 30 * 1000; // Check WiFi every 30 seconds
-
-// --- Timing Constants ---
-const unsigned long LED_PULSE_DURATION = 50;
-const unsigned long MAIN_LOOP_DELAY = 1000;
-const unsigned long NETWORK_STABILIZATION_DELAY = 2000;
-const unsigned long REBOOT_DELAY = 3000;
-
-// --- Network Constants ---
-const int WIFI_MAX_ATTEMPTS = 30;
-const int WIFI_RECONNECT_ATTEMPTS = 20;
-const int WIFI_RETRY_DELAY = 500;
+// Get config instance
+Config& config = Config::getInstance();
 
 // --- Object Instances ---
 Preferences preferences;
 WebServer server(80);
-DHT dht(DHT_PIN, DHT_TYPE);
 WiFiClient espClient;
-ESPMQTTManager mqttManager(mqtt_user, mqtt_pass, "192.168.1.12", mqtt_port);
-ESPOTAUpdater otaUpdater(GITHUB_REPO, FIRMWARE_VERSION);
+ESPOTAUpdater otaUpdater(Config::GITHUB_REPO, Config::FIRMWARE_VERSION);
 
 // --- Function Declarations ---
 float readCPUTemperature();
-float readDHTTemperature();
-float readDHTHumidity();
 String getBoardType();
 void setup_wifi();
 void checkWiFiConnection();
@@ -86,12 +39,12 @@ void handleFirmwareUploadComplete();
 void handleWifiConfig();
 void handleWifiUpdate();
 void handleNetworkScan();
-void handleUpdateTemplate();
-void handleUpdateTemplateAction();
-void handleForceTemplateUpdate();
-void checkForTemplateUpdate();
-bool downloadTemplate();
-void forceTemplateUpdate();
+void handleRoot();
+void handleSetClientId();
+void handleBrightness();
+void handleReboot();
+void setupWebServer();
+void loadClientId();
 void ensureTemplateExists();
 void handleDebug();
 
@@ -100,6 +53,9 @@ String makeGitHubAPICall(const String& endpoint);
 bool downloadFileFromGitHub(const String& filePath, const String& localPath);
 void updateStoredCommitHash();
 String loadTemplate(const char* templatePath);
+bool downloadTemplate();
+void checkForTemplateUpdate();
+void forceTemplateUpdate();
 
 // --- OTA Update Callbacks ---
 void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
@@ -152,67 +108,40 @@ float readCPUTemperature() {
   return temperatureRead();
 }
 
-float readDHTTemperature() {
-  float temp = dht.readTemperature();
-  if (isnan(temp)) {
-    Serial.println("Failed to read temperature from DHT sensor!");
-    return -999.0; // Return error value
-  }
-  return temp;
-}
-
-float readDHTHumidity() {
-  float humidity = dht.readHumidity();
-  if (isnan(humidity)) {
-    Serial.println("Failed to read humidity from DHT sensor!");
-    return -999.0; // Return error value
-  }
-  return humidity;
-}
-
-// --- WiFi Setup ---
+// --- WiFi Management Functions ---
 void setup_wifi() {
-  Serial.print("Connecting to WiFi");
+  Serial.println("Setting up WiFi connection...");
+  Serial.printf("Connecting to: %s\n", config.getWiFiSSID());
   
-  // Configure WiFi for better reconnection behavior
   WiFi.mode(WIFI_STA);
-  WiFi.setAutoReconnect(true);
-  WiFi.persistent(true);
-  
-  WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
+  WiFi.begin(config.getWiFiSSID(), config.getWiFiPassword());
   
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < WIFI_MAX_ATTEMPTS) {
-    delay(WIFI_RETRY_DELAY);
+  while (WiFi.status() != WL_CONNECTED && attempts < Config::WIFI_MAX_ATTEMPTS) {
+    delay(Config::WIFI_RETRY_DELAY);
     Serial.print(".");
     attempts++;
   }
   
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\nWiFi connected!");
+    Serial.println("\n✓ WiFi connected!");
     Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("Signal strength: %d dBm\n", WiFi.RSSI());
-    Serial.printf("MAC address: %s\n", WiFi.macAddress().c_str());
   } else {
-    Serial.println("\nFailed to connect to WiFi!");
+    Serial.println("\n✗ Failed to connect to WiFi");
+    Serial.println("Please check your WiFi credentials in the web interface");
   }
-  
-  delay(NETWORK_STABILIZATION_DELAY);
 }
 
-// --- WiFi Connection Monitor ---
 void checkWiFiConnection() {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi connection lost! Attempting to reconnect...");
-    
-    // Try to reconnect
+    Serial.println("\n⚠ WiFi connection lost. Attempting to reconnect...");
     WiFi.disconnect();
-    delay(1000);
-    WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
+    WiFi.begin(config.getWiFiSSID(), config.getWiFiPassword());
     
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < WIFI_RECONNECT_ATTEMPTS) {
-      delay(WIFI_RETRY_DELAY);
+    while (WiFi.status() != WL_CONNECTED && attempts < Config::WIFI_RECONNECT_ATTEMPTS) {
+      delay(Config::WIFI_RETRY_DELAY);
       Serial.print(".");
       attempts++;
     }
@@ -242,18 +171,11 @@ String loadHTMLTemplate(const char* filename) {
   file.close();
   
   // Replace placeholders with actual values
-  html.replace("{{CLIENT_ID}}", client_id);
+  html.replace("{{CLIENT_ID}}", config.client_id);
   html.replace("{{IP_ADDRESS}}", WiFi.localIP().toString());
-  html.replace("{{LED_BRIGHTNESS}}", String(ledBrightness));
-  html.replace("{{MQTT_SERVER}}", mqtt_server_ip);
+  html.replace("{{LED_BRIGHTNESS}}", String(config.led_brightness));
   html.replace("{{WIFI_RSSI}}", String(WiFi.RSSI()));
   html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
-  
-  // Add environmental sensor data
-  float dhtTemp = readDHTTemperature();
-  float dhtHumidity = readDHTHumidity();
-  html.replace("{{DHT_TEMPERATURE}}", dhtTemp != -999.0 ? String(dhtTemp, 1) + "°C" : "Error");
-  html.replace("{{DHT_HUMIDITY}}", dhtHumidity != -999.0 ? String(dhtHumidity, 1) + "%" : "Error");
   
   // Add template version info
   preferences.begin("esp-config", true);
@@ -274,34 +196,24 @@ void handleSetClientId() {
   if (server.hasArg("client_id")) {
     String newClientId = server.arg("client_id");
     if (newClientId.length() > 0 && newClientId.length() <= 32) {
-      client_id = newClientId;
-      preferences.begin("esp-config", false);
-      preferences.putString("client_id", client_id);
-      preferences.end();
-      
-      // Update MQTT topics with new client_id
-      mqttManager.updateTopics(client_id);
+      config.saveClientId(newClientId);
       
       // Restart mDNS with new hostname
       MDNS.end();
-      if (!MDNS.begin(client_id.c_str())) {
+      if (!MDNS.begin(config.getClientId())) {
         Serial.println("Error restarting mDNS with new hostname");
       } else {
-        Serial.println("mDNS restarted with new hostname: " + client_id);
+        Serial.println("mDNS restarted with new hostname: " + config.client_id);
         MDNS.addService("http", "tcp", 80);
       }
       
       String html = loadTemplate("simple_response.html");
       html.replace("{{TITLE}}", "Updated");
       html.replace("{{HEADER}}", "Client ID Updated");
-      html.replace("{{MESSAGE}}", "New Client ID: <strong>" + client_id + "</strong>");
+      html.replace("{{MESSAGE}}", "New Client ID: <strong>" + config.client_id + "</strong>");
       html.replace("{{EXTRA_CONTENT}}", 
-        "<p>New mDNS address: <strong>http://" + client_id + ".local</strong></p>"
-        "<p>Device will reconnect to MQTT with new ID.</p>");
+        "<p>New mDNS address: <strong>http://" + config.client_id + ".local</strong></p>");
       server.send(200, "text/html", html);
-      
-      // Force MQTT reconnection with new client ID
-      mqttManager.disconnect();
     } else {
       server.send(400, "text/plain", "Invalid client ID. Must be 1-32 characters.");
     }
@@ -314,15 +226,12 @@ void handleBrightness() {
   if (server.hasArg("brightness")) {
     int newBrightness = server.arg("brightness").toInt();
     if (newBrightness >= 0 && newBrightness <= 255) {
-      ledBrightness = newBrightness;
-      preferences.begin("esp-config", false);
-      preferences.putInt("led_brightness", ledBrightness);
-      preferences.end();
+      config.saveLedBrightness(newBrightness);
       
       String html = loadTemplate("simple_response.html");
       html.replace("{{TITLE}}", "Brightness Updated");
       html.replace("{{HEADER}}", "LED Brightness Updated");
-      html.replace("{{MESSAGE}}", "New Brightness: <strong>" + String(ledBrightness) + "</strong>");
+      html.replace("{{MESSAGE}}", "New Brightness: <strong>" + String(config.led_brightness) + "</strong>");
       html.replace("{{EXTRA_CONTENT}}", "");
       server.send(200, "text/html", html);
     } else {
@@ -459,7 +368,7 @@ void handleFirmwareUploadComplete() {
   server.send(200, "text/html", html);
   
   if (!Update.hasError()) {
-    delay(REBOOT_DELAY);
+    delay(Config::REBOOT_DELAY);
     ESP.restart();
   }
 }
@@ -485,18 +394,15 @@ void handleWifiUpdate() {
   String newSSID = server.arg("ssid");
   String newPassword = server.arg("password");
   
-  // Save new WiFi credentials to preferences
-  preferences.begin("esp-config", false);
-  preferences.putString("wifi_ssid", newSSID);
-  preferences.putString("wifi_password", newPassword);
-  preferences.end();
+  // Save new WiFi credentials using config
+  config.saveWiFiCredentials(newSSID, newPassword);
   
   String html = loadTemplate("wifi_updated.html");
   html.replace("{{NEW_SSID}}", newSSID);
   
   server.send(200, "text/html", html);
   
-  delay(REBOOT_DELAY);
+  delay(Config::REBOOT_DELAY);
   ESP.restart();
 }
 
@@ -530,7 +436,7 @@ void handleDebug() {
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>💻 System Information</h2>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Board Type:</span><span class='debug-value'>" + getBoardType() + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(FIRMWARE_VERSION) + " (v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100) + ")</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(Config::FIRMWARE_VERSION) + " (v" + String(Config::FIRMWARE_VERSION/100) + "." + String(Config::FIRMWARE_VERSION%100) + ")</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Chip Model:</span><span class='debug-value'>" + String(ESP.getChipModel()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Chip Cores:</span><span class='debug-value'>" + String(ESP.getChipCores()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>CPU Frequency:</span><span class='debug-value'>" + String(ESP.getCpuFreqMHz()) + " MHz</span></div>";
@@ -551,20 +457,14 @@ void handleDebug() {
   debugSections += "<div class='debug-item'><span class='debug-label'>DNS:</span><span class='debug-value'>" + WiFi.dnsIP().toString() + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>MAC Address:</span><span class='debug-value'>" + WiFi.macAddress() + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Signal Strength:</span><span class='debug-value'>" + String(WiFi.RSSI()) + " dBm</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>MQTT Status:</span><span class='debug-value " + String(mqttManager.isConnected() ? "success" : "error") + "'>" + String(mqttManager.isConnected() ? "Connected" : "Disconnected") + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>MQTT Server:</span><span class='debug-value'>" + mqtt_server_ip + ":" + String(mqtt_port) + "</span></div>";
   debugSections += "</div>";
   
   // Sensor Information
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>🌡️ Sensor Information</h2>";
   float cpuTemp = readCPUTemperature();
-  float dhtTemp = readDHTTemperature();
-  float dhtHumidity = readDHTHumidity();
   debugSections += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value'>" + String(cpuTemp, 1) + "°C</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>DHT22 Temperature:</span><span class='debug-value " + String(dhtTemp != -999.0 ? "success" : "error") + "'>" + String(dhtTemp != -999.0 ? String(dhtTemp, 1) + "°C" : "Error") + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>DHT22 Humidity:</span><span class='debug-value " + String(dhtHumidity != -999.0 ? "success" : "error") + "'>" + String(dhtHumidity != -999.0 ? String(dhtHumidity, 1) + "%" : "Error") + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value'>" + String(ledBrightness) + "/255</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value'>" + String(config.led_brightness) + "/255</span></div>";
   debugSections += "</div>";
   
   // Timing Information
@@ -572,10 +472,10 @@ void handleDebug() {
   debugSections += "<h2>⏰ Timing Information</h2>";
   unsigned long currentTime = millis();
   debugSections += "<div class='debug-item'><span class='debug-label'>Current Time:</span><span class='debug-value'>" + String(currentTime) + " ms</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Last Update Check:</span><span class='debug-value'>" + String(lastUpdateCheck) + " ms</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since Update Check:</span><span class='debug-value'>" + String((currentTime - lastUpdateCheck) / 1000) + " seconds</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Last WiFi Check:</span><span class='debug-value'>" + String(lastWiFiCheck) + " ms</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since WiFi Check:</span><span class='debug-value'>" + String((currentTime - lastWiFiCheck) / 1000) + " seconds</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Last Update Check:</span><span class='debug-value'>" + String(config.last_update_check) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since Update Check:</span><span class='debug-value'>" + String((currentTime - config.last_update_check) / 1000) + " seconds</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Last WiFi Check:</span><span class='debug-value'>" + String(config.last_wifi_check) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since WiFi Check:</span><span class='debug-value'>" + String((currentTime - config.last_wifi_check) / 1000) + " seconds</span></div>";
   debugSections += "</div>";
   
   // Storage Information
@@ -616,11 +516,11 @@ void handleDebug() {
 // --- Utility Functions ---
 String makeGitHubAPICall(const String& endpoint) {
   HTTPClient http;
-  String url = "https://api.github.com/repos/" + String(GITHUB_REPO) + "/" + endpoint;
+  String url = "https://api.github.com/repos/" + String(Config::GITHUB_REPO) + "/" + endpoint;
   
   http.begin(url);
-  http.addHeader("User-Agent", USER_AGENT_CHECKER);
-  http.setTimeout(HTTP_TIMEOUT_SHORT);
+  http.addHeader("User-Agent", Config::USER_AGENT_CHECKER);
+  http.setTimeout(Config::HTTP_TIMEOUT_SHORT);
   
   int httpCode = http.GET();
   String result = "";
@@ -637,11 +537,11 @@ String makeGitHubAPICall(const String& endpoint) {
 
 bool downloadFileFromGitHub(const String& filePath, const String& localPath) {
   HTTPClient http;
-  String url = "https://raw.githubusercontent.com/" + String(GITHUB_REPO) + "/main/" + filePath;
+  String url = "https://raw.githubusercontent.com/" + String(Config::GITHUB_REPO) + "/main/" + filePath;
   
   http.begin(url);
-  http.addHeader("User-Agent", USER_AGENT_TEMPLATE);
-  http.setTimeout(HTTP_TIMEOUT_LONG);
+  http.addHeader("User-Agent", Config::USER_AGENT_TEMPLATE);
+  http.setTimeout(Config::HTTP_TIMEOUT_LONG);
   
   int httpCode = http.GET();
   bool success = false;
@@ -669,7 +569,8 @@ bool downloadFileFromGitHub(const String& filePath, const String& localPath) {
 void updateStoredCommitHash() {
   String response = makeGitHubAPICall("commits/main");
   if (response.length() > 0) {
-    StaticJsonDocument<1024> doc;
+    JsonDocument doc;
+    doc.shrinkToFit();
     if (deserializeJson(doc, response) == DeserializationError::Ok) {
       String latestCommit = doc["sha"].as<String>();
       preferences.begin("esp-config", false);
@@ -729,10 +630,10 @@ void handleUpdateTemplate() {
   preferences.end();
   
   // Replace placeholders
-  html.replace("{{GITHUB_REPO}}", String(GITHUB_REPO));
+  html.replace("{{GITHUB_REPO}}", String(Config::GITHUB_REPO));
   html.replace("{{CURRENT_COMMIT}}", currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit);
   html.replace("{{TEMPLATE_FIRMWARE_VERSION}}", "v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100));
-  html.replace("{{CURRENT_FIRMWARE_VERSION}}", "v" + String(FIRMWARE_VERSION/100) + "." + String(FIRMWARE_VERSION%100));
+  html.replace("{{CURRENT_FIRMWARE_VERSION}}", "v" + String(Config::FIRMWARE_VERSION/100) + "." + String(Config::FIRMWARE_VERSION%100));
   
   server.send(200, "text/html", html);
 }
@@ -827,7 +728,8 @@ void checkForTemplateUpdate() {
     return;
   }
 
-  StaticJsonDocument<1024> doc;
+  JsonDocument doc;
+  doc.shrinkToFit();
   if (deserializeJson(doc, response) != DeserializationError::Ok) {
     Serial.println("Failed to parse GitHub API response");
     return;
@@ -885,17 +787,17 @@ void ensureTemplateExists() {
   int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
   preferences.end();
   
-  if (storedFirmwareVersion != FIRMWARE_VERSION) {
+  if (storedFirmwareVersion != Config::FIRMWARE_VERSION) {
     Serial.printf("Firmware updated from v%d.%d to v%d.%d, downloading latest templates...\n", 
                   storedFirmwareVersion/100, storedFirmwareVersion%100,
-                  FIRMWARE_VERSION/100, FIRMWARE_VERSION%100);
+                  Config::FIRMWARE_VERSION/100, Config::FIRMWARE_VERSION%100);
     
     // Download latest templates
     forceTemplateUpdate();
     
     // Update stored firmware version
     preferences.begin("esp-config", false);
-    preferences.putInt("last_firmware_version", FIRMWARE_VERSION);
+    preferences.putInt("last_firmware_version", Config::FIRMWARE_VERSION);
     preferences.end();
     
     Serial.println("✓ Templates synchronized with new firmware");
@@ -907,11 +809,11 @@ void ensureTemplateExists() {
 // --- Web Server Setup ---
 void setupWebServer() {
   // Initialize mDNS
-  if (!MDNS.begin(client_id.c_str())) {
+  if (!MDNS.begin(config.getClientId())) {
     Serial.println("ERROR: mDNS failed to start");
   } else {
     MDNS.addService("http", "tcp", 80);
-    Serial.printf("✓ mDNS: http://%s.local\n", client_id.c_str());
+    Serial.printf("✓ mDNS: http://%s.local\n", config.getClientId());
   }
   
   // Setup routes
@@ -951,47 +853,23 @@ void setupWebServer() {
 
 // --- Configuration Management ---
 void loadClientId() {
-  preferences.begin("esp-config", true); // read-only
-  client_id = preferences.getString("client_id", "ESP_Default");
-  ledBrightness = preferences.getInt("led_brightness", 128);
-  
-  // Load WiFi credentials if saved
-  String saved_ssid = preferences.getString("wifi_ssid", "");
-  String saved_password = preferences.getString("wifi_password", "");
-  
-  preferences.end();
-  
-  // Update WiFi credentials if they were saved
-  if (saved_ssid.length() > 0) {
-    wifi_ssid = saved_ssid;
-    wifi_password = saved_password;
-  }
-  
-  // Update MQTT topics with loaded client_id
-  mqttManager.updateTopics(client_id);
-  
-  Serial.printf("✓ Client ID: %s\n", client_id.c_str());
-  Serial.printf("✓ LED Brightness: %d\n", ledBrightness);
-  if (saved_ssid.length() > 0) {
-    Serial.printf("✓ Saved WiFi: %s\n", saved_ssid.c_str());
-  }
+  config.loadFromPreferences();
 }
 
 void setup() {
+  // Initialize configuration
+  config.begin();
+  
   // Initialize serial communication
   Serial.begin(115200);
   Serial.println("\n=== ESP32 IoT Device Starting ===");
   Serial.printf("Board Type: %s\n", getBoardType().c_str());
-  Serial.printf("Firmware Version: %d (v%d.%d)\n", FIRMWARE_VERSION, FIRMWARE_VERSION/100, FIRMWARE_VERSION%100);
+  Serial.printf("Firmware Version: %d (v%d.%d)\n", Config::FIRMWARE_VERSION, Config::FIRMWARE_VERSION/100, Config::FIRMWARE_VERSION%100);
   
   // Initialize hardware
-  ledcSetup(ledChannel, ledFreq, ledResolution);
-  ledcAttachPin(ledPin, ledChannel);
-  ledcWrite(ledChannel, 0); // Start with LED off
-  
-  // Initialize DHT sensor
-  dht.begin();
-  Serial.println("✓ DHT22 sensor initialized");
+  ledcSetup(Config::LED_CHANNEL, Config::LED_FREQ, Config::LED_RESOLUTION);
+  ledcAttachPin(Config::LED_PIN, Config::LED_CHANNEL);
+  ledcWrite(Config::LED_CHANNEL, 0); // Start with LED off
   
   // Initialize filesystem
   if (!LittleFS.begin(true)) {
@@ -1046,13 +924,7 @@ void setup() {
   // Perform initial update check
   Serial.println("Checking for firmware updates...");
   otaUpdater.checkForUpdates();
-  lastUpdateCheck = millis();
-  
-  // Initialize MQTT (moved to end for better stability)
-  mqtt_server_ip = mqttManager.discoverServer();
-  mqttManager.updateServerIP(mqtt_server_ip);
-  mqttManager.begin(client_id);
-  Serial.printf("✓ MQTT server: %s\n", mqtt_server_ip.c_str());
+  config.updateUpdateCheckTime(millis());
   
   Serial.println("=== Setup Complete ===\n");
 }
@@ -1061,72 +933,27 @@ void loop() {
   unsigned long currentTime = millis();
   
   // LED heartbeat indicator
-  ledcWrite(ledChannel, ledBrightness);
-  delay(LED_PULSE_DURATION);
-  ledcWrite(ledChannel, 0);
+  ledcWrite(Config::LED_CHANNEL, config.led_brightness);
+  delay(Config::LED_PULSE_DURATION);
+  ledcWrite(Config::LED_CHANNEL, 0);
   
   // Handle web server requests
   server.handleClient();
-  
-  // MQTT connection and message handling
-  if (!mqttManager.isConnected()) {
-    mqttManager.connect();
-  }
-  mqttManager.loop();
 
   // Periodic tasks with timing
   
   // WiFi connection monitoring (every 30 seconds)
-  if (currentTime - lastWiFiCheck > wifiCheckInterval) {
+  if (config.shouldCheckWiFi(currentTime)) {
     checkWiFiConnection();
-    lastWiFiCheck = currentTime;
+    config.updateWiFiCheckTime(currentTime);
   }
   
-  // Environmental data publishing (every 10 seconds)
-  if (mqttManager.shouldPublishTemperature(currentTime)) {
-    float cpuTemp = readCPUTemperature();
-    float dhtTemp = readDHTTemperature();
-    float dhtHumidity = readDHTHumidity();
-    
-    // Publish CPU temperature (for system monitoring)
-    mqttManager.publishCpuTemperature(cpuTemp);
-    // mqttManager.publishTemperature(dhtTemp);
-    // Publish DHT22 data (environmental monitoring)
-    if (dhtTemp != -999.0) {
-      Serial.printf("DHT Temperature: %.1f°C\n", dhtTemp);
-      mqttManager.publishTemperature(dhtTemp);
-      // TODO: Add publishEnvironmentalTemperature method to MQTT manager
-    }
-    
-    if (dhtHumidity != -999.0) {
-      Serial.printf("DHT Humidity: %.1f%%\n", dhtHumidity);
-      // TODO: Add publishHumidity method to MQTT manager
-    }
-    
-    mqttManager.updateLastPublishTime(currentTime);
-  }
-
-  // Firmware version publishing (every 5 minutes)
-  if (mqttManager.shouldPublishFirmwareVersion(currentTime)) {
-    mqttManager.publishFirmwareVersion(FIRMWARE_VERSION);
-    mqttManager.updateLastVersionPublishTime(currentTime);
-  }
-
   // OTA update checking (every 5 minutes)
-  if (currentTime - lastUpdateCheck > updateInterval) {
+  if (config.shouldCheckUpdates(currentTime)) {
     otaUpdater.checkForUpdates();
-    lastUpdateCheck = currentTime;
+    config.updateUpdateCheckTime(currentTime);
   }
 
-  // MQTT server re-discovery (every 15 minutes)
-  if (mqttManager.shouldRediscoverServer(currentTime)) {
-    Serial.println("Re-discovering MQTT server...");
-    String newMQTTServer = mqttManager.discoverServer();
-    mqttManager.updateServerIP(newMQTTServer);
-    mqtt_server_ip = newMQTTServer;
-    mqttManager.updateLastDiscoveryTime(currentTime);
-  }
-
-  delay(MAIN_LOOP_DELAY);
+  delay(Config::MAIN_LOOP_DELAY);
 }
 
