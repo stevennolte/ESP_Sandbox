@@ -35,7 +35,7 @@ namespace ConfigConstants {
     
     // Firmware Configuration
     namespace Firmware {
-        const int VERSION = 928; // v9.28
+        const int VERSION = 950; // v9.28
         constexpr const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
         const unsigned long UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
     }

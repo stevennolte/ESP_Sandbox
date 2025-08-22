@@ -43,6 +43,7 @@ void setupWebServer();
 void loadClientId();
 void ensureTemplateExists();
 void handleDebug();
+void handleDebugData(); // New API endpoint for real-time data
 
 // --- Utility Functions ---
 String makeGitHubAPICall(const String& endpoint);
@@ -323,10 +324,10 @@ void handleDebug() {
   debugSections += "<div class='debug-item'><span class='debug-label'>Chip Cores:</span><span class='debug-value'>" + String(ESP.getChipCores()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>CPU Frequency:</span><span class='debug-value'>" + String(ESP.getCpuFreqMHz()) + " MHz</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Flash Size:</span><span class='debug-value'>" + String(ESP.getFlashChipSize() / 1024 / 1024) + " MB</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Free Heap:</span><span class='debug-value'>" + String(ESP.getFreeHeap()) + " bytes</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Min Free Heap:</span><span class='debug-value'>" + String(ESP.getMinFreeHeap()) + " bytes</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Max Alloc Heap:</span><span class='debug-value'>" + String(ESP.getMaxAllocHeap()) + " bytes</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Uptime:</span><span class='debug-value'>" + String(millis() / 1000) + " seconds</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Free Heap:</span><span class='debug-value' data-id='system-free-heap'>" + String(ESP.getFreeHeap()) + " bytes</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Min Free Heap:</span><span class='debug-value' data-id='system-min-free-heap'>" + String(ESP.getMinFreeHeap()) + " bytes</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Max Alloc Heap:</span><span class='debug-value' data-id='system-max-alloc-heap'>" + String(ESP.getMaxAllocHeap()) + " bytes</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Uptime:</span><span class='debug-value' data-id='system-uptime'>" + String(millis() / 1000) + " seconds</span></div>";
   debugSections += "</div>";
   
   // Network Information
@@ -339,19 +340,19 @@ void handleDebug() {
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>🌡️ Sensor Information</h2>";
   float cpuTemp = readCPUTemperature();
-  debugSections += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value'>" + String(cpuTemp, 1) + "°C</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value'>" + String(config.led_brightness) + "/255</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value' data-id='sensor-cpu-temp'>" + String(cpuTemp, 1) + "°C</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value' data-id='sensor-led-brightness'>" + String(config.led_brightness) + "/255</span></div>";
   debugSections += "</div>";
   
   // Timing Information
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>⏰ Timing Information</h2>";
   unsigned long currentTime = millis();
-  debugSections += "<div class='debug-item'><span class='debug-label'>Current Time:</span><span class='debug-value'>" + String(currentTime) + " ms</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Last Update Check:</span><span class='debug-value'>" + String(config.last_update_check) + " ms</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since Update Check:</span><span class='debug-value'>" + String((currentTime - config.last_update_check) / 1000) + " seconds</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Last WiFi Check:</span><span class='debug-value'>" + String(config.last_wifi_check) + " ms</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since WiFi Check:</span><span class='debug-value'>" + String((currentTime - config.last_wifi_check) / 1000) + " seconds</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Current Time:</span><span class='debug-value' data-id='timing-current-time'>" + String(currentTime) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Last Update Check:</span><span class='debug-value' data-id='timing-last-update-check'>" + String(config.last_update_check) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since Update Check:</span><span class='debug-value' data-id='timing-time-since-update-check'>" + String((currentTime - config.last_update_check) / 1000) + " seconds</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Last WiFi Check:</span><span class='debug-value' data-id='timing-last-wifi-check'>" + String(config.last_wifi_check) + " ms</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Time Since WiFi Check:</span><span class='debug-value' data-id='timing-time-since-wifi-check'>" + String((currentTime - config.last_wifi_check) / 1000) + " seconds</span></div>";
   debugSections += "</div>";
   
   // Storage Information
@@ -360,9 +361,9 @@ void handleDebug() {
   size_t totalBytes = LittleFS.totalBytes();
   size_t usedBytes = LittleFS.usedBytes();
   debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Total:</span><span class='debug-value'>" + String(totalBytes) + " bytes (" + String(totalBytes/1024) + " KB)</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Used:</span><span class='debug-value'>" + String(usedBytes) + " bytes (" + String(usedBytes/1024) + " KB)</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Free:</span><span class='debug-value'>" + String(totalBytes - usedBytes) + " bytes (" + String((totalBytes - usedBytes)/1024) + " KB)</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Usage Percentage:</span><span class='debug-value'>" + String((usedBytes * 100) / totalBytes) + "%</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Used:</span><span class='debug-value' data-id='storage-used'>" + String(usedBytes) + " bytes (" + String(usedBytes/1024) + " KB)</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>LittleFS Free:</span><span class='debug-value' data-id='storage-free'>" + String(totalBytes - usedBytes) + " bytes (" + String((totalBytes - usedBytes)/1024) + " KB)</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Usage Percentage:</span><span class='debug-value' data-id='storage-usage-percent'>" + String((usedBytes * 100) / totalBytes) + "%</span></div>";
   debugSections += "</div>";
   
   // Configuration Information
@@ -387,6 +388,78 @@ void handleDebug() {
   html.replace("{{DEBUG_SECTIONS}}", debugSections);
   
   server.send(200, "text/html", html);
+}
+
+// --- Debug Data API (for real-time updates) ---
+void handleDebugData() {
+  JsonDocument doc;
+  
+  // System Information
+  doc["system"]["boardType"] = getBoardType();
+  doc["system"]["firmwareVersion"] = ConfigConstants::Firmware::VERSION;
+  doc["system"]["firmwareVersionText"] = "v" + String(ConfigConstants::Firmware::VERSION/100) + "." + String(ConfigConstants::Firmware::VERSION%100);
+  doc["system"]["chipModel"] = ESP.getChipModel();
+  doc["system"]["chipCores"] = ESP.getChipCores();
+  doc["system"]["cpuFreq"] = ESP.getCpuFreqMHz();
+  doc["system"]["flashSize"] = ESP.getFlashChipSize() / 1024 / 1024;
+  doc["system"]["freeHeap"] = ESP.getFreeHeap();
+  doc["system"]["minFreeHeap"] = ESP.getMinFreeHeap();
+  doc["system"]["maxAllocHeap"] = ESP.getMaxAllocHeap();
+  doc["system"]["uptime"] = millis() / 1000;
+  
+  // Network Information
+  doc["network"]["wifiStatus"] = WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected";
+  doc["network"]["wifiConnected"] = WiFi.status() == WL_CONNECTED;
+  doc["network"]["ssid"] = WiFi.SSID();
+  doc["network"]["ipAddress"] = WiFi.localIP().toString();
+  doc["network"]["gateway"] = WiFi.gatewayIP().toString();
+  doc["network"]["dns"] = WiFi.dnsIP().toString();
+  doc["network"]["macAddress"] = WiFi.macAddress();
+  doc["network"]["rssi"] = WiFi.RSSI();
+  
+  // Sensor Information
+  doc["sensors"]["cpuTemp"] = readCPUTemperature();
+  doc["sensors"]["ledBrightness"] = config.led_brightness;
+  
+  // Timing Information
+  unsigned long currentTime = millis();
+  doc["timing"]["currentTime"] = currentTime;
+  doc["timing"]["lastUpdateCheck"] = config.last_update_check;
+  doc["timing"]["timeSinceUpdateCheck"] = (currentTime - config.last_update_check) / 1000;
+  doc["timing"]["lastWifiCheck"] = config.last_wifi_check;
+  doc["timing"]["timeSinceWifiCheck"] = (currentTime - config.last_wifi_check) / 1000;
+  
+  // Storage Information
+  size_t totalBytes = LittleFS.totalBytes();
+  size_t usedBytes = LittleFS.usedBytes();
+  doc["storage"]["totalBytes"] = totalBytes;
+  doc["storage"]["usedBytes"] = usedBytes;
+  doc["storage"]["freeBytes"] = totalBytes - usedBytes;
+  doc["storage"]["totalKB"] = totalBytes / 1024;
+  doc["storage"]["usedKB"] = usedBytes / 1024;
+  doc["storage"]["freeKB"] = (totalBytes - usedBytes) / 1024;
+  doc["storage"]["usagePercent"] = (usedBytes * 100) / totalBytes;
+  
+  // Configuration Information
+  preferences.begin("esp-config", true);
+  String storedCommit = preferences.getString("last_commit", "Unknown");
+  int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
+  String storedClientId = preferences.getString("client_id", "Not Set");
+  int storedBrightness = preferences.getInt("led_brightness", 0);
+  String storedSSID = preferences.getString("wifi_ssid", "Not Set");
+  preferences.end();
+  
+  doc["config"]["storedClientId"] = storedClientId;
+  doc["config"]["storedLedBrightness"] = storedBrightness;
+  doc["config"]["storedWifiSSID"] = storedSSID;
+  doc["config"]["storedTemplateCommit"] = storedCommit.length() > 7 ? storedCommit.substring(0, 7) : storedCommit;
+  doc["config"]["storedFirmwareVersion"] = storedFirmwareVersion;
+  doc["config"]["storedFirmwareVersionText"] = "v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100);
+  
+  String response;
+  serializeJson(doc, response);
+  
+  server.send(200, "application/json", response);
 }
 
 // --- Utility Functions ---
@@ -722,6 +795,7 @@ void setupWebServer() {
   
   // Debug page route
   server.on("/debug", handleDebug);
+  server.on("/debug-data", handleDebugData); // Real-time debug data API
   
   server.begin();
   Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());

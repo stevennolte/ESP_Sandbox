@@ -71,14 +71,87 @@
         <!-- Manual Actions -->
         <div class='debug-section'>
             <h2>🔄 Manual Actions</h2>
-            <button onclick='refreshPage()'>🔄 Refresh Data</button>
+            <button onclick='toggleRealTime()' id='realTimeBtn'>🔄 Enable Real-Time Updates</button>
+            <button onclick='refreshPage()'>🔄 Manual Refresh</button>
             <button onclick='testMQTT()'>📡 Test MQTT Connection</button>
             <button onclick='testSensors()'>🌡️ Test Sensors</button>
             <button onclick='forceFirmwareCheck()'>⬇️ Force Firmware Check</button>
             <div id='actionResult' style='margin-top:10px;'></div>
+            <div id='realTimeStatus' style='margin-top:10px; font-size:12px; color:#666;'></div>
         </div>
         
         <script>
+            let realTimeEnabled = false;
+            let updateInterval = null;
+            let lastUpdateTime = null;
+            
+            function toggleRealTime() {
+                const btn = document.getElementById('realTimeBtn');
+                if (realTimeEnabled) {
+                    realTimeEnabled = false;
+                    clearInterval(updateInterval);
+                    btn.innerHTML = '🔄 Enable Real-Time Updates';
+                    btn.style.backgroundColor = '#007bff';
+                    document.getElementById('realTimeStatus').innerHTML = '';
+                } else {
+                    realTimeEnabled = true;
+                    updateInterval = setInterval(updateDebugData, 2000); // Update every 2 seconds
+                    btn.innerHTML = '⏸️ Disable Real-Time Updates';
+                    btn.style.backgroundColor = '#dc3545';
+                    updateDebugData(); // Initial update
+                }
+            }
+            
+            async function updateDebugData() {
+                try {
+                    const response = await fetch('/debug-data');
+                    const data = await response.json();
+                    
+                    // Update system information
+                    updateValueById('system-uptime', data.system.uptime + ' seconds');
+                    updateValueById('system-free-heap', data.system.freeHeap + ' bytes');
+                    updateValueById('system-min-free-heap', data.system.minFreeHeap + ' bytes');
+                    updateValueById('system-max-alloc-heap', data.system.maxAllocHeap + ' bytes');
+                    
+                    // Update network information
+                    updateValueById('network-wifi-status', data.network.wifiStatus, data.network.wifiConnected ? 'success' : 'error');
+                    updateValueById('network-rssi', data.network.rssi + ' dBm');
+                    
+                    // Update sensor information
+                    updateValueById('sensor-cpu-temp', data.sensors.cpuTemp.toFixed(1) + '°C');
+                    updateValueById('sensor-led-brightness', data.sensors.ledBrightness + '/255');
+                    
+                    // Update timing information
+                    updateValueById('timing-current-time', data.timing.currentTime + ' ms');
+                    updateValueById('timing-last-update-check', data.timing.lastUpdateCheck + ' ms');
+                    updateValueById('timing-time-since-update-check', data.timing.timeSinceUpdateCheck + ' seconds');
+                    updateValueById('timing-last-wifi-check', data.timing.lastWifiCheck + ' ms');
+                    updateValueById('timing-time-since-wifi-check', data.timing.timeSinceWifiCheck + ' seconds');
+                    
+                    // Update storage information
+                    updateValueById('storage-used', data.storage.usedBytes + ' bytes (' + data.storage.usedKB + ' KB)');
+                    updateValueById('storage-free', data.storage.freeBytes + ' bytes (' + data.storage.freeKB + ' KB)');
+                    updateValueById('storage-usage-percent', data.storage.usagePercent + '%');
+                    
+                    lastUpdateTime = new Date();
+                    document.getElementById('realTimeStatus').innerHTML = '✓ Last updated: ' + lastUpdateTime.toLocaleTimeString();
+                    
+                } catch (error) {
+                    console.error('Failed to update debug data:', error);
+                    document.getElementById('realTimeStatus').innerHTML = '❌ Update failed: ' + error.message;
+                }
+            }
+            
+            function updateValueById(id, value, className = '') {
+                const element = document.querySelector(`[data-id="${id}"]`);
+                if (element) {
+                    element.innerHTML = value;
+                    if (className) {
+                        element.className = 'debug-value ' + className;
+                    }
+                }
+            }
+            
             function refreshPage() { location.reload(); }
             function testMQTT() {
                 document.getElementById('actionResult').innerHTML = '<p style="color:blue;">Testing MQTT connection...</p>';
