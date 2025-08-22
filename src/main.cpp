@@ -14,6 +14,7 @@
 #include <FS.h>
 #include <HTTPClient.h>
 #include "Config.h"
+#include "WiFiHelper.h"
 
 // Get config instance
 Config& config = Config::getInstance();
@@ -27,8 +28,6 @@ ESPOTAUpdater otaUpdater(ConfigConstants::Firmware::GITHUB_REPO, ConfigConstants
 // --- Function Declarations ---
 float readCPUTemperature();
 String getBoardType();
-void setup_wifi();
-void checkWiFiConnection();
 String loadHTMLTemplate(const char* filename);
 void handleFileList();
 void handleFileDownload();
@@ -36,9 +35,6 @@ void handleFileUpload();
 void handleFileUploadComplete();
 void handleFirmwareUpload();
 void handleFirmwareUploadComplete();
-void handleWifiConfig();
-void handleWifiUpdate();
-void handleNetworkScan();
 void handleRoot();
 void handleSetClientId();
 void handleBrightness();
@@ -58,20 +54,6 @@ void checkForTemplateUpdate();
 void forceTemplateUpdate();
 
 // --- OTA Update Callbacks ---
-void onUpdateAvailable(int currentVersion, int newVersion, const String& downloadUrl) {
-  Serial.printf("*** UPDATE AVAILABLE ***\n");
-  Serial.printf("Current version: %d, New version: %d\n", currentVersion, newVersion);
-  Serial.printf("Download URL: %s\n", downloadUrl.c_str());
-  
-  // Automatically start the update process
-  Serial.println("Starting automatic firmware update...");
-  otaUpdater.performUpdate(downloadUrl.c_str());
-}
-
-void onUpdateProgress(size_t progress, size_t total) {
-  Serial.printf("OTA Progress: %d/%d bytes (%d%%)\n", progress, total, (progress * 100) / total);
-}
-
 void onUpdateComplete(bool success, const String& message) {
   if (success) {
     Serial.println("*** OTA UPDATE SUCCESSFUL ***");
@@ -106,54 +88,6 @@ float readCPUTemperature() {
   // ESP32 internal temperature sensor
   // Note: This is not very accurate and is mainly for monitoring purposes
   return temperatureRead();
-}
-
-// --- WiFi Management Functions ---
-void setup_wifi() {
-  Serial.println("Setting up WiFi connection...");
-  Serial.printf("Connecting to: %s\n", config.getWiFiSSID());
-  
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(config.getWiFiSSID(), config.getWiFiPassword());
-  
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < ConfigConstants::WiFi::MAX_ATTEMPTS) {
-    delay(ConfigConstants::WiFi::RETRY_DELAY);
-    Serial.print(".");
-    attempts++;
-  }
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n✓ WiFi connected!");
-    Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("Signal strength: %d dBm\n", WiFi.RSSI());
-  } else {
-    Serial.println("\n✗ Failed to connect to WiFi");
-    Serial.println("Please check your WiFi credentials in the web interface");
-  }
-}
-
-void checkWiFiConnection() {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("\n⚠ WiFi connection lost. Attempting to reconnect...");
-    WiFi.disconnect();
-    WiFi.begin(config.getWiFiSSID(), config.getWiFiPassword());
-    
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < ConfigConstants::WiFi::RECONNECT_ATTEMPTS) {
-      delay(ConfigConstants::WiFi::RETRY_DELAY);
-      Serial.print(".");
-      attempts++;
-    }
-    
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("\n✓ WiFi reconnected!");
-      Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
-      Serial.printf("Signal strength: %d dBm\n", WiFi.RSSI());
-    } else {
-      Serial.println("\n✗ Failed to reconnect to WiFi");
-    }
-  }
 }
 
 // Function to load and process HTML template
@@ -373,58 +307,6 @@ void handleFirmwareUploadComplete() {
   }
 }
 
-// --- WiFi Configuration Functions ---
-void handleWifiConfig() {
-  String html = loadTemplate("wifi_config.html");
-  
-  // Replace placeholders with actual values
-  html.replace("{{CURRENT_SSID}}", WiFi.SSID());
-  html.replace("{{SIGNAL_STRENGTH}}", String(WiFi.RSSI()));
-  html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
-  
-  server.send(200, "text/html", html);
-}
-
-void handleWifiUpdate() {
-  if (!server.hasArg("ssid") || !server.hasArg("password")) {
-    server.send(400, "text/plain", "Missing SSID or password");
-    return;
-  }
-  
-  String newSSID = server.arg("ssid");
-  String newPassword = server.arg("password");
-  
-  // Save new WiFi credentials using config
-  config.saveWiFiCredentials(newSSID, newPassword);
-  
-  String html = loadTemplate("wifi_updated.html");
-  html.replace("{{NEW_SSID}}", newSSID);
-  
-  server.send(200, "text/html", html);
-  
-  delay(ConfigConstants::Timing::REBOOT_DELAY);
-  ESP.restart();
-}
-
-// --- Network Scanning ---
-void handleNetworkScan() {
-  WiFi.scanDelete();
-  int n = WiFi.scanNetworks();
-  
-  String json = "{\"networks\":[";
-  for (int i = 0; i < n; i++) {
-    if (i > 0) json += ",";
-    json += "{";
-    json += "\"ssid\":\"" + WiFi.SSID(i) + "\",";
-    json += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
-    json += "\"encrypted\":" + String(WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "true" : "false");
-    json += "}";
-  }
-  json += "]}";
-  
-  server.send(200, "application/json", json);
-}
-
 // --- Debug Page ---
 void handleDebug() {
   String html = loadTemplate("debug.html");
@@ -450,13 +332,7 @@ void handleDebug() {
   // Network Information
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>📡 Network Information</h2>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>WiFi Status:</span><span class='debug-value " + String(WiFi.status() == WL_CONNECTED ? "success" : "error") + "'>" + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>SSID:</span><span class='debug-value'>" + WiFi.SSID() + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>IP Address:</span><span class='debug-value'>" + WiFi.localIP().toString() + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Gateway:</span><span class='debug-value'>" + WiFi.gatewayIP().toString() + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>DNS:</span><span class='debug-value'>" + WiFi.dnsIP().toString() + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>MAC Address:</span><span class='debug-value'>" + WiFi.macAddress() + "</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Signal Strength:</span><span class='debug-value'>" + String(WiFi.RSSI()) + " dBm</span></div>";
+  debugSections += WiFiHelper::getDebugInfo();
   debugSections += "</div>";
   
   // Sensor Information
@@ -835,9 +711,9 @@ void setupWebServer() {
   server.on("/firmware-upload", HTTP_POST, handleFirmwareUploadComplete, handleFirmwareUpload);
   
   // WiFi configuration routes
-  server.on("/wifi", handleWifiConfig);
-  server.on("/wifi-update", HTTP_POST, handleWifiUpdate);
-  server.on("/scan-networks", handleNetworkScan);
+  server.on("/wifi", []() { WiFiHelper::handleConfig(server); });
+  server.on("/wifi-update", HTTP_POST, []() { WiFiHelper::handleUpdate(server); });
+  server.on("/scan-networks", []() { WiFiHelper::handleNetworkScan(server); });
   
   // Template update routes
   server.on("/update-template", handleUpdateTemplate);
@@ -882,8 +758,8 @@ void setup() {
   loadClientId();
 
   // Connect to WiFi
-  setup_wifi();
-  if (WiFi.status() != WL_CONNECTED) {
+  WiFiHelper::setup();
+  if (!WiFiHelper::isConnected()) {
     Serial.println("ERROR: Cannot continue without WiFi");
     return;
   }
@@ -915,11 +791,9 @@ void setup() {
   setupWebServer();
 
   // Initialize OTA updater
-  otaUpdater.setUpdateAvailableCallback(onUpdateAvailable);
-  otaUpdater.setUpdateProgressCallback(onUpdateProgress);
   otaUpdater.setUpdateCompleteCallback(onUpdateComplete);
   otaUpdater.setBoardType(getBoardType());
-  otaUpdater.enableAutoUpdate(false); // Disable auto-update to prevent duplicates
+  otaUpdater.enableAutoUpdate(true); // Let the library handle the update process
 
   // Perform initial update check
   Serial.println("Checking for firmware updates...");
@@ -944,7 +818,7 @@ void loop() {
   
   // WiFi connection monitoring (every 30 seconds)
   if (config.shouldCheckWiFi(currentTime)) {
-    checkWiFiConnection();
+    WiFiHelper::checkConnection();
     config.updateWiFiCheckTime(currentTime);
   }
   
