@@ -50,7 +50,21 @@
             <p><strong>Current WiFi:</strong> {{CURRENT_SSID}}</p>
             <p><strong>Signal Strength:</strong> {{SIGNAL_STRENGTH}} dBm</p>
             <p><strong>Status:</strong> {{WIFI_STATUS}}</p>
+            <p><strong>Boot Mode:</strong> {{WIFI_MODE}}</p>
         </div>
+        
+        <h2>WiFi Boot Mode</h2>
+        <div class='info'>
+            <p><strong>Current Mode:</strong> {{WIFI_MODE}}</p>
+            <p><em>Station Mode:</em> Connect to existing WiFi network<br>
+            <em>Access Point Mode:</em> Create own WiFi network ({{CLIENT_ID}})</p>
+        </div>
+        
+        <form method='POST' action='/wifi-mode'>
+            <input type='hidden' name='mode' value='{{WIFI_MODE_TOGGLE}}'>
+            <input type='submit' value='{{WIFI_MODE_BUTTON}}'>
+        </form>
+        <p><small><em>Note: Mode changes take effect after reboot</em></small></p>
         
         <h2>Change WiFi Network</h2>
         <form method='POST' action='/wifi-update'>

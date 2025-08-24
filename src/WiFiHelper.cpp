@@ -128,6 +128,10 @@ void WiFiHelper::handleConfig(WebServer& server) {
     html.replace("{{CURRENT_SSID}}", WiFi.SSID());
     html.replace("{{SIGNAL_STRENGTH}}", String(WiFi.RSSI()));
     html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
+    html.replace("{{CLIENT_ID}}", config.client_id);
+    html.replace("{{WIFI_MODE}}", config.wifi.force_ap_mode ? "Access Point" : "Station");
+    html.replace("{{WIFI_MODE_TOGGLE}}", config.wifi.force_ap_mode ? "station" : "ap");
+    html.replace("{{WIFI_MODE_BUTTON}}", config.wifi.force_ap_mode ? "Switch to Station Mode" : "Switch to Access Point Mode");
     
     server.send(200, "text/html", html);
 }
