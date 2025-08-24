@@ -12,8 +12,15 @@ namespace ConfigConstants {
         const int RECONNECT_ATTEMPTS = 20;
         const int RETRY_DELAY = 500;
         const unsigned long CHECK_INTERVAL = 30 * 1000; // 30 seconds
-        constexpr const char* DEFAULT_SSID = "SSEI";
+        constexpr const char* DEFAULT_SSID = "SSID";
         constexpr const char* DEFAULT_PASSWORD = "Nd14il!la";
+        
+        // Access Point Configuration
+        constexpr const char* AP_PASSWORD = "ESP32Config"; // Default AP password
+        const int AP_CHANNEL = 1;
+        const int AP_MAX_CONNECTIONS = 4;
+        const bool AP_HIDDEN = false;
+        const bool DEFAULT_AP_MODE = false; // Default to WiFi station mode
     }
     
     // Hardware Configuration
@@ -31,12 +38,15 @@ namespace ConfigConstants {
         const unsigned long MAIN_LOOP_DELAY = 1000;
         const unsigned long NETWORK_STABILIZATION_DELAY = 2000;
         const unsigned long REBOOT_DELAY = 3000;
+        const unsigned long WATCHDOG_TIMEOUT = 30; // 30 seconds watchdog timeout
+        const unsigned long WATCHDOG_PANIC_TIMEOUT = 5; // 5 seconds panic handler timeout
     }
     
     // Firmware Configuration
     namespace Firmware {
         const int VERSION = 950; // v9.28
         constexpr const char* GITHUB_REPO = "stevennolte/ESP_Sandbox";
+        constexpr const char* GITHUB_BRANCH = "Minimal"; // Branch for template downloads
         const unsigned long UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
     }
     
@@ -56,6 +66,7 @@ public:
     String ssid;
     String password;
     unsigned long last_check_time;
+    bool force_ap_mode; // Force access point mode on boot
     
     // Runtime configurable WiFi parameters
     int max_attempts;
@@ -66,6 +77,7 @@ public:
         ssid = ConfigConstants::WiFi::DEFAULT_SSID;
         password = ConfigConstants::WiFi::DEFAULT_PASSWORD;
         last_check_time = 0;
+        force_ap_mode = ConfigConstants::WiFi::DEFAULT_AP_MODE;
         
         // Initialize with default values from constants
         max_attempts = ConfigConstants::WiFi::MAX_ATTEMPTS;
@@ -77,6 +89,9 @@ public:
         String saved_ssid = prefs.getString("wifi_ssid", "");
         String saved_password = prefs.getString("wifi_password", "");
         
+        // Load AP mode preference
+        force_ap_mode = prefs.getBool("force_ap_mode", ConfigConstants::WiFi::DEFAULT_AP_MODE);
+        
         // Load WiFi parameters from preferences
         max_attempts = prefs.getInt("wifi_max_attempts", ConfigConstants::WiFi::MAX_ATTEMPTS);
         reconnect_attempts = prefs.getInt("wifi_reconnect_attempts", ConfigConstants::WiFi::RECONNECT_ATTEMPTS);
@@ -87,6 +102,8 @@ public:
             password = saved_password;
             Serial.printf("✓ WiFi credentials loaded: %s\n", ssid.c_str());
         }
+        
+        Serial.printf("✓ WiFi mode preference loaded: %s\n", force_ap_mode ? "Access Point" : "Station");
     }
     
     void saveCredentials(const String& newSSID, const String& newPassword) {
@@ -114,6 +131,15 @@ public:
         
         Serial.printf("✓ WiFi parameters saved: max_attempts=%d, reconnect_attempts=%d, retry_delay=%d\n", 
                      max_attempts, reconnect_attempts, retry_delay);
+    }
+    
+    void saveApMode(bool apMode) {
+        force_ap_mode = apMode;
+        Preferences prefs;
+        prefs.begin("esp-config", false);
+        prefs.putBool("force_ap_mode", force_ap_mode);
+        prefs.end();
+        Serial.printf("✓ WiFi mode saved: %s\n", force_ap_mode ? "Access Point" : "Station");
     }
     
     bool shouldCheck(unsigned long currentTime) {
@@ -240,6 +266,9 @@ public:
     }
     void saveWiFiParams(int maxAttempts, int reconnectAttempts, int retryDelay) {
         wifi.saveWiFiParams(maxAttempts, reconnectAttempts, retryDelay);
+    }
+    void saveApMode(bool apMode) {
+        wifi.saveApMode(apMode);
     }
     
     // Timing helper methods

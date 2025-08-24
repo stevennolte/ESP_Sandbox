@@ -12,6 +12,11 @@ public:
     static void setup();
     static void checkConnection();
     
+    // Access Point mode
+    static bool startAccessPoint();
+    static bool isAccessPointMode();
+    static String getAccessPointName();
+    
     // Web interface handlers
     static void handleConfig(WebServer& server);
     static void handleUpdate(WebServer& server);
@@ -25,6 +30,7 @@ public:
 
 private:
     static String loadTemplate(const char* templatePath);
+    static bool accessPointMode;
 };
 
 #endif // WIFIHELPER_H

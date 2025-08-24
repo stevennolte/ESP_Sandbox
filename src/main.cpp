@@ -1,6 +1,6 @@
 /*
- * ESP32 IoT Device with OTA Updates
- * Features: LED control, Web interface, OTA updates
+ * ESP32 IoT Device with OTA Updates and Watchdog Timer
+ * Features: LED control, Web interface, OTA updates, Recovery mode
  */
 
 #include <WiFi.h>
@@ -13,11 +13,18 @@
 #include <Update.h>
 #include <FS.h>
 #include <HTTPClient.h>
+#include <esp_task_wdt.h>
+#include <esp_system.h>
 #include "Config.h"
 #include "WiFiHelper.h"
+#include "SystemUtils.h"
 
 // Get config instance
 Config& config = Config::getInstance();
+
+// --- Watchdog Variables ---
+bool recoveryMode = false;
+unsigned long lastWatchdogFeed = 0;
 
 // --- Object Instances ---
 Preferences preferences;
@@ -26,8 +33,6 @@ WiFiClient espClient;
 ESPOTAUpdater otaUpdater(ConfigConstants::Firmware::GITHUB_REPO, ConfigConstants::Firmware::VERSION);
 
 // --- Function Declarations ---
-float readCPUTemperature();
-String getBoardType();
 String loadHTMLTemplate(const char* filename);
 void handleFileList();
 void handleFileDownload();
@@ -38,12 +43,20 @@ void handleFirmwareUploadComplete();
 void handleRoot();
 void handleSetClientId();
 void handleBrightness();
+void handleWiFiModeToggle();
 void handleReboot();
 void setupWebServer();
 void loadClientId();
 void ensureTemplateExists();
 void handleDebug();
 void handleDebugData(); // New API endpoint for real-time data
+
+// --- Watchdog Functions ---
+void initWatchdog();
+void feedWatchdog();
+void checkWatchdogTimeout();
+bool isRecoveryMode();
+void enterRecoveryMode();
 
 // --- Utility Functions ---
 String makeGitHubAPICall(const String& endpoint);
@@ -54,41 +67,111 @@ bool downloadTemplate();
 void checkForTemplateUpdate();
 void forceTemplateUpdate();
 
-// --- OTA Update Callbacks ---
-void onUpdateComplete(bool success, const String& message) {
-  if (success) {
-    Serial.println("*** OTA UPDATE SUCCESSFUL ***");
+// --- Watchdog Functions ---
+void initWatchdog() {
+  Serial.println("Initializing software watchdog timer...");
+  
+  // Check if this boot was due to a software watchdog timeout
+  preferences.begin("esp-config", true);
+  bool watchdogTimeout = preferences.getBool("watchdog_timeout", false);
+  preferences.end();
+  
+  // Check if this is a recovery boot
+  esp_reset_reason_t resetReason = esp_reset_reason();
+  if (resetReason == ESP_RST_TASK_WDT || resetReason == ESP_RST_WDT || resetReason == ESP_RST_PANIC || watchdogTimeout) {
+    Serial.println("*** WATCHDOG/PANIC RESET DETECTED - ENTERING RECOVERY MODE ***");
+    recoveryMode = true;
     
-    // Download latest templates after successful firmware update
-    Serial.println("Downloading latest web templates...");
-    if (downloadTemplate()) {
-      updateStoredCommitHash();
-      Serial.println("✓ Templates updated with firmware");
-    } else {
-      Serial.println("⚠ Some templates failed to download - device will attempt to download missing templates on next boot");
-    }
-    
-    Serial.println("Rebooting...");
+    // Store recovery mode flag in preferences
+    preferences.begin("esp-config", false);
+    preferences.putBool("recovery_mode", true);
+    preferences.putULong("recovery_time", millis());
+    preferences.putBool("watchdog_timeout", false); // Clear the flag
+    preferences.end();
   } else {
-    Serial.println("*** OTA UPDATE FAILED ***");
-    Serial.printf("Error: %s\n", message.c_str());
+    // Clear recovery mode flag on normal boot
+    preferences.begin("esp-config", false);
+    preferences.putBool("recovery_mode", false);
+    preferences.putBool("watchdog_timeout", false);
+    preferences.end();
+  }
+  
+  // Initialize software watchdog (we'll use a simple timer-based approach)
+  lastWatchdogFeed = millis();
+  Serial.printf("✓ Software watchdog initialized: %d second timeout\n", ConfigConstants::Timing::WATCHDOG_TIMEOUT);
+}
+
+void feedWatchdog() {
+  lastWatchdogFeed = millis();
+}
+
+void checkWatchdogTimeout() {
+  unsigned long timeSinceLastFeed = millis() - lastWatchdogFeed;
+  if (timeSinceLastFeed > (ConfigConstants::Timing::WATCHDOG_TIMEOUT * 1000)) {
+    Serial.println("*** SOFTWARE WATCHDOG TIMEOUT - RESTARTING ***");
+    
+    // Mark as watchdog timeout for next boot
+    preferences.begin("esp-config", false);
+    preferences.putBool("watchdog_timeout", true);
+    preferences.end();
+    
+    delay(1000);
+    ESP.restart();
   }
 }
 
-// --- Board Type Detection ---
-String getBoardType() {
-#ifdef BOARD_TYPE
-  return String(BOARD_TYPE);
-#else
-  return "Unknown";
-#endif
+bool isRecoveryMode() {
+  return recoveryMode;
 }
 
-// --- Temperature Functions ---
-float readCPUTemperature() {
-  // ESP32 internal temperature sensor
-  // Note: This is not very accurate and is mainly for monitoring purposes
-  return temperatureRead();
+void enterRecoveryMode() {
+  Serial.println("*** ENTERING RECOVERY MODE ***");
+  recoveryMode = true;
+  
+  // Store recovery state
+  preferences.begin("esp-config", false);
+  preferences.putBool("recovery_mode", true);
+  preferences.putULong("recovery_time", millis());
+  preferences.end();
+  
+  // Simple recovery web server with minimal functionality
+  server.on("/", []() {
+    String html = "<!DOCTYPE html><html><head>";
+    html += "<title>🔧 Recovery Mode - " + String(config.getClientId()) + "</title>";
+    html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:50px auto;padding:20px;background:#f5f5f5}";
+    html += ".container{background:white;padding:30px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}";
+    html += ".warning{background:#fff3cd;border:1px solid #ffeaa7;color:#856404;padding:15px;border-radius:5px;margin:20px 0}";
+    html += ".button{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;font-size:16px}";
+    html += ".button:hover{background:#0056b3}</style></head><body>";
+    html += "<div class='container'>";
+    html += "<h1>🔧 Recovery Mode</h1>";
+    html += "<div class='warning'>⚠ <strong>Device is in recovery mode</strong><br>";
+    html += "This occurred due to a watchdog timer reset, indicating the device may have frozen.</div>";
+    html += "<h3>Device Information:</h3>";
+    html += "<p><strong>Device ID:</strong> " + String(config.getClientId()) + "</p>";
+    html += "<p><strong>IP Address:</strong> " + WiFi.localIP().toString() + "</p>";
+    html += "<p><strong>Uptime:</strong> " + String(millis() / 1000) + " seconds</p>";
+    html += "<p><strong>Reset Reason:</strong> " + String(esp_reset_reason()) + "</p>";
+    html += "<h3>Available Actions:</h3>";
+    html += "<form action='/exit-recovery' method='post' style='margin:20px 0'>";
+    html += "<button type='submit' class='button'>Exit Recovery Mode & Restart</button></form>";
+    html += "<p><small>Only basic functions are available in recovery mode.<br>";
+    html += "Exiting recovery mode will restart the device with full functionality.</small></p>";
+    html += "</div></body></html>";
+    server.send(200, "text/html", html);
+  });
+  
+  server.on("/exit-recovery", HTTP_POST, []() {
+    preferences.begin("esp-config", false);
+    preferences.putBool("recovery_mode", false);
+    preferences.end();
+    server.send(200, "text/html", "<!DOCTYPE html><html><body><h1>Exiting Recovery Mode</h1><p>Rebooting...</p></body></html>");
+    delay(2000);
+    ESP.restart();
+  });
+  
+  server.begin();
+  Serial.println("✓ Recovery mode web server started");
 }
 
 // Function to load and process HTML template
@@ -111,6 +194,9 @@ String loadHTMLTemplate(const char* filename) {
   html.replace("{{LED_BRIGHTNESS}}", String(config.led_brightness));
   html.replace("{{WIFI_RSSI}}", String(WiFi.RSSI()));
   html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
+  html.replace("{{WIFI_MODE}}", config.wifi.force_ap_mode ? "Access Point" : "Station");
+  html.replace("{{WIFI_MODE_TOGGLE}}", config.wifi.force_ap_mode ? "station" : "ap");
+  html.replace("{{WIFI_MODE_BUTTON}}", config.wifi.force_ap_mode ? "Switch to Station Mode" : "Switch to Access Point Mode");
   
   // Add template version info
   preferences.begin("esp-config", true);
@@ -174,6 +260,23 @@ void handleBrightness() {
     }
   } else {
     server.send(400, "text/plain", "Missing brightness parameter");
+  }
+}
+
+void handleWiFiModeToggle() {
+  if (server.hasArg("mode")) {
+    String mode = server.arg("mode");
+    bool apMode = (mode == "ap");
+    config.saveApMode(apMode);
+    
+    String html = loadTemplate("simple_response.html");
+    html.replace("{{TITLE}}", "WiFi Mode Updated");
+    html.replace("{{HEADER}}", "WiFi Mode Updated");
+    html.replace("{{MESSAGE}}", "WiFi mode set to: <strong>" + String(apMode ? "Access Point" : "Station") + "</strong>");
+    html.replace("{{EXTRA_CONTENT}}", "<p><em>Changes will take effect after reboot.</em></p>");
+    server.send(200, "text/html", html);
+  } else {
+    server.send(400, "text/plain", "Missing mode parameter");
   }
 }
 
@@ -318,7 +421,7 @@ void handleDebug() {
   // System Information
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>💻 System Information</h2>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Board Type:</span><span class='debug-value'>" + getBoardType() + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Board Type:</span><span class='debug-value'>" + SystemUtils::getBoardType() + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Firmware Version:</span><span class='debug-value'>" + String(ConfigConstants::Firmware::VERSION) + " (v" + String(ConfigConstants::Firmware::VERSION/100) + "." + String(ConfigConstants::Firmware::VERSION%100) + ")</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Chip Model:</span><span class='debug-value'>" + String(ESP.getChipModel()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Chip Cores:</span><span class='debug-value'>" + String(ESP.getChipCores()) + "</span></div>";
@@ -328,6 +431,9 @@ void handleDebug() {
   debugSections += "<div class='debug-item'><span class='debug-label'>Min Free Heap:</span><span class='debug-value' data-id='system-min-free-heap'>" + String(ESP.getMinFreeHeap()) + " bytes</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Max Alloc Heap:</span><span class='debug-value' data-id='system-max-alloc-heap'>" + String(ESP.getMaxAllocHeap()) + " bytes</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Uptime:</span><span class='debug-value' data-id='system-uptime'>" + String(millis() / 1000) + " seconds</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Recovery Mode:</span><span class='debug-value'>" + String(recoveryMode ? "Yes" : "No") + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Last Watchdog Feed:</span><span class='debug-value' data-id='watchdog-last-feed'>" + String((millis() - lastWatchdogFeed) / 1000) + " seconds ago</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Reset Reason:</span><span class='debug-value'>" + String(esp_reset_reason()) + "</span></div>";
   debugSections += "</div>";
   
   // Network Information
@@ -339,7 +445,7 @@ void handleDebug() {
   // Sensor Information
   debugSections += "<div class='debug-section'>";
   debugSections += "<h2>🌡️ Sensor Information</h2>";
-  float cpuTemp = readCPUTemperature();
+  float cpuTemp = SystemUtils::readCPUTemperature();
   debugSections += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value' data-id='sensor-cpu-temp'>" + String(cpuTemp, 1) + "°C</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value' data-id='sensor-led-brightness'>" + String(config.led_brightness) + "/255</span></div>";
   debugSections += "</div>";
@@ -375,11 +481,13 @@ void handleDebug() {
   String storedClientId = preferences.getString("client_id", "Not Set");
   int storedBrightness = preferences.getInt("led_brightness", 0);
   String storedSSID = preferences.getString("wifi_ssid", "Not Set");
+  bool storedApMode = preferences.getBool("force_ap_mode", false);
   preferences.end();
   
   debugSections += "<div class='debug-item'><span class='debug-label'>Stored Client ID:</span><span class='debug-value'>" + storedClientId + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Stored LED Brightness:</span><span class='debug-value'>" + String(storedBrightness) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Stored WiFi SSID:</span><span class='debug-value'>" + storedSSID + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>WiFi Boot Mode:</span><span class='debug-value'>" + String(storedApMode ? "Access Point" : "Station") + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Stored Template Commit:</span><span class='debug-value'>" + (storedCommit.length() > 7 ? storedCommit.substring(0, 7) : storedCommit) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Stored Firmware Version:</span><span class='debug-value'>" + String(storedFirmwareVersion) + " (v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100) + ")</span></div>";
   debugSections += "</div>";
@@ -395,7 +503,7 @@ void handleDebugData() {
   JsonDocument doc;
   
   // System Information
-  doc["system"]["boardType"] = getBoardType();
+  doc["system"]["boardType"] = SystemUtils::getBoardType();
   doc["system"]["firmwareVersion"] = ConfigConstants::Firmware::VERSION;
   doc["system"]["firmwareVersionText"] = "v" + String(ConfigConstants::Firmware::VERSION/100) + "." + String(ConfigConstants::Firmware::VERSION%100);
   doc["system"]["chipModel"] = ESP.getChipModel();
@@ -406,6 +514,9 @@ void handleDebugData() {
   doc["system"]["minFreeHeap"] = ESP.getMinFreeHeap();
   doc["system"]["maxAllocHeap"] = ESP.getMaxAllocHeap();
   doc["system"]["uptime"] = millis() / 1000;
+  doc["system"]["recoveryMode"] = recoveryMode;
+  doc["system"]["lastWatchdogFeed"] = (millis() - lastWatchdogFeed) / 1000;
+  doc["system"]["resetReason"] = esp_reset_reason();
   
   // Network Information
   doc["network"]["wifiStatus"] = WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected";
@@ -418,7 +529,7 @@ void handleDebugData() {
   doc["network"]["rssi"] = WiFi.RSSI();
   
   // Sensor Information
-  doc["sensors"]["cpuTemp"] = readCPUTemperature();
+  doc["sensors"]["cpuTemp"] = SystemUtils::readCPUTemperature();
   doc["sensors"]["ledBrightness"] = config.led_brightness;
   
   // Timing Information
@@ -486,7 +597,7 @@ String makeGitHubAPICall(const String& endpoint) {
 
 bool downloadFileFromGitHub(const String& filePath, const String& localPath) {
   HTTPClient http;
-  String url = "https://raw.githubusercontent.com/" + String(ConfigConstants::Firmware::GITHUB_REPO) + "/main/" + filePath;
+  String url = "https://raw.githubusercontent.com/" + String(ConfigConstants::Firmware::GITHUB_REPO) + "/" + String(ConfigConstants::Firmware::GITHUB_BRANCH) + "/" + filePath;
   
   http.begin(url);
   http.addHeader("User-Agent", ConfigConstants::Network::USER_AGENT_TEMPLATE);
@@ -516,7 +627,7 @@ bool downloadFileFromGitHub(const String& filePath, const String& localPath) {
 }
 
 void updateStoredCommitHash() {
-  String response = makeGitHubAPICall("commits/main");
+  String response = makeGitHubAPICall("commits/" + String(ConfigConstants::Firmware::GITHUB_BRANCH));
   if (response.length() > 0) {
     JsonDocument doc;
     doc.shrinkToFit();
@@ -566,37 +677,6 @@ String loadTemplate(const char* templatePath) {
   file.close();
   Serial.printf("✓ Template loaded successfully: %s (%d bytes)\n", fullPath.c_str(), html.length());
   return html;
-}
-
-// --- Template Update Functions ---
-void handleUpdateTemplate() {
-  String html = loadTemplate("template_update.html");
-  
-  // Show current template info
-  preferences.begin("esp-config", true);
-  String currentCommit = preferences.getString("last_commit", "Unknown");
-  int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
-  preferences.end();
-  
-  // Replace placeholders
-  html.replace("{{GITHUB_REPO}}", String(ConfigConstants::Firmware::GITHUB_REPO));
-  html.replace("{{CURRENT_COMMIT}}", currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit);
-  html.replace("{{TEMPLATE_FIRMWARE_VERSION}}", "v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100));
-  html.replace("{{CURRENT_FIRMWARE_VERSION}}", "v" + String(ConfigConstants::Firmware::VERSION/100) + "." + String(ConfigConstants::Firmware::VERSION%100));
-  
-  server.send(200, "text/html", html);
-}
-
-void handleUpdateTemplateAction() {
-  Serial.println("Manual template update requested...");
-  checkForTemplateUpdate();
-  server.send(200, "text/plain", "Template check completed - see serial output for details");
-}
-
-void handleForceTemplateUpdate() {
-  Serial.println("Force template update requested...");
-  forceTemplateUpdate();
-  server.send(200, "text/plain", "Force template update completed - see serial output for details");
 }
 
 bool downloadTemplate() {
@@ -671,7 +751,7 @@ bool downloadTemplate() {
 void checkForTemplateUpdate() {
   Serial.println("Checking for template updates...");
   
-  String response = makeGitHubAPICall("commits/main");
+  String response = makeGitHubAPICall("commits/" + String(ConfigConstants::Firmware::GITHUB_BRANCH));
   if (response.length() == 0) {
     Serial.println("Failed to get GitHub API response");
     return;
@@ -787,15 +867,47 @@ void setupWebServer() {
   server.on("/wifi", []() { WiFiHelper::handleConfig(server); });
   server.on("/wifi-update", HTTP_POST, []() { WiFiHelper::handleUpdate(server); });
   server.on("/scan-networks", []() { WiFiHelper::handleNetworkScan(server); });
+  server.on("/wifi-mode", HTTP_POST, handleWiFiModeToggle);
   
   // Template update routes
-  server.on("/update-template", handleUpdateTemplate);
-  server.on("/update-template-action", HTTP_POST, handleUpdateTemplateAction);
-  server.on("/force-template-update", HTTP_POST, handleForceTemplateUpdate);
+  server.on("/update-template", []() {
+    String html = loadTemplate("template_update.html");
+    
+    // Show current template info
+    preferences.begin("esp-config", true);
+    String currentCommit = preferences.getString("last_commit", "Unknown");
+    int storedFirmwareVersion = preferences.getInt("last_firmware_version", 0);
+    preferences.end();
+    
+    // Replace placeholders
+    html.replace("{{GITHUB_REPO}}", String(ConfigConstants::Firmware::GITHUB_REPO));
+    html.replace("{{CURRENT_COMMIT}}", currentCommit.length() > 7 ? currentCommit.substring(0, 7) : currentCommit);
+    html.replace("{{TEMPLATE_FIRMWARE_VERSION}}", "v" + String(storedFirmwareVersion/100) + "." + String(storedFirmwareVersion%100));
+    html.replace("{{CURRENT_FIRMWARE_VERSION}}", "v" + String(ConfigConstants::Firmware::VERSION/100) + "." + String(ConfigConstants::Firmware::VERSION%100));
+    
+    server.send(200, "text/html", html);
+  });
+  server.on("/update-template-action", HTTP_POST, []() {
+    Serial.println("Manual template update requested...");
+    checkForTemplateUpdate();
+    server.send(200, "text/plain", "Template check completed - see serial output for details");
+  });
+  server.on("/force-template-update", HTTP_POST, []() {
+    Serial.println("Force template update requested...");
+    forceTemplateUpdate();
+    server.send(200, "text/plain", "Force template update completed - see serial output for details");
+  });
   
   // Debug page route
   server.on("/debug", handleDebug);
   server.on("/debug-data", handleDebugData); // Real-time debug data API
+  
+  // Watchdog test endpoint (for testing only)
+  server.on("/test-watchdog", []() {
+    server.send(200, "text/plain", "Triggering watchdog timeout in 10 seconds...");
+    Serial.println("*** WATCHDOG TEST: Stopping watchdog feeds ***");
+    delay(35000); // This will trigger the watchdog timeout
+  });
   
   server.begin();
   Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
@@ -813,8 +925,32 @@ void setup() {
   // Initialize serial communication
   Serial.begin(115200);
   Serial.println("\n=== ESP32 IoT Device Starting ===");
-  Serial.printf("Board Type: %s\n", getBoardType().c_str());
+  Serial.printf("Board Type: %s\n", SystemUtils::getBoardType().c_str());
   Serial.printf("Firmware Version: %d (v%d.%d)\n", ConfigConstants::Firmware::VERSION, ConfigConstants::Firmware::VERSION/100, ConfigConstants::Firmware::VERSION%100);
+  
+  // Initialize watchdog timer
+  initWatchdog();
+  
+  // Check if we're in recovery mode
+  if (isRecoveryMode()) {
+    Serial.println("⚠ Device is in recovery mode - limited functionality");
+    
+    // Basic WiFi setup for recovery
+    WiFi.begin(ConfigConstants::WiFi::DEFAULT_SSID, ConfigConstants::WiFi::DEFAULT_PASSWORD);
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 10) {
+      delay(1000);
+      attempts++;
+      Serial.print(".");
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.printf("\n✓ WiFi connected: %s\n", WiFi.localIP().toString().c_str());
+    }
+    
+    enterRecoveryMode();
+    return; // Skip normal setup in recovery mode
+  }
   
   // Initialize hardware
   ledcSetup(ConfigConstants::Hardware::LED_CHANNEL, ConfigConstants::Hardware::LED_FREQ, ConfigConstants::Hardware::LED_RESOLUTION);
@@ -831,12 +967,15 @@ void setup() {
   // Load saved configuration
   loadClientId();
 
-  // Connect to WiFi
+  // Connect to WiFi or start Access Point
   WiFiHelper::setup();
   if (!WiFiHelper::isConnected()) {
-    Serial.println("ERROR: Cannot continue without WiFi");
+    Serial.println("ERROR: Failed to establish network connection");
     return;
   }
+  
+  // Log connection status
+  Serial.println(WiFiHelper::getConnectionInfo());
   
   // Ensure web template exists and is up to date
   ensureTemplateExists();
@@ -865,8 +1004,7 @@ void setup() {
   setupWebServer();
 
   // Initialize OTA updater
-  otaUpdater.setUpdateCompleteCallback(onUpdateComplete);
-  otaUpdater.setBoardType(getBoardType());
+  otaUpdater.setBoardType(SystemUtils::getBoardType());
   otaUpdater.enableAutoUpdate(true); // Let the library handle the update process
 
   // Perform initial update check
@@ -879,6 +1017,21 @@ void setup() {
 
 void loop() {
   unsigned long currentTime = millis();
+
+  // Feed the watchdog timer at the start of each loop
+  if (!recoveryMode) {
+    feedWatchdog();
+    
+    // Check for watchdog timeout (separate check for safety)
+    checkWatchdogTimeout();
+  }
+
+  // Handle recovery mode separately
+  if (recoveryMode) {
+    server.handleClient();
+    delay(100); // Shorter delay in recovery mode
+    return;
+  }
 
   // LED heartbeat indicator
   ledcWrite(ConfigConstants::Hardware::LED_CHANNEL, config.led_brightness);
