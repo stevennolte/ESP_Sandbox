@@ -1,0 +1,43 @@
+<map id="StatusIndicator::setLEDColor" name="StatusIndicator::setLEDColor">
+<area shape="rect" id="Node000001" title="Set RGB LED color values." alt="" coords="811,187,1017,212"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#a5e362d6679ce7bd558095d3c0381837c" title="Disable the status indicator (turns off LED)" alt="" coords="557,20,731,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="889,179,834,127,799,99,761,75,729,60,695,48,697,43,731,55,764,70,802,95,838,123,893,175"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#af7c7d79d91d4ff1f7364cf5d9c664e51" title="Set the animation mode." alt="" coords="552,85,736,111"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="875,183,822,157,762,133,699,113,700,108,764,127,824,153,877,178"/>
+<area shape="rect" id="Node000015" href="$classStatusIndicator.html#a15fe973ce9d9a1a838df26e98204c5ff" title="Update animations &#45; must be called regularly in main loop." alt="" coords="296,236,469,261"/>
+<area shape="poly" id="edge14_Node000001_Node000015" title=" " alt="" coords="855,186,787,172,704,161,614,161,569,166,526,177,512,183,502,190,479,208,416,238,414,233,476,204,499,186,509,178,524,171,568,161,614,156,704,156,788,166,856,181"/>
+<area shape="rect" id="Node000016" href="$classStatusIndicator.html#a3a7ac8d902c74ac2c8c7cf8b1a0fd8bf" title="Update blink animation." alt="" coords="541,187,747,212"/>
+<area shape="poly" id="edge15_Node000001_Node000016" title=" " alt="" coords="797,202,747,202,747,197,797,197"/>
+<area shape="rect" id="Node000017" href="$classStatusIndicator.html#ae035b77033e51c7105cf8de1bbb3f58a" title="Update breathing animation." alt="" coords="532,236,756,261"/>
+<area shape="poly" id="edge17_Node000001_Node000017" title=" " alt="" coords="831,217,715,239,714,233,830,212"/>
+<area shape="rect" id="Node000018" href="$classStatusIndicator.html#adfb76aa441c7fc7ebea9b173feaf587f" title="Update pulse animation." alt="" coords="540,285,748,311"/>
+<area shape="poly" id="edge19_Node000001_Node000018" title=" " alt="" coords="880,221,827,249,764,275,718,288,717,283,762,270,824,244,878,216"/>
+<area shape="rect" id="Node000019" href="$classStatusIndicator.html#a994a62e16454b236b935167e35bae9f0" title="Update RGB color cycling animation." alt="" coords="525,335,763,360"/>
+<area shape="poly" id="edge21_Node000001_Node000019" title=" " alt="" coords="894,224,838,275,803,302,764,324,729,337,727,332,762,320,800,297,835,271,890,220"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#ad6d3b4809a7f6f1f6068b271ef50c152" title="Toggle the enabled state." alt="" coords="298,5,467,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="543,30,467,25,468,20,543,24"/>
+<area shape="rect" id="Node000005" href="$classStatusIndicator.html#ac0e9588a156a3dba8fedf14897cfba1b" title="Initialize the status indicator with specified brightness." alt="" coords="301,55,465,80"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="538,88,464,80,465,74,539,83"/>
+<area shape="rect" id="Node000006" href="$classStatusIndicator.html#a2b860e78c232539231749ed4ceb6df87" title="Turn off the indicator." alt="" coords="310,104,455,129"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="539,108,456,114,455,109,538,103"/>
+<area shape="rect" id="Node000007" href="$classStatusIndicator.html#a565ca4b4a5c27816e073708e3a067ece" title="Set both status type and animation mode." alt="" coords="288,154,477,194"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="582,117,526,133,448,156,446,151,525,127,581,112"/>
+<area shape="rect" id="Node000008" href="$classStatusIndicator.html#aa352696f746ce7c38dfb92e45953009f" title="Show connecting status (cyan breathing)" alt="" coords="5,13,240,39"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="295,149,286,143,269,119,262,95,256,73,238,52,219,41,222,37,242,48,260,70,267,94,273,117,290,139,298,145"/>
+<area shape="rect" id="Node000009" href="$classStatusIndicator.html#a32203370e0a8c6c82aaa8c5498199357" title="Show error status (red fast blinking)" alt="" coords="26,63,219,88"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="302,151,287,143,272,132,262,121,253,111,239,102,210,91,211,86,241,97,256,107,266,118,276,128,289,138,304,146"/>
+<area shape="rect" id="Node000010" href="$classStatusIndicator.html#a4b102485727038932f9a8c1b3a669d9d" title="Show info status (blue solid)" alt="" coords="29,112,216,137"/>
+<area shape="poly" id="edge9_Node000007_Node000010" title=" " alt="" coords="274,156,190,140,191,135,275,151"/>
+<area shape="rect" id="Node000011" href="$classStatusIndicator.html#a11fa21d9e416009d7cfa7760f79bff15" title="Show normal status (green pulsing)" alt="" coords="17,161,228,187"/>
+<area shape="poly" id="edge10_Node000007_Node000011" title=" " alt="" coords="274,177,228,177,228,171,274,171"/>
+<area shape="rect" id="Node000012" href="$classStatusIndicator.html#a59139509e89a55f7368586f97c65093e" title="Show recovery status (red fast blinking)" alt="" coords="11,211,234,236"/>
+<area shape="poly" id="edge11_Node000007_Node000012" title=" " alt="" coords="275,197,191,213,190,208,274,192"/>
+<area shape="rect" id="Node000013" href="$classStatusIndicator.html#ab17492a890febb127c2aee37f026c560" title="Show success status (bright green solid)" alt="" coords="15,260,230,285"/>
+<area shape="poly" id="edge12_Node000007_Node000013" title=" " alt="" coords="332,203,241,250,197,262,196,257,239,245,330,198"/>
+<area shape="rect" id="Node000014" href="$classStatusIndicator.html#a0b5d29aa9ab2b5902829d49ec0f43698" title="Show warning status (orange/yellow slow blinking)" alt="" coords="15,309,230,335"/>
+<area shape="poly" id="edge13_Node000007_Node000014" title=" " alt="" coords="322,203,290,225,275,244,268,263,259,281,242,299,217,312,214,307,238,295,255,278,263,260,271,241,286,221,319,198"/>
+<area shape="poly" id="edge16_Node000016_Node000015" title=" " alt="" coords="563,217,451,239,450,233,562,212"/>
+<area shape="poly" id="edge18_Node000017_Node000015" title=" " alt="" coords="518,251,470,251,470,246,518,246"/>
+<area shape="poly" id="edge20_Node000018_Node000015" title=" " alt="" coords="562,285,450,264,451,259,563,280"/>
+<area shape="poly" id="edge22_Node000019_Node000015" title=" " alt="" coords="555,334,524,324,457,294,403,264,406,259,459,289,526,320,557,329"/>
+</map>

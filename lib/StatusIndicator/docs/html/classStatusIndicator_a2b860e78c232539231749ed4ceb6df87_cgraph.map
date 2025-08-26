@@ -1,0 +1,9 @@
+<map id="StatusIndicator::off" name="StatusIndicator::off">
+<area shape="rect" id="Node000001" title="Turn off the indicator." alt="" coords="5,31,151,56"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#af7c7d79d91d4ff1f7364cf5d9c664e51" title="Set the animation mode." alt="" coords="199,31,383,56"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="151,41,185,41,185,46,151,46"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="434,5,641,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="383,31,420,27,421,33,383,37"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="431,55,644,80"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="383,50,417,53,417,58,383,55"/>
+</map>

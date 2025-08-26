@@ -1,0 +1,9 @@
+<map id="StatusIndicator::updateBlink" name="StatusIndicator::updateBlink">
+<area shape="rect" id="Node000001" title="Update blink animation." alt="" coords="5,70,212,95"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#a9edd883389bdd3f1737be0acf62431f6" title="Get RGB color values for a given status type." alt="" coords="271,5,462,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="166,67,262,46,263,51,167,73"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="263,70,470,95"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="212,80,250,80,250,85,212,85"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="260,119,473,145"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="176,93,287,114,286,119,175,98"/>
+</map>

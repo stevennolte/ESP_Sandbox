@@ -1,0 +1,5 @@
+<map id="StatusIndicator::setupPWMChannels" name="StatusIndicator::setupPWMChannels">
+<area shape="rect" id="Node000001" title="Setup PWM channels for LED control." alt="" coords="217,5,475,31"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#ac0e9588a156a3dba8fedf14897cfba1b" title="Initialize the status indicator with specified brightness." alt="" coords="5,5,169,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="203,21,170,21,170,15,203,15"/>
+</map>

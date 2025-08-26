@@ -18,9 +18,13 @@
 #include "Config.h"
 #include "WiFiHelper.h"
 #include "SystemUtils.h"
+#include <StatusIndicator.h>
 
 // Get config instance
 Config& config = Config::getInstance();
+
+// --- Status Indicator ---
+StatusIndicator statusLED;
 
 // --- Watchdog Variables ---
 bool recoveryMode = false;
@@ -249,6 +253,9 @@ void handleBrightness() {
     if (newBrightness >= 0 && newBrightness <= 255) {
       config.saveLedBrightness(newBrightness);
       
+      // Update status LED brightness
+      statusLED.setBrightness(newBrightness);
+      
       String html = loadTemplate("simple_response.html");
       html.replace("{{TITLE}}", "Brightness Updated");
       html.replace("{{HEADER}}", "LED Brightness Updated");
@@ -448,6 +455,10 @@ void handleDebug() {
   float cpuTemp = SystemUtils::readCPUTemperature();
   debugSections += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value' data-id='sensor-cpu-temp'>" + String(cpuTemp, 1) + "°C</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value' data-id='sensor-led-brightness'>" + String(config.led_brightness) + "/255</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Type:</span><span class='debug-value'>" + String(statusLED.getLEDType() == LEDType::RGB_LED ? "RGB LED" : "Single LED") + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Mode:</span><span class='debug-value' data-id='sensor-led-mode'>" + String((int)statusLED.getMode()) + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Status:</span><span class='debug-value' data-id='sensor-led-status'>" + String((int)statusLED.getStatus()) + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Enabled:</span><span class='debug-value' data-id='sensor-led-enabled'>" + String(statusLED.isEnabled() ? "Yes" : "No") + "</span></div>";
   debugSections += "</div>";
   
   // Timing Information
@@ -531,6 +542,10 @@ void handleDebugData() {
   // Sensor Information
   doc["sensors"]["cpuTemp"] = SystemUtils::readCPUTemperature();
   doc["sensors"]["ledBrightness"] = config.led_brightness;
+  doc["sensors"]["statusLedType"] = statusLED.getLEDType() == LEDType::RGB_LED ? "RGB" : "Single";
+  doc["sensors"]["statusLedMode"] = (int)statusLED.getMode();
+  doc["sensors"]["statusLedStatus"] = (int)statusLED.getStatus();
+  doc["sensors"]["statusLedEnabled"] = statusLED.isEnabled();
   
   // Timing Information
   unsigned long currentTime = millis();
@@ -909,6 +924,49 @@ void setupWebServer() {
     delay(35000); // This will trigger the watchdog timeout
   });
   
+  // Status LED test endpoints
+  server.on("/test-led", []() {
+    String html = "<!DOCTYPE html><html><head><title>LED Test</title>";
+    html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:50px auto;padding:20px}";
+    html += ".button{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;margin:5px;text-decoration:none;display:inline-block}</style></head><body>";
+    html += "<h1>Status LED Test</h1>";
+    html += "<p>Current LED Type: <strong>" + String(statusLED.getLEDType() == LEDType::RGB_LED ? "RGB LED" : "Single LED") + "</strong></p>";
+    html += "<p>Current Status: <strong>" + statusLED.getStatusString() + "</strong></p>";
+    html += "<div>";
+    html += "<a href='/led-normal' class='button'>Normal</a>";
+    html += "<a href='/led-warning' class='button'>Warning</a>";
+    html += "<a href='/led-error' class='button'>Error</a>";
+    html += "<a href='/led-info' class='button'>Info</a>";
+    html += "<a href='/led-success' class='button'>Success</a>";
+    html += "<a href='/led-connecting' class='button'>Connecting</a>";
+    html += "<a href='/led-recovery' class='button'>Recovery</a>";
+    if (statusLED.getLEDType() == LEDType::RGB_LED) {
+      html += "<a href='/led-cycle' class='button'>RGB Cycle</a>";
+    }
+    html += "<a href='/led-off' class='button'>Off</a>";
+    html += "</div>";
+    html += "<p><a href='/'>← Back to Main</a></p>";
+    html += "</body></html>";
+    server.send(200, "text/html", html);
+  });
+  
+  server.on("/led-normal", []() { statusLED.showNormal(); server.send(200, "text/plain", "LED: Normal"); });
+  server.on("/led-warning", []() { statusLED.showWarning(); server.send(200, "text/plain", "LED: Warning"); });
+  server.on("/led-error", []() { statusLED.showError(); server.send(200, "text/plain", "LED: Error"); });
+  server.on("/led-info", []() { statusLED.showInfo(); server.send(200, "text/plain", "LED: Info"); });
+  server.on("/led-success", []() { statusLED.showSuccess(); server.send(200, "text/plain", "LED: Success"); });
+  server.on("/led-connecting", []() { statusLED.showConnecting(); server.send(200, "text/plain", "LED: Connecting"); });
+  server.on("/led-recovery", []() { statusLED.showRecovery(); server.send(200, "text/plain", "LED: Recovery"); });
+  server.on("/led-cycle", []() { 
+    if (statusLED.getLEDType() == LEDType::RGB_LED) {
+      statusLED.setStatusWithMode(StatusType::NORMAL, IndicatorMode::RGB_CYCLE);
+      server.send(200, "text/plain", "LED: RGB Cycle");
+    } else {
+      server.send(400, "text/plain", "RGB Cycle not available on single LED");
+    }
+  });
+  server.on("/led-off", []() { statusLED.off(); server.send(200, "text/plain", "LED: Off"); });
+  
   server.begin();
   Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
 }
@@ -928,12 +986,17 @@ void setup() {
   Serial.printf("Board Type: %s\n", SystemUtils::getBoardType().c_str());
   Serial.printf("Firmware Version: %d (v%d.%d)\n", ConfigConstants::Firmware::VERSION, ConfigConstants::Firmware::VERSION/100, ConfigConstants::Firmware::VERSION%100);
   
+  // Initialize status indicator
+  statusLED.begin(config.led_brightness);
+  statusLED.showConnecting();
+  
   // Initialize watchdog timer
   initWatchdog();
   
   // Check if we're in recovery mode
   if (isRecoveryMode()) {
     Serial.println("⚠ Device is in recovery mode - limited functionality");
+    statusLED.showRecovery();
     
     // Basic WiFi setup for recovery
     WiFi.begin(ConfigConstants::WiFi::DEFAULT_SSID, ConfigConstants::WiFi::DEFAULT_PASSWORD);
@@ -946,20 +1009,20 @@ void setup() {
     
     if (WiFi.status() == WL_CONNECTED) {
       Serial.printf("\n✓ WiFi connected: %s\n", WiFi.localIP().toString().c_str());
+      statusLED.showWarning();  // Recovery mode connected
     }
     
     enterRecoveryMode();
     return; // Skip normal setup in recovery mode
   }
   
-  // Initialize hardware
-  ledcSetup(ConfigConstants::Hardware::LED_CHANNEL, ConfigConstants::Hardware::LED_FREQ, ConfigConstants::Hardware::LED_RESOLUTION);
-  ledcAttachPin(ConfigConstants::Hardware::LED_PIN, ConfigConstants::Hardware::LED_CHANNEL);
-  ledcWrite(ConfigConstants::Hardware::LED_CHANNEL, 0); // Start with LED off
+  // Initialize hardware (LED now handled by StatusIndicator)
+  // No need for manual LED setup anymore
   
   // Initialize filesystem
   if (!LittleFS.begin(true)) {
     Serial.println("ERROR: Failed to mount LittleFS");
+    statusLED.showError();
     return;
   }
   Serial.println("✓ LittleFS mounted");
@@ -971,11 +1034,14 @@ void setup() {
   WiFiHelper::setup();
   if (!WiFiHelper::isConnected()) {
     Serial.println("ERROR: Failed to establish network connection");
+    statusLED.showError();
     return;
   }
   
   // Log connection status
   Serial.println(WiFiHelper::getConnectionInfo());
+  statusLED.showSuccess();
+  delay(1000);
   
   // Ensure web template exists and is up to date
   ensureTemplateExists();
@@ -1012,11 +1078,17 @@ void setup() {
   otaUpdater.checkForUpdates();
   config.updateUpdateCheckTime(millis());
   
+  // Set normal operation status
+  statusLED.showNormal();
+  
   Serial.println("=== Setup Complete ===\n");
 }
 
 void loop() {
   unsigned long currentTime = millis();
+
+  // Update status indicator (must be called for animations)
+  statusLED.update();
 
   // Feed the watchdog timer at the start of each loop
   if (!recoveryMode) {
@@ -1033,11 +1105,6 @@ void loop() {
     return;
   }
 
-  // LED heartbeat indicator
-  ledcWrite(ConfigConstants::Hardware::LED_CHANNEL, config.led_brightness);
-  delay(ConfigConstants::Timing::LED_PULSE_DURATION);
-  ledcWrite(ConfigConstants::Hardware::LED_CHANNEL, 0);
-  
   // Handle web server requests
   server.handleClient();
 
@@ -1047,12 +1114,21 @@ void loop() {
   if (config.shouldCheckWiFi(currentTime)) {
     WiFiHelper::checkConnection();
     config.updateWiFiCheckTime(currentTime);
+    
+    // Update status based on WiFi connection
+    if (!WiFiHelper::isConnected()) {
+      statusLED.showError();
+    } else {
+      statusLED.showNormal();
+    }
   }
   
   // OTA update checking (every 5 minutes)
   if (config.shouldCheckUpdates(currentTime)) {
+    statusLED.showInfo();  // Show checking for updates
     otaUpdater.checkForUpdates();
     config.updateUpdateCheckTime(currentTime);
+    statusLED.showNormal();  // Back to normal
   }
 
   delay(ConfigConstants::Timing::MAIN_LOOP_DELAY);

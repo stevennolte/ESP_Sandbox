@@ -1,0 +1,9 @@
+<map id="StatusIndicator::updateBreathe" name="StatusIndicator::updateBreathe">
+<area shape="rect" id="Node000001" title="Update breathing animation." alt="" coords="5,70,229,95"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#a9edd883389bdd3f1737be0acf62431f6" title="Get RGB color values for a given status type." alt="" coords="289,5,479,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="177,67,277,46,278,51,178,73"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="281,70,487,95"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="229,80,267,80,267,85,229,85"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="277,119,491,145"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="187,93,302,114,301,119,186,98"/>
+</map>

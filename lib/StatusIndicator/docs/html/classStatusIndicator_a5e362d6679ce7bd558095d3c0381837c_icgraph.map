@@ -1,0 +1,5 @@
+<map id="StatusIndicator::disable" name="StatusIndicator::disable">
+<area shape="rect" id="Node000001" title="Disable the status indicator (turns off LED)" alt="" coords="223,5,397,31"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#ad6d3b4809a7f6f1f6068b271ef50c152" title="Toggle the enabled state." alt="" coords="5,5,175,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="208,21,175,21,175,15,208,15"/>
+</map>

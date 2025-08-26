@@ -1,0 +1,9 @@
+<map id="StatusIndicator::updatePulse" name="StatusIndicator::updatePulse">
+<area shape="rect" id="Node000001" title="Update pulse animation." alt="" coords="5,70,213,95"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#a9edd883389bdd3f1737be0acf62431f6" title="Get RGB color values for a given status type." alt="" coords="273,5,463,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="167,67,263,46,264,51,168,73"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="265,70,471,95"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="214,80,251,80,251,85,214,85"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="261,119,475,145"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="177,93,288,114,287,119,176,98"/>
+</map>

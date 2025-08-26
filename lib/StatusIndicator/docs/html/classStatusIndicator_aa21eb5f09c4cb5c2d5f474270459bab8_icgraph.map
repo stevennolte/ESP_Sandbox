@@ -1,0 +1,7 @@
+<map id="StatusIndicator::hsvToRgb" name="StatusIndicator::hsvToRgb">
+<area shape="rect" id="Node000001" title="Convert HSV color space to RGB." alt="" coords="512,5,703,31"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#a994a62e16454b236b935167e35bae9f0" title="Update RGB color cycling animation." alt="" coords="227,5,464,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="498,21,464,21,464,15,498,15"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a15fe973ce9d9a1a838df26e98204c5ff" title="Update animations &#45; must be called regularly in main loop." alt="" coords="5,5,179,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="213,21,179,21,179,15,213,15"/>
+</map>

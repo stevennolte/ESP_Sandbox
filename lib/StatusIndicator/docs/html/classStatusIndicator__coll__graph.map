@@ -1,0 +1,19 @@
+<map id="StatusIndicator" name="StatusIndicator">
+<area shape="rect" id="Node000001" title=" " alt="" coords="371,280,586,1059"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,75,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="40,71,39,110,42,157,51,207,68,255,95,305,128,353,202,442,283,519,360,583,357,587,279,523,199,445,123,356,91,308,63,257,46,208,37,158,34,110,35,71"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="115,5,146,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="132,71,136,156,145,206,160,255,201,337,252,415,307,487,362,550,358,554,303,491,247,419,196,340,155,257,139,208,131,157,127,71"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="239,5,345,71"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="295,71,301,155,317,255,340,335,368,414,363,416,335,337,312,257,296,156,290,71"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="372,5,457,71"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="416,71,415,155,419,256,419,263,414,264,413,256,410,155,411,71"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="513,5,572,71"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="542,71,522,264,517,263,537,71"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="629,5,672,71"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="650,71,640,155,621,257,593,358,588,357,616,255,635,155,645,71"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="729,5,834,71"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="784,71,776,156,767,207,752,257,720,329,682,399,640,465,598,526,593,523,636,462,677,396,715,327,747,255,762,206,771,156,778,71"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="869,5,936,71"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="907,71,903,157,893,208,876,257,849,306,819,353,749,440,673,516,600,580,597,576,669,513,745,436,815,349,845,303,871,255,888,207,898,157,902,71"/>
+</map>

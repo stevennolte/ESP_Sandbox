@@ -1,0 +1,23 @@
+<map id="StatusIndicator::setMode" name="StatusIndicator::setMode">
+<area shape="rect" id="Node000001" title="Set the animation mode." alt="" coords="525,96,709,121"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#ac0e9588a156a3dba8fedf14897cfba1b" title="Initialize the status indicator with specified brightness." alt="" coords="301,47,465,72"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="542,96,443,75,445,69,543,91"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a2b860e78c232539231749ed4ceb6df87" title="Turn off the indicator." alt="" coords="310,96,455,121"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="511,111,455,111,455,106,511,106"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a565ca4b4a5c27816e073708e3a067ece" title="Set both status type and animation mode." alt="" coords="288,146,477,186"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="552,127,466,149,464,143,551,122"/>
+<area shape="rect" id="Node000005" href="$classStatusIndicator.html#aa352696f746ce7c38dfb92e45953009f" title="Show connecting status (cyan breathing)" alt="" coords="5,5,240,31"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="295,141,286,135,269,111,262,87,256,65,238,44,219,33,222,29,242,40,260,62,267,86,273,109,290,131,298,137"/>
+<area shape="rect" id="Node000006" href="$classStatusIndicator.html#a32203370e0a8c6c82aaa8c5498199357" title="Show error status (red fast blinking)" alt="" coords="26,55,219,80"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="302,143,287,135,272,124,262,113,253,103,239,94,210,83,211,78,241,89,256,99,266,110,276,120,289,130,304,138"/>
+<area shape="rect" id="Node000007" href="$classStatusIndicator.html#a4b102485727038932f9a8c1b3a669d9d" title="Show info status (blue solid)" alt="" coords="29,104,216,129"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="274,148,190,132,191,127,275,143"/>
+<area shape="rect" id="Node000008" href="$classStatusIndicator.html#a11fa21d9e416009d7cfa7760f79bff15" title="Show normal status (green pulsing)" alt="" coords="17,153,228,179"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="274,169,228,169,228,163,274,163"/>
+<area shape="rect" id="Node000009" href="$classStatusIndicator.html#a59139509e89a55f7368586f97c65093e" title="Show recovery status (red fast blinking)" alt="" coords="11,203,234,228"/>
+<area shape="poly" id="edge8_Node000004_Node000009" title=" " alt="" coords="275,189,191,205,190,200,274,184"/>
+<area shape="rect" id="Node000010" href="$classStatusIndicator.html#ab17492a890febb127c2aee37f026c560" title="Show success status (bright green solid)" alt="" coords="15,252,230,277"/>
+<area shape="poly" id="edge9_Node000004_Node000010" title=" " alt="" coords="338,195,292,220,241,242,197,254,196,249,239,237,290,215,336,191"/>
+<area shape="rect" id="Node000011" href="$classStatusIndicator.html#a0b5d29aa9ab2b5902829d49ec0f43698" title="Show warning status (orange/yellow slow blinking)" alt="" coords="15,301,230,327"/>
+<area shape="poly" id="edge10_Node000004_Node000011" title=" " alt="" coords="357,198,307,246,275,271,241,291,208,304,206,299,239,286,272,266,303,242,353,194"/>
+</map>

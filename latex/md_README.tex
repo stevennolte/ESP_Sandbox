@@ -1,0 +1,166 @@
+\chapter{ESP32 IoT Device with OTA Updates}
+\hypertarget{md_README}{}\label{md_README}\index{ESP32 IoT Device with OTA Updates@{ESP32 IoT Device with OTA Updates}}
+\label{md_README_autotoc_md58}%
+\Hypertarget{md_README_autotoc_md58}%
+ A comprehensive ESP32 IoT project featuring LED control, MQTT integration, web interface, and automatic OTA firmware updates from Git\+Hub releases.\hypertarget{md_README_autotoc_md59}{}\doxysection{\texorpdfstring{Features}{Features}}\label{md_README_autotoc_md59}
+\hypertarget{md_README_autotoc_md60}{}\doxysubsection{\texorpdfstring{Core Functionality}{Core Functionality}}\label{md_README_autotoc_md60}
+
+\begin{DoxyItemize}
+\item {\bfseries{LED Indicator}}\+: PWM-\/controlled brightness with web configuration
+\item {\bfseries{Temperature Monitoring}}\+: Internal ESP32 CPU temperature via MQTT
+\item {\bfseries{Web Interface}}\+: Responsive HTML interface for device configuration
+\item {\bfseries{MQTT Integration}}\+: Home Assistant compatible with auto-\/discovery
+\item {\bfseries{OTA Updates}}\+: Automatic firmware updates from Git\+Hub releases
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md61}{}\doxysubsection{\texorpdfstring{Network Features}{Network Features}}\label{md_README_autotoc_md61}
+
+\begin{DoxyItemize}
+\item {\bfseries{Wi\+Fi Connection}}\+: Automatic connection with status monitoring
+\item {\bfseries{m\+DNS Support}}\+: Access device via {\ttfamily \href{http://}{\texttt{ http\+://}}\mbox{[}client-\/id\mbox{]}.local}
+\item {\bfseries{MQTT Auto-\/\+Discovery}}\+: Automatically finds Home Assistant server
+\item {\bfseries{Multi-\/\+Board Support}}\+: ESP32 Dev\+Kit and Seeed Xiao ESP32\+S3
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md62}{}\doxysection{\texorpdfstring{Hardware Requirements}{Hardware Requirements}}\label{md_README_autotoc_md62}
+
+\begin{DoxyItemize}
+\item ESP32 development board (Dev\+Kit or Seeed Xiao ESP32\+S3)
+\item DS18\+B20 temperature sensor (optional)
+\item Built-\/in LED (pin 2)
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md63}{}\doxysection{\texorpdfstring{Pin Configuration}{Pin Configuration}}\label{md_README_autotoc_md63}
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{2}{|X[-1]}|}
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Component   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Pin    }\\\cline{1-2}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Component   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Pin    }\\\cline{1-2}
+\endhead
+DS18\+B20 Data   &GPIO 4    \\\cline{1-2}
+DS18\+B20 Power   &GPIO 21    \\\cline{1-2}
+LED   &GPIO 2   \\\cline{1-2}
+\end{longtabu}
+\hypertarget{md_README_autotoc_md64}{}\doxysection{\texorpdfstring{Software Dependencies}{Software Dependencies}}\label{md_README_autotoc_md64}
+\hypertarget{md_README_autotoc_md65}{}\doxysubsection{\texorpdfstring{Platform\+IO Libraries}{PlatformIO Libraries}}\label{md_README_autotoc_md65}
+
+\begin{DoxyItemize}
+\item One\+Wire
+\item Dallas\+Temperature
+\item Wi\+Fi
+\item Arduino\+Json
+\item Preferences
+\item Web\+Server
+\item ESPm\+DNS
+\item Little\+FS
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md66}{}\doxysubsection{\texorpdfstring{Custom Libraries}{Custom Libraries}}\label{md_README_autotoc_md66}
+
+\begin{DoxyItemize}
+\item ESPMQTTManager
+\item ESPOTAUpdater
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md67}{}\doxysection{\texorpdfstring{Configuration}{Configuration}}\label{md_README_autotoc_md67}
+\hypertarget{md_README_autotoc_md68}{}\doxysubsection{\texorpdfstring{Wi\+Fi Settings}{WiFi Settings}}\label{md_README_autotoc_md68}
+Update in {\ttfamily main.\+cpp}\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ ssid\ =\ \textcolor{stringliteral}{"{}YOUR\_WIFI\_SSID"{}};}
+\DoxyCodeLine{\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ password\ =\ \textcolor{stringliteral}{"{}YOUR\_WIFI\_PASSWORD"{}};}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md69}{}\doxysubsection{\texorpdfstring{MQTT Settings}{MQTT Settings}}\label{md_README_autotoc_md69}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ mqtt\_user\ =\ \textcolor{stringliteral}{"{}YOUR\_MQTT\_USERNAME"{}};}
+\DoxyCodeLine{\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ mqtt\_pass\ =\ \textcolor{stringliteral}{"{}YOUR\_MQTT\_PASSWORD"{}};}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md70}{}\doxysection{\texorpdfstring{Web Interface}{Web Interface}}\label{md_README_autotoc_md70}
+Access the device via\+:
+\begin{DoxyItemize}
+\item IP address\+: {\ttfamily \href{http://}{\texttt{ http\+://}}\mbox{[}device-\/ip\mbox{]}}
+\item m\+DNS\+: {\ttfamily \href{http://}{\texttt{ http\+://}}\mbox{[}client-\/id\mbox{]}.local}
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md71}{}\doxysubsection{\texorpdfstring{Available Endpoints}{Available Endpoints}}\label{md_README_autotoc_md71}
+
+\begin{DoxyItemize}
+\item {\ttfamily /} -\/ Main configuration page
+\item {\ttfamily /set} -\/ Update client ID (POST)
+\item {\ttfamily /brightness} -\/ Update LED brightness (POST)
+\item {\ttfamily /reboot} -\/ Restart device
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md72}{}\doxysection{\texorpdfstring{MQTT Topics}{MQTT Topics}}\label{md_README_autotoc_md72}
+All topics use the format\+: {\ttfamily homeassistant/\mbox{[}component\mbox{]}/\mbox{[}client\+\_\+id\mbox{]}/\mbox{[}entity\mbox{]}}\hypertarget{md_README_autotoc_md73}{}\doxysubsection{\texorpdfstring{Published Topics}{Published Topics}}\label{md_README_autotoc_md73}
+
+\begin{DoxyItemize}
+\item CPU Temperature\+: {\ttfamily homeassistant/sensor/\mbox{[}client\+\_\+id\mbox{]}/cpu\+\_\+temp/state}
+\item Firmware Version\+: {\ttfamily homeassistant/sensor/\mbox{[}client\+\_\+id\mbox{]}/firmware/state}
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md74}{}\doxysubsection{\texorpdfstring{Auto-\/\+Discovery}{Auto-Discovery}}\label{md_README_autotoc_md74}
+The device automatically publishes Home Assistant discovery messages for\+:
+\begin{DoxyItemize}
+\item CPU temperature sensor
+\item Firmware version sensor
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md75}{}\doxysection{\texorpdfstring{OTA Updates}{OTA Updates}}\label{md_README_autotoc_md75}
+\hypertarget{md_README_autotoc_md76}{}\doxysubsection{\texorpdfstring{Automatic Updates}{Automatic Updates}}\label{md_README_autotoc_md76}
+
+\begin{DoxyItemize}
+\item Checks for new firmware every 5 minutes
+\item Downloads from Git\+Hub releases automatically
+\item Supports board-\/specific firmware files\+:
+\begin{DoxyItemize}
+\item {\ttfamily firmware-\/esp32-\/devkit.\+bin} for ESP32 Dev\+Kit
+\item {\ttfamily firmware-\/xiao-\/esp32s3.\+bin} for Seeed Xiao ESP32\+S3
+\item {\ttfamily firmware.\+bin} as fallback
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md77}{}\doxysubsection{\texorpdfstring{Version Format}{Version Format}}\label{md_README_autotoc_md77}
+
+\begin{DoxyItemize}
+\item Uses major.\+minor format (e.\+g., v9.\+5 = version 95)
+\item Automatically increments in Git\+Hub Actions
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md78}{}\doxysection{\texorpdfstring{Build and Deploy}{Build and Deploy}}\label{md_README_autotoc_md78}
+\hypertarget{md_README_autotoc_md79}{}\doxysubsection{\texorpdfstring{Platform\+IO}{PlatformIO}}\label{md_README_autotoc_md79}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\#\ Build\ for\ all\ environments}
+\DoxyCodeLine{pio\ run}
+\DoxyCodeLine{}
+\DoxyCodeLine{\#\ Build\ specific\ environment}
+\DoxyCodeLine{pio\ run\ -\/e\ esp32dev}
+\DoxyCodeLine{pio\ run\ -\/e\ seeed\_xiao\_esp32s3}
+\DoxyCodeLine{}
+\DoxyCodeLine{\#\ Upload\ firmware}
+\DoxyCodeLine{pio\ run\ -\/t\ upload}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md80}{}\doxysubsection{\texorpdfstring{Git\+Hub Actions}{GitHub Actions}}\label{md_README_autotoc_md80}
+Automatic build and release workflow\+:
+\begin{DoxyEnumerate}
+\item Increments version number
+\item Builds firmware for both board types
+\item Creates Git\+Hub release
+\item Uploads firmware binaries
+\end{DoxyEnumerate}\hypertarget{md_README_autotoc_md81}{}\doxysection{\texorpdfstring{File Structure}{File Structure}}\label{md_README_autotoc_md81}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{├──\ src/}
+\DoxyCodeLine{│\ \ \ └──\ main.cpp\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \#\ Main\ application\ code}
+\DoxyCodeLine{├──\ lib/}
+\DoxyCodeLine{│\ \ \ ├──\ ESPMQTTManager/\ \ \ \ \ \ \ \ \ \#\ MQTT\ management\ library}
+\DoxyCodeLine{│\ \ \ └──\ ESPOTAUpdater/\ \ \ \ \ \ \ \ \ \ \#\ OTA\ update\ library}
+\DoxyCodeLine{├──\ data/}
+\DoxyCodeLine{│\ \ \ └──\ index.html\ \ \ \ \ \ \ \ \ \ \ \ \ \ \#\ Web\ interface\ template}
+\DoxyCodeLine{├──\ platformio.ini\ \ \ \ \ \ \ \ \ \ \ \ \ \ \#\ PlatformIO\ configuration}
+\DoxyCodeLine{├──\ firmware.json\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \#\ Version\ information}
+\DoxyCodeLine{└──\ .github/workflows/\ \ \ \ \ \ \ \ \ \ \#\ CI/CD\ automation}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md82}{}\doxysection{\texorpdfstring{Development}{Development}}\label{md_README_autotoc_md82}
+\hypertarget{md_README_autotoc_md83}{}\doxysubsection{\texorpdfstring{Adding New Features}{Adding New Features}}\label{md_README_autotoc_md83}
+
+\begin{DoxyEnumerate}
+\item Implement in {\ttfamily main.\+cpp} or create new library
+\item Update firmware version in {\ttfamily main.\+cpp}
+\item Test locally with Platform\+IO
+\item Commit and push -\/ Git\+Hub Actions handles the rest
+\end{DoxyEnumerate}\hypertarget{md_README_autotoc_md84}{}\doxysubsection{\texorpdfstring{Debugging}{Debugging}}\label{md_README_autotoc_md84}
+
+\begin{DoxyItemize}
+\item Serial output available at 115200 baud
+\item Web interface shows current status
+\item MQTT messages for monitoring
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md85}{}\doxysection{\texorpdfstring{License}{License}}\label{md_README_autotoc_md85}
+This project is open source. See the repository for license details. 

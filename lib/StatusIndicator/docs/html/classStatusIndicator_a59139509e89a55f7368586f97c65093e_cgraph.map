@@ -1,0 +1,11 @@
+<map id="StatusIndicator::showRecovery" name="StatusIndicator::showRecovery">
+<area shape="rect" id="Node000001" title="Show recovery status (red fast blinking)" alt="" coords="5,31,228,56"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#a565ca4b4a5c27816e073708e3a067ece" title="Set both status type and animation mode." alt="" coords="276,23,465,63"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="228,41,262,41,262,46,228,46"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#af7c7d79d91d4ff1f7364cf5d9c664e51" title="Set the animation mode." alt="" coords="513,31,697,56"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="465,41,500,41,500,46,465,46"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="749,5,955,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="697,31,735,27,735,33,698,37"/>
+<area shape="rect" id="Node000005" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="745,55,959,80"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="698,50,732,53,731,58,697,55"/>
+</map>

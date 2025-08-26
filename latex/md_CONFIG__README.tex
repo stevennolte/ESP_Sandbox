@@ -1,0 +1,543 @@
+\chapter{📋 ESP32 Configuration System Guide}
+\hypertarget{md_CONFIG__README}{}\label{md_CONFIG__README}\index{📋 ESP32 Configuration System Guide@{📋 ESP32 Configuration System Guide}}
+\label{md_CONFIG__README_autotoc_md0}%
+\Hypertarget{md_CONFIG__README_autotoc_md0}%
+ \hypertarget{md_CONFIG__README_autotoc_md1}{}\doxysection{\texorpdfstring{🏗️ Architecture Overview}{🏗️ Architecture Overview}}\label{md_CONFIG__README_autotoc_md1}
+The ESP32 configuration system uses a {\bfseries{hybrid approach}} with three layers for maximum flexibility and organization\+:\hypertarget{md_CONFIG__README_autotoc_md2}{}\doxysubsection{\texorpdfstring{$<$strong$>$1. Compile-\/\+Time Constants ($<$tt$>$\+Config\+Constants$<$/tt$>$ namespace)\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}{<strong>1. Compile-Time Constants (<tt>ConfigConstants</tt> namespace)**}}\label{md_CONFIG__README_autotoc_md2}
+
+\begin{DoxyItemize}
+\item {\bfseries{Purpose}}\+: Fixed values that never change during runtime
+\item {\bfseries{Location}}\+: Defined in {\ttfamily Config\+Constants\+:\+:} namespaces
+\item {\bfseries{Usage}}\+: Hardware pins, default values, timeouts, version info
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md3}{}\doxysubsection{\texorpdfstring{$<$strong$>$2. Runtime Configuration Classes$<$/strong$>$}{<strong>2. Runtime Configuration Classes</strong>}}\label{md_CONFIG__README_autotoc_md3}
+
+\begin{DoxyItemize}
+\item {\bfseries{Purpose}}\+: Values that can change during program execution
+\item {\bfseries{Storage}}\+: Automatically saved to ESP32\textquotesingle{}s NVRAM (non-\/volatile memory)
+\item \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}\+Persistence\+: Survives reboots and power cycles
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md4}{}\doxysubsection{\texorpdfstring{$<$strong$>$3. Main Config Class (\+Singleton)$<$/strong$>$}{<strong>3. Main Config Class (Singleton)</strong>}}\label{md_CONFIG__README_autotoc_md4}
+
+\begin{DoxyItemize}
+\item {\bfseries{Purpose}}\+: Central access point for all configuration
+\item {\bfseries{Pattern}}\+: Single global instance accessible everywhere
+\item {\bfseries{Integration}}\+: Combines constants and runtime configs
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md6}{}\doxysection{\texorpdfstring{🔧 Layer 1\+: Compile-\/\+Time Constants}{🔧 Layer 1: Compile-Time Constants}}\label{md_CONFIG__README_autotoc_md6}
+Access constants like this in your code\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{ConfigConstants::WiFi::MAX\_ATTEMPTS\ \ \ \ \ \ \ \ \textcolor{comment}{//\ 15}}
+\DoxyCodeLine{ConfigConstants::Hardware::LED\_PIN\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ 2\ \ }}
+\DoxyCodeLine{ConfigConstants::Timing::REBOOT\_DELAY\ \ \ \ \ \ \textcolor{comment}{//\ 3000ms}}
+\DoxyCodeLine{ConfigConstants::Firmware::VERSION\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ 928}}
+\DoxyCodeLine{ConfigConstants::Network::HTTP\_TIMEOUT\_SHORT\ \textcolor{comment}{//\ 15000ms}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md7}{}\doxysubsection{\texorpdfstring{Available Constant Categories\+:}{Available Constant Categories:}}\label{md_CONFIG__README_autotoc_md7}
+\hypertarget{md_CONFIG__README_autotoc_md8}{}\doxysubsubsection{\texorpdfstring{$<$strong$>$\+Wi\+Fi Constants$<$/strong$>$}{<strong>WiFi Constants</strong>}}\label{md_CONFIG__README_autotoc_md8}
+
+\begin{DoxyItemize}
+\item {\ttfamily MAX\+\_\+\+ATTEMPTS} -\/ Default Wi\+Fi connection attempts (15)
+\item {\ttfamily RECONNECT\+\_\+\+ATTEMPTS} -\/ Default reconnection attempts (20)
+\item {\ttfamily RETRY\+\_\+\+DELAY} -\/ Delay between connection attempts (500ms)
+\item {\ttfamily CHECK\+\_\+\+INTERVAL} -\/ Wi\+Fi status check interval (30 seconds)
+\item {\ttfamily DEFAULT\+\_\+\+SSID} -\/ Default network name
+\item {\ttfamily DEFAULT\+\_\+\+PASSWORD} -\/ Default network password
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md9}{}\doxysubsubsection{\texorpdfstring{$<$strong$>$\+Hardware Constants$<$/strong$>$}{<strong>Hardware Constants</strong>}}\label{md_CONFIG__README_autotoc_md9}
+
+\begin{DoxyItemize}
+\item {\ttfamily LED\+\_\+\+PIN} -\/ Built-\/in LED pin (2)
+\item {\ttfamily LED\+\_\+\+CHANNEL} -\/ PWM channel for LED (0)
+\item {\ttfamily LED\+\_\+\+FREQ} -\/ PWM frequency (5000 Hz)
+\item {\ttfamily LED\+\_\+\+RESOLUTION} -\/ PWM resolution (8-\/bit)
+\item {\ttfamily DEFAULT\+\_\+\+LED\+\_\+\+BRIGHTNESS} -\/ Default brightness (128)
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md10}{}\doxysubsubsection{\texorpdfstring{$<$strong$>$\+Timing Constants$<$/strong$>$}{<strong>Timing Constants</strong>}}\label{md_CONFIG__README_autotoc_md10}
+
+\begin{DoxyItemize}
+\item {\ttfamily LED\+\_\+\+PULSE\+\_\+\+DURATION} -\/ LED flash duration (50ms)
+\item {\ttfamily MAIN\+\_\+\+LOOP\+\_\+\+DELAY} -\/ Main loop delay (1000ms)
+\item {\ttfamily NETWORK\+\_\+\+STABILIZATION\+\_\+\+DELAY} -\/ Network stabilization wait (2000ms)
+\item {\ttfamily REBOOT\+\_\+\+DELAY} -\/ Delay before system reboot (3000ms)
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md11}{}\doxysubsubsection{\texorpdfstring{$<$strong$>$\+Firmware Constants$<$/strong$>$}{<strong>Firmware Constants</strong>}}\label{md_CONFIG__README_autotoc_md11}
+
+\begin{DoxyItemize}
+\item {\ttfamily VERSION} -\/ Current firmware version (928 = v9.\+28)
+\item {\ttfamily GITHUB\+\_\+\+REPO} -\/ Repository for updates ("{}stevennolte/\+ESP\+\_\+\+Sandbox"{})
+\item {\ttfamily UPDATE\+\_\+\+INTERVAL} -\/ How often to check for updates (5 minutes)
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md12}{}\doxysubsubsection{\texorpdfstring{$<$strong$>$\+Network Constants$<$/strong$>$}{<strong>Network Constants</strong>}}\label{md_CONFIG__README_autotoc_md12}
+
+\begin{DoxyItemize}
+\item {\ttfamily HTTP\+\_\+\+TIMEOUT\+\_\+\+SHORT} -\/ Short HTTP timeout (15 seconds)
+\item {\ttfamily HTTP\+\_\+\+TIMEOUT\+\_\+\+LONG} -\/ Long HTTP timeout (30 seconds)
+\item {\ttfamily USER\+\_\+\+AGENT\+\_\+\+TEMPLATE} -\/ User agent for template downloads
+\item {\ttfamily USER\+\_\+\+AGENT\+\_\+\+CHECKER} -\/ User agent for update checks
+\item {\ttfamily DEFAULT\+\_\+\+CLIENT\+\_\+\+ID} -\/ Default device identifier
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md14}{}\doxysection{\texorpdfstring{🔄 Layer 2\+: Runtime Configuration Classes}{🔄 Layer 2: Runtime Configuration Classes}}\label{md_CONFIG__README_autotoc_md14}
+\hypertarget{md_CONFIG__README_autotoc_md15}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Wi\+Fi\+Config$<$/strong$>$ -\/ Network Settings}{<strong>WiFiConfig</strong> - Network Settings}}\label{md_CONFIG__README_autotoc_md15}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{config.wifi.ssid\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Current\ WiFi\ network\ name}}
+\DoxyCodeLine{config.wifi.password\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Current\ WiFi\ password\ \ }}
+\DoxyCodeLine{config.wifi.max\_attempts\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Configurable\ connection\ attempts}}
+\DoxyCodeLine{config.wifi.reconnect\_attempts\ \ \ \ \ \ \textcolor{comment}{//\ Configurable\ reconnection\ attempts}}
+\DoxyCodeLine{config.wifi.retry\_delay\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Configurable\ delay\ between\ attempts}}
+\DoxyCodeLine{config.wifi.last\_check\_time\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ When\ WiFi\ was\ last\ checked}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md16}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Hardware\+Config$<$/strong$>$ -\/ Device Settings}{<strong>HardwareConfig</strong> - Device Settings}}\label{md_CONFIG__README_autotoc_md16}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{config.hardware.led\_brightness\ \ \ \ \ \ \textcolor{comment}{//\ LED\ brightness\ (0-\/255)}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md17}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Firmware\+Config$<$/strong$>$ -\/ Update Management}{<strong>FirmwareConfig</strong> - Update Management}}\label{md_CONFIG__README_autotoc_md17}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{config.firmware.last\_update\_check\ \ \ \textcolor{comment}{//\ When\ updates\ were\ last\ checked}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md18}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Network\+Config$<$/strong$>$ -\/ Device Identity}{<strong>NetworkConfig</strong> - Device Identity}}\label{md_CONFIG__README_autotoc_md18}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{config.network.client\_id\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Unique\ device\ identifier}}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md20}{}\doxysection{\texorpdfstring{🎯 Layer 3\+: Main Config Class Usage}{🎯 Layer 3: Main Config Class Usage}}\label{md_CONFIG__README_autotoc_md20}
+\hypertarget{md_CONFIG__README_autotoc_md21}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Getting the Config Instance$<$/strong$>$}{<strong>Getting the Config Instance</strong>}}\label{md_CONFIG__README_autotoc_md21}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Config\&\ config\ =\ Config::getInstance();\ \ \textcolor{comment}{//\ Singleton\ pattern}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md22}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Initialization (in setup())$<$/strong$>$}{<strong>Initialization (in setup())</strong>}}\label{md_CONFIG__README_autotoc_md22}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ setup()\ \{}
+\DoxyCodeLine{\ \ \ \ config.begin();\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Initialize\ all\ submodules}}
+\DoxyCodeLine{\ \ \ \ config.loadFromPreferences();\ \ \ \textcolor{comment}{//\ Load\ saved\ settings\ from\ NVRAM}}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Your\ other\ setup\ code...}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md24}{}\doxysection{\texorpdfstring{📖 How to Use the Config System}{📖 How to Use the Config System}}\label{md_CONFIG__README_autotoc_md24}
+\hypertarget{md_CONFIG__README_autotoc_md25}{}\doxysubsection{\texorpdfstring{$<$strong$>$1. Reading Values$<$/strong$>$}{<strong>1. Reading Values</strong>}}\label{md_CONFIG__README_autotoc_md25}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{//\ Read\ compile-\/time\ constants}}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ maxAttempts\ =\ ConfigConstants::WiFi::MAX\_ATTEMPTS;}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ ledPin\ =\ ConfigConstants::Hardware::LED\_PIN;}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Read\ runtime\ values\ \ }}
+\DoxyCodeLine{String\ currentSSID\ =\ config.wifi.ssid;}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ brightness\ =\ config.hardware.led\_brightness;}
+\DoxyCodeLine{String\ deviceID\ =\ config.network.client\_id;}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Use\ in\ Serial\ output}}
+\DoxyCodeLine{Serial.printf(\textcolor{stringliteral}{"{}Current\ WiFi:\ \%s,\ Brightness:\ \%d\(\backslash\)n"{}},\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ config.wifi.ssid.c\_str(),\ config.hardware.led\_brightness);}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md26}{}\doxysubsection{\texorpdfstring{$<$strong$>$2. Changing Runtime Values (\+Temporary)$<$/strong$>$}{<strong>2. Changing Runtime Values (Temporary)</strong>}}\label{md_CONFIG__README_autotoc_md26}
+Changes are lost on reboot unless explicitly saved\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{//\ Temporary\ changes\ (lost\ on\ reboot)}}
+\DoxyCodeLine{config.wifi.max\_attempts\ =\ 50;}
+\DoxyCodeLine{config.hardware.led\_brightness\ =\ 200;}
+\DoxyCodeLine{config.network.client\_id\ =\ \textcolor{stringliteral}{"{}MyDevice123"{}};}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md27}{}\doxysubsection{\texorpdfstring{$<$strong$>$3. Changing Runtime Values (\+Permanent)$<$/strong$>$}{<strong>3. Changing Runtime Values (Permanent)</strong>}}\label{md_CONFIG__README_autotoc_md27}
+These methods automatically save to NVRAM and survive reboots\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{//\ Permanently\ save\ WiFi\ credentials}}
+\DoxyCodeLine{config.saveWiFiCredentials(\textcolor{stringliteral}{"{}MyNetwork"{}},\ \textcolor{stringliteral}{"{}MyPassword"{}});}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Permanently\ save\ LED\ brightness}}
+\DoxyCodeLine{config.saveLedBrightness(180);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Permanently\ save\ device\ ID}}
+\DoxyCodeLine{config.saveClientId(\textcolor{stringliteral}{"{}ProductionDevice"{}});}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Permanently\ save\ WiFi\ connection\ parameters}}
+\DoxyCodeLine{config.saveWiFiParams(50,\ 30,\ 1000);\ \ \textcolor{comment}{//\ max\_attempts,\ reconnect\_attempts,\ retry\_delay}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md28}{}\doxysubsection{\texorpdfstring{$<$strong$>$4. Using in Your Code$<$/strong$>$}{<strong>4. Using in Your Code</strong>}}\label{md_CONFIG__README_autotoc_md28}
+\hypertarget{md_CONFIG__README_autotoc_md29}{}\doxysubsubsection{\texorpdfstring{Wi\+Fi Connection Example\+:}{WiFi Connection Example:}}\label{md_CONFIG__README_autotoc_md29}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ connectWiFi()\ \{}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}Connecting\ to\ \%s\ with\ \%d\ max\ attempts...\(\backslash\)n"{}},\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ config.wifi.ssid.c\_str(),\ config.wifi.max\_attempts);}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ WiFi.begin(config.wifi.ssid.c\_str(),\ config.wifi.password.c\_str());}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{int}\ attempts\ =\ 0;}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{while}\ (WiFi.status()\ !=\ WL\_CONNECTED\ \&\&\ attempts\ <\ config.wifi.max\_attempts)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ delay(config.wifi.retry\_delay);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ Serial.print(\textcolor{stringliteral}{"{}."{}});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ attempts++;}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{if}\ (WiFi.status()\ ==\ WL\_CONNECTED)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}\(\backslash\)n✓\ Connected\ after\ \%d\ attempts\(\backslash\)n"{}},\ attempts);}
+\DoxyCodeLine{\ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}\(\backslash\)n✗\ Failed\ after\ \%d\ attempts\(\backslash\)n"{}},\ attempts);}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md30}{}\doxysubsubsection{\texorpdfstring{LED Control Example\+:}{LED Control Example:}}\label{md_CONFIG__README_autotoc_md30}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ updateLED()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Use\ hardware\ constants\ for\ pin\ setup}}
+\DoxyCodeLine{\ \ \ \ ledcSetup(ConfigConstants::Hardware::LED\_CHANNEL,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ ConfigConstants::Hardware::LED\_FREQ,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ ConfigConstants::Hardware::LED\_RESOLUTION);}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Use\ runtime\ brightness\ setting}}
+\DoxyCodeLine{\ \ \ \ ledcWrite(ConfigConstants::Hardware::LED\_CHANNEL,\ config.hardware.led\_brightness);}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md31}{}\doxysubsubsection{\texorpdfstring{Timing Example\+:}{Timing Example:}}\label{md_CONFIG__README_autotoc_md31}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ loop()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Your\ main\ code\ here}}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Use\ configurable\ main\ loop\ delay}}
+\DoxyCodeLine{\ \ \ \ delay(ConfigConstants::Timing::MAIN\_LOOP\_DELAY);}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md33}{}\doxysection{\texorpdfstring{💾 Persistence \& Storage}{💾 Persistence \& Storage}}\label{md_CONFIG__README_autotoc_md33}
+\hypertarget{md_CONFIG__README_autotoc_md34}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+What Gets Saved Automatically\+:$<$/strong$>$}{<strong>What Gets Saved Automatically:</strong>}}\label{md_CONFIG__README_autotoc_md34}
+
+\begin{DoxyItemize}
+\item ✅ Wi\+Fi credentials (SSID, password)
+\item ✅ Wi\+Fi connection parameters (max\+\_\+attempts, retry\+\_\+delay, etc.)
+\item ✅ LED brightness setting
+\item ✅ Device client ID
+\item ✅ Firmware version tracking
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md35}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Storage Details\+:$<$/strong$>$}{<strong>Storage Details:</strong>}}\label{md_CONFIG__README_autotoc_md35}
+
+\begin{DoxyItemize}
+\item {\bfseries{Location}}\+: ESP32\textquotesingle{}s NVRAM (Non-\/\+Volatile RAM)
+\item {\bfseries{Namespace}}\+: {\ttfamily "{}esp-\/config"{}}
+\item {\bfseries{Persistence}}\+: Survives power cycles, firmware updates, and reboots
+\item {\bfseries{Loading}}\+: Automatic at startup via {\ttfamily config.\+load\+From\+Preferences()}
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md36}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Storage Keys\+:$<$/strong$>$}{<strong>Storage Keys:</strong>}}\label{md_CONFIG__README_autotoc_md36}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{wifi\_ssid\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ //\ WiFi\ network\ name}
+\DoxyCodeLine{wifi\_password\ \ \ \ \ \ \ \ \ \ \ //\ WiFi\ password}
+\DoxyCodeLine{wifi\_max\_attempts\ \ \ \ \ \ \ //\ Connection\ attempts}
+\DoxyCodeLine{wifi\_reconnect\_attempts\ //\ Reconnection\ attempts\ \ }
+\DoxyCodeLine{wifi\_retry\_delay\ \ \ \ \ \ \ \ //\ Delay\ between\ attempts}
+\DoxyCodeLine{led\_brightness\ \ \ \ \ \ \ \ \ \ //\ LED\ brightness\ value}
+\DoxyCodeLine{client\_id\ \ \ \ \ \ \ \ \ \ \ \ \ \ //\ Device\ identifier}
+\DoxyCodeLine{last\_firmware\_version\ \ \ //\ Firmware\ version\ tracking}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md38}{}\doxysection{\texorpdfstring{🔍 Backward Compatibility}{🔍 Backward Compatibility}}\label{md_CONFIG__README_autotoc_md38}
+The system maintains compatibility with older code patterns\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{//\ Legacy\ access\ (still\ works,\ but\ deprecated)}}
+\DoxyCodeLine{config.wifi\_ssid\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ References\ config.wifi.ssid}}
+\DoxyCodeLine{config.wifi\_password\ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ References\ config.wifi.password\ \ }}
+\DoxyCodeLine{config.led\_brightness\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ References\ config.hardware.led\_brightness}}
+\DoxyCodeLine{config.client\_id\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ References\ config.network.client\_id}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Modern\ access\ (preferred)}}
+\DoxyCodeLine{config.wifi.ssid}
+\DoxyCodeLine{config.wifi.password}
+\DoxyCodeLine{config.hardware.led\_brightness}
+\DoxyCodeLine{config.network.client\_id}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md40}{}\doxysection{\texorpdfstring{🎛️ Web Interface Integration}{🎛️ Web Interface Integration}}\label{md_CONFIG__README_autotoc_md40}
+The config system integrates seamlessly with web interfaces\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ handleWiFiSettings()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{if}\ (server.hasArg(\textcolor{stringliteral}{"{}ssid"{}})\ \&\&\ server.hasArg(\textcolor{stringliteral}{"{}password"{}}))\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ String\ ssid\ =\ server.arg(\textcolor{stringliteral}{"{}ssid"{}});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ String\ password\ =\ server.arg(\textcolor{stringliteral}{"{}password"{}});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ config.saveWiFiCredentials(ssid,\ password);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ server.send(200,\ \textcolor{stringliteral}{"{}text/plain"{}},\ \textcolor{stringliteral}{"{}WiFi\ credentials\ updated!"{}});}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ handleLEDSettings()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{if}\ (server.hasArg(\textcolor{stringliteral}{"{}brightness"{}}))\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ brightness\ =\ server.arg(\textcolor{stringliteral}{"{}brightness"{}}).toInt();}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (brightness\ >=\ 0\ \&\&\ brightness\ <=\ 255)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ config.saveLedBrightness(brightness);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ server.send(200,\ \textcolor{stringliteral}{"{}text/plain"{}},\ \textcolor{stringliteral}{"{}LED\ brightness\ updated!"{}});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ server.send(400,\ \textcolor{stringliteral}{"{}text/plain"{}},\ \textcolor{stringliteral}{"{}Invalid\ brightness\ value"{}});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ handleDeviceSettings()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{if}\ (server.hasArg(\textcolor{stringliteral}{"{}client\_id"{}}))\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ String\ clientId\ =\ server.arg(\textcolor{stringliteral}{"{}client\_id"{}});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ config.saveClientId(clientId);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ server.send(200,\ \textcolor{stringliteral}{"{}text/plain"{}},\ \textcolor{stringliteral}{"{}Client\ ID\ updated!"{}});}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ handleAdvancedWiFi()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{if}\ (server.hasArg(\textcolor{stringliteral}{"{}max\_attempts"{}}))\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ maxAttempts\ =\ server.arg(\textcolor{stringliteral}{"{}max\_attempts"{}}).toInt();}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ reconnectAttempts\ =\ server.arg(\textcolor{stringliteral}{"{}reconnect\_attempts"{}}).toInt();}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ retryDelay\ =\ server.arg(\textcolor{stringliteral}{"{}retry\_delay"{}}).toInt();}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ config.saveWiFiParams(maxAttempts,\ reconnectAttempts,\ retryDelay);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ server.send(200,\ \textcolor{stringliteral}{"{}text/plain"{}},\ \textcolor{stringliteral}{"{}WiFi\ parameters\ updated!"{}});}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md42}{}\doxysection{\texorpdfstring{🛠️ Adding New Configuration Options}{🛠️ Adding New Configuration Options}}\label{md_CONFIG__README_autotoc_md42}
+\hypertarget{md_CONFIG__README_autotoc_md43}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Step 1\+: Add Constants (if needed)$<$/strong$>$}{<strong>Step 1: Add Constants (if needed)</strong>}}\label{md_CONFIG__README_autotoc_md43}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{//\ In\ ConfigConstants\ namespace}}
+\DoxyCodeLine{\textcolor{keyword}{namespace\ }NewFeature\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ DEFAULT\_VALUE\ =\ 100;}
+\DoxyCodeLine{\ \ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ DEFAULT\_STRING\ =\ \textcolor{stringliteral}{"{}DefaultText"{}};}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md44}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Step 2\+: Create Runtime Config Class$<$/strong$>$}{<strong>Step 2: Create Runtime Config Class</strong>}}\label{md_CONFIG__README_autotoc_md44}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{class\ }NewFeatureConfig\ \{}
+\DoxyCodeLine{\textcolor{keyword}{public}:}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{int}\ runtime\_value;}
+\DoxyCodeLine{\ \ \ \ String\ runtime\_string;}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{void}\ begin()\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ runtime\_value\ =\ ConfigConstants::NewFeature::DEFAULT\_VALUE;}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ runtime\_string\ =\ ConfigConstants::NewFeature::DEFAULT\_STRING;}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{void}\ loadFromPreferences(Preferences\&\ prefs)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ runtime\_value\ =\ prefs.getInt(\textcolor{stringliteral}{"{}feature\_value"{}},\ ConfigConstants::NewFeature::DEFAULT\_VALUE);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ runtime\_string\ =\ prefs.getString(\textcolor{stringliteral}{"{}feature\_string"{}},\ ConfigConstants::NewFeature::DEFAULT\_STRING);}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{void}\ saveValue(\textcolor{keywordtype}{int}\ newValue)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ runtime\_value\ =\ newValue;}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ Preferences\ prefs;}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ prefs.begin(\textcolor{stringliteral}{"{}esp-\/config"{}},\ \textcolor{keyword}{false});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ prefs.putInt(\textcolor{stringliteral}{"{}feature\_value"{}},\ runtime\_value);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ prefs.end();}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\};}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md45}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Step 3\+: Add to Main Config Class$<$/strong$>$}{<strong>Step 3: Add to Main Config Class</strong>}}\label{md_CONFIG__README_autotoc_md45}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{class\ }Config\ \{}
+\DoxyCodeLine{\textcolor{keyword}{public}:}
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Add\ your\ new\ config}}
+\DoxyCodeLine{\ \ \ \ NewFeatureConfig\ newFeature;}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{void}\ begin()\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{comment}{//\ Add\ to\ initialization}}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ newFeature.begin();}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{void}\ loadFromPreferences()\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{comment}{//\ Add\ to\ loading}}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ newFeature.loadFromPreferences(prefs);}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\};}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md47}{}\doxysection{\texorpdfstring{📊 Configuration Status \& Debugging}{📊 Configuration Status \& Debugging}}\label{md_CONFIG__README_autotoc_md47}
+\hypertarget{md_CONFIG__README_autotoc_md48}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Check Current Configuration\+:$<$/strong$>$}{<strong>Check Current Configuration:</strong>}}\label{md_CONFIG__README_autotoc_md48}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ printConfigStatus()\ \{}
+\DoxyCodeLine{\ \ \ \ Serial.println(\textcolor{stringliteral}{"{}===\ Configuration\ Status\ ==="{}});}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ WiFi\ settings}}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}WiFi\ SSID:\ \%s\(\backslash\)n"{}},\ config.wifi.ssid.c\_str());}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}WiFi\ Max\ Attempts:\ \%d\(\backslash\)n"{}},\ config.wifi.max\_attempts);}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}WiFi\ Retry\ Delay:\ \%d\ ms\(\backslash\)n"{}},\ config.wifi.retry\_delay);}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Hardware\ settings}}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}LED\ Brightness:\ \%d\(\backslash\)n"{}},\ config.hardware.led\_brightness);}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Network\ settings}}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}Client\ ID:\ \%s\(\backslash\)n"{}},\ config.network.client\_id.c\_str());}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Constants}}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}Firmware\ Version:\ \%d\(\backslash\)n"{}},\ ConfigConstants::Firmware::VERSION);}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}LED\ Pin:\ \%d\(\backslash\)n"{}},\ ConfigConstants::Hardware::LED\_PIN);}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_CONFIG__README_autotoc_md49}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Reset to Defaults\+:$<$/strong$>$}{<strong>Reset to Defaults:</strong>}}\label{md_CONFIG__README_autotoc_md49}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ resetConfiguration()\ \{}
+\DoxyCodeLine{\ \ \ \ Serial.println(\textcolor{stringliteral}{"{}Resetting\ configuration\ to\ defaults..."{}});}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Clear\ preferences}}
+\DoxyCodeLine{\ \ \ \ Preferences\ prefs;}
+\DoxyCodeLine{\ \ \ \ prefs.begin(\textcolor{stringliteral}{"{}esp-\/config"{}},\ \textcolor{keyword}{false});}
+\DoxyCodeLine{\ \ \ \ prefs.clear();}
+\DoxyCodeLine{\ \ \ \ prefs.end();}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Reinitialize}}
+\DoxyCodeLine{\ \ \ \ config.begin();}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ Serial.println(\textcolor{stringliteral}{"{}Configuration\ reset\ complete!"{}});}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md51}{}\doxysection{\texorpdfstring{🚀 Key Benefits}{🚀 Key Benefits}}\label{md_CONFIG__README_autotoc_md51}
+
+\begin{DoxyEnumerate}
+\item {\bfseries{📁 Organized}}\+: Related settings grouped logically by category
+\item {\bfseries{💾 Persistent}}\+: Important settings survive reboots and power cycles
+\item {\bfseries{⚡ Flexible}}\+: Mix of compile-\/time constants and runtime variables
+\item {\bfseries{🔒 Type-\/\+Safe}}\+: Strong typing prevents configuration errors
+\item {\bfseries{🎯 Centralized}}\+: Single point of access for all settings
+\item {\bfseries{🔧 Extensible}}\+: Easy to add new configuration categories
+\item {\bfseries{🌐 Web-\/\+Friendly}}\+: Integrates seamlessly with web interfaces
+\item {\bfseries{🐛 Debug-\/\+Friendly}}\+: Clear structure makes troubleshooting easier
+\item {\bfseries{🔄 Backward Compatible}}\+: Legacy code continues to work
+\item {\bfseries{⚙️ Professional}}\+: Enterprise-\/grade configuration management
+\end{DoxyEnumerate}
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md53}{}\doxysection{\texorpdfstring{🎯 Best Practices}{🎯 Best Practices}}\label{md_CONFIG__README_autotoc_md53}
+\hypertarget{md_CONFIG__README_autotoc_md54}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Do\textquotesingle{}s\+:$<$/strong$>$}{<strong>Do's:</strong>}}\label{md_CONFIG__README_autotoc_md54}
+
+\begin{DoxyItemize}
+\item ✅ Use {\ttfamily Config\+Constants\+:\+:} for values that never change
+\item ✅ Use {\ttfamily config.\+submodule.\+property} for runtime values
+\item ✅ Use {\ttfamily config.\+save\+X()} methods for permanent changes
+\item ✅ Call {\ttfamily config.\+begin()} and {\ttfamily config.\+load\+From\+Preferences()} in setup()
+\item ✅ Group related constants in logical namespaces
+\item ✅ Validate user input before saving to config
+\end{DoxyItemize}\hypertarget{md_CONFIG__README_autotoc_md55}{}\doxysubsection{\texorpdfstring{$<$strong$>$\+Don\textquotesingle{}ts\+:$<$/strong$>$}{<strong>Don'ts:</strong>}}\label{md_CONFIG__README_autotoc_md55}
+
+\begin{DoxyItemize}
+\item ❌ Don\textquotesingle{}t modify constants at runtime (they\textquotesingle{}re const for a reason)
+\item ❌ Don\textquotesingle{}t forget to save important changes with {\ttfamily config.\+save\+X()} methods
+\item ❌ Don\textquotesingle{}t access config before calling {\ttfamily config.\+begin()}
+\item ❌ Don\textquotesingle{}t use raw preference keys, use the config system instead
+\item ❌ Don\textquotesingle{}t mix up temporary changes vs. permanent saves
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md_CONFIG__README_autotoc_md57}{}\doxysection{\texorpdfstring{📝 Example\+: Complete Implementation}{📝 Example: Complete Implementation}}\label{md_CONFIG__README_autotoc_md57}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{preprocessor}{\#include\ "{}Config.h"{}}}
+\DoxyCodeLine{}
+\DoxyCodeLine{Config\&\ config\ =\ Config::getInstance();}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ setup()\ \{}
+\DoxyCodeLine{\ \ \ \ Serial.begin(115200);}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Initialize\ configuration\ system}}
+\DoxyCodeLine{\ \ \ \ config.begin();}
+\DoxyCodeLine{\ \ \ \ config.loadFromPreferences();}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Print\ current\ settings}}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}Device:\ \%s\(\backslash\)n"{}},\ config.network.client\_id.c\_str());}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}WiFi:\ \%s\(\backslash\)n"{}},\ config.wifi.ssid.c\_str());}
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}LED\ Brightness:\ \%d\(\backslash\)n"{}},\ config.hardware.led\_brightness);}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Connect\ to\ WiFi\ using\ config}}
+\DoxyCodeLine{\ \ \ \ connectWiFi();}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Setup\ LED\ using\ config}}
+\DoxyCodeLine{\ \ \ \ setupLED();}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ connectWiFi()\ \{}
+\DoxyCodeLine{\ \ \ \ WiFi.begin(config.wifi.ssid.c\_str(),\ config.wifi.password.c\_str());}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{int}\ attempts\ =\ 0;}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{while}\ (WiFi.status()\ !=\ WL\_CONNECTED\ \&\&\ attempts\ <\ config.wifi.max\_attempts)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ delay(config.wifi.retry\_delay);}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ Serial.print(\textcolor{stringliteral}{"{}."{}});}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ attempts++;}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ Serial.printf(\textcolor{stringliteral}{"{}\(\backslash\)nWiFi\ \%s\ after\ \%d\ attempts\(\backslash\)n"{}},\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ WiFi.status()\ ==\ WL\_CONNECTED\ ?\ \textcolor{stringliteral}{"{}connected"{}}\ :\ \textcolor{stringliteral}{"{}failed"{}},\ attempts);}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ setupLED()\ \{}
+\DoxyCodeLine{\ \ \ \ ledcSetup(ConfigConstants::Hardware::LED\_CHANNEL,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ ConfigConstants::Hardware::LED\_FREQ,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ ConfigConstants::Hardware::LED\_RESOLUTION);}
+\DoxyCodeLine{\ \ \ \ ledcAttachPin(ConfigConstants::Hardware::LED\_PIN,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ConfigConstants::Hardware::LED\_CHANNEL);}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ loop()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Pulse\ LED\ with\ configured\ brightness}}
+\DoxyCodeLine{\ \ \ \ ledcWrite(ConfigConstants::Hardware::LED\_CHANNEL,\ config.hardware.led\_brightness);}
+\DoxyCodeLine{\ \ \ \ delay(ConfigConstants::Timing::LED\_PULSE\_DURATION);}
+\DoxyCodeLine{\ \ \ \ ledcWrite(ConfigConstants::Hardware::LED\_CHANNEL,\ 0);}
+\DoxyCodeLine{\ \ \ \ }
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Main\ loop\ delay}}
+\DoxyCodeLine{\ \ \ \ delay(ConfigConstants::Timing::MAIN\_LOOP\_DELAY);}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+This configuration system provides a robust, professional foundation for your ESP32 IoT projects! 🚀 
