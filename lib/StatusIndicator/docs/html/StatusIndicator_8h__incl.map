@@ -1,5 +1,7 @@
 <map id="src/StatusIndicator.h" name="src/StatusIndicator.h">
-<area shape="rect" id="Node000001" title="Status indicator library for ESP32 devices with LED and RGB support." alt="" coords="5,5,160,31"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="41,79,125,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,31,85,65,80,65,80,31"/>
+<area shape="rect" id="Node000001" title="Status indicator library for ESP32 devices with LED and WS2812 support." alt="" coords="41,5,195,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,89,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="108,33,70,71,66,67,104,29"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="113,79,264,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="132,29,170,67,166,71,128,33"/>
 </map>

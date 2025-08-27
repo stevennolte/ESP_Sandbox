@@ -4,6 +4,8 @@
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="195,41,229,41,229,46,195,46"/>
 <area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="478,5,685,31"/>
 <area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="427,31,464,27,465,33,427,37"/>
-<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="475,55,688,80"/>
-<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="427,50,461,53,461,58,427,55"/>
+<area shape="rect" id="Node000005" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="475,55,688,80"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="427,50,461,53,461,58,427,55"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7" title="Update WS2812 LED with current RGB values." alt="" coords="736,5,963,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="685,15,722,15,722,21,685,21"/>
 </map>

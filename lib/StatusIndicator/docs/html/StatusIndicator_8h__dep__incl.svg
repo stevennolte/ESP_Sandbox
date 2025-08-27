@@ -21,7 +21,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Status indicator library for ESP32 devices with LED and RGB support.">
+<g id="a_Node000001"><a xlink:title="Status indicator library for ESP32 devices with LED and WS2812 support.">
 <polygon fill="#999999" stroke="#666666" points="121.5,-74 5.5,-74 5.5,-55 121.5,-55 121.5,-74"/>
 <text text-anchor="middle" x="63.5" y="-62" font-family="Helvetica,sans-Serif" font-size="10.00">src/StatusIndicator.h</text>
 </a>

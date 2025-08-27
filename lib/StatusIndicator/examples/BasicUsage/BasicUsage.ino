@@ -32,8 +32,8 @@ void setup() {
     indicator.begin(128);  // Medium brightness
     
     // Print detected configuration
-    Serial.printf("Detected LED type: %s\n", 
-                  indicator.getLEDType() == LEDType::RGB_LED ? "RGB LED" : "Single LED");
+    String ledTypeStr = (indicator.getLEDType() == LEDType::WS2812_LED) ? "WS2812 RGB LED" : "Single LED";
+    Serial.printf("Detected LED type: %s\n", ledTypeStr.c_str());
     
     Serial.println("Starting status demonstration...\n");
 }
@@ -91,9 +91,15 @@ void loop() {
                 break;
                 
             case 7:
-                if (indicator.getLEDType() == LEDType::RGB_LED) {
-                    Serial.println("Showing RGB CYCLE (rainbow effect)");
-                    indicator.setStatusWithMode(StatusType::NORMAL, IndicatorMode::RGB_CYCLE);
+                if (indicator.getLEDType() == LEDType::WS2812_LED) {
+                    Serial.println("Showing custom WS2812 colors (cycling through RGB)");
+                    static int colorDemo = 0;
+                    switch (colorDemo % 3) {
+                        case 0: indicator.setRGBColor(255, 0, 0); break;    // Red
+                        case 1: indicator.setRGBColor(0, 255, 0); break;    // Green  
+                        case 2: indicator.setRGBColor(0, 0, 255); break;    // Blue
+                    }
+                    colorDemo++;
                 } else {
                     Serial.println("Showing BREATHE effect");
                     indicator.setStatusWithMode(StatusType::NORMAL, IndicatorMode::BREATHE);

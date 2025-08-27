@@ -4,26 +4,28 @@
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="100,138,119,112,147,80,184,48,226,24,268,12,311,5,355,3,399,5,482,18,551,36,550,41,481,23,399,10,355,8,312,10,269,17,228,29,187,53,151,84,123,115,104,141"/>
 <area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="515,190,722,216"/>
 <area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="111,163,161,197,193,213,227,226,271,235,315,239,405,239,487,229,556,216,557,221,488,235,405,244,315,245,270,240,226,231,191,218,158,201,108,167"/>
-<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="512,129,725,154"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="179,148,498,141,498,147,179,153"/>
-<area shape="rect" id="Node000005" href="$classStatusIndicator.html#a3a7ac8d902c74ac2c8c7cf8b1a0fd8bf" title="Update blink animation." alt="" coords="242,40,449,65"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="110,137,161,105,226,74,250,66,252,71,228,79,163,110,113,142"/>
-<area shape="rect" id="Node000006" href="$classStatusIndicator.html#ae035b77033e51c7105cf8de1bbb3f58a" title="Update breathing animation." alt="" coords="233,89,457,114"/>
-<area shape="poly" id="edge8_Node000001_Node000006" title=" " alt="" coords="156,137,267,114,268,120,157,142"/>
-<area shape="rect" id="Node000007" href="$classStatusIndicator.html#adfb76aa441c7fc7ebea9b173feaf587f" title="Update pulse animation." alt="" coords="241,190,449,216"/>
-<area shape="poly" id="edge12_Node000001_Node000007" title=" " alt="" coords="157,162,268,185,267,190,156,168"/>
-<area shape="rect" id="Node000008" href="$classStatusIndicator.html#a994a62e16454b236b935167e35bae9f0" title="Update RGB color cycling animation." alt="" coords="227,292,464,317"/>
-<area shape="poly" id="edge16_Node000001_Node000008" title=" " alt="" coords="106,163,155,215,190,245,228,270,264,285,262,290,225,275,187,249,152,219,102,167"/>
-<area shape="poly" id="edge5_Node000005_Node000002" title=" " alt="" coords="449,54,510,56,510,61,449,59"/>
-<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="446,63,466,74,484,96,491,119,498,142,514,164,546,183,543,187,510,168,493,144,486,121,480,99,462,78,443,67"/>
-<area shape="poly" id="edge7_Node000005_Node000004" title=" " alt="" coords="421,62,465,74,577,121,575,125,463,79,420,68"/>
-<area shape="poly" id="edge9_Node000006_Node000002" title=" " alt="" coords="435,86,509,76,510,81,436,91"/>
-<area shape="poly" id="edge10_Node000006_Node000003" title=" " alt="" coords="380,112,513,163,569,183,567,188,511,168,378,117"/>
-<area shape="poly" id="edge11_Node000006_Node000004" title=" " alt="" coords="433,112,518,124,518,130,432,117"/>
-<area shape="poly" id="edge13_Node000007_Node000002" title=" " alt="" coords="369,188,511,114,564,87,566,91,513,119,372,193"/>
-<area shape="poly" id="edge14_Node000007_Node000003" title=" " alt="" coords="449,200,501,200,501,206,449,206"/>
-<area shape="poly" id="edge15_Node000007_Node000004" title=" " alt="" coords="402,188,547,155,548,160,403,193"/>
-<area shape="poly" id="edge18_Node000008_Node000003" title=" " alt="" coords="400,289,463,270,525,245,579,219,581,224,527,250,465,275,401,294"/>
-<area shape="rect" id="Node000009" href="$classStatusIndicator.html#aa21eb5f09c4cb5c2d5f474270459bab8" title="Convert HSV color space to RGB." alt="" coords="523,292,714,317"/>
-<area shape="poly" id="edge17_Node000008_Node000009" title=" " alt="" coords="464,302,510,302,510,307,464,307"/>
+<area shape="rect" id="Node000005" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="512,129,725,154"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="179,148,498,141,498,147,179,153"/>
+<area shape="rect" id="Node000006" href="$classStatusIndicator.html#a3a7ac8d902c74ac2c8c7cf8b1a0fd8bf" title="Update blink animation." alt="" coords="242,40,449,65"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="110,137,161,105,226,74,250,66,252,71,228,79,163,110,113,142"/>
+<area shape="rect" id="Node000007" href="$classStatusIndicator.html#ae035b77033e51c7105cf8de1bbb3f58a" title="Update breathing animation." alt="" coords="233,89,457,114"/>
+<area shape="poly" id="edge9_Node000001_Node000007" title=" " alt="" coords="156,137,267,114,268,120,157,142"/>
+<area shape="rect" id="Node000008" href="$classStatusIndicator.html#adfb76aa441c7fc7ebea9b173feaf587f" title="Update pulse animation." alt="" coords="241,190,449,216"/>
+<area shape="poly" id="edge13_Node000001_Node000008" title=" " alt="" coords="157,162,268,185,267,190,156,168"/>
+<area shape="rect" id="Node000009" href="$classStatusIndicator.html#a994a62e16454b236b935167e35bae9f0" title="Update RGB color cycling animation." alt="" coords="227,292,464,317"/>
+<area shape="poly" id="edge17_Node000001_Node000009" title=" " alt="" coords="106,163,155,215,190,245,228,270,264,285,262,290,225,275,187,249,152,219,102,167"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7" title="Update WS2812 LED with current RGB values." alt="" coords="773,190,1000,216"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="722,200,760,200,760,206,722,206"/>
+<area shape="poly" id="edge6_Node000006_Node000002" title=" " alt="" coords="449,54,510,56,510,61,449,59"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="446,63,466,74,484,96,491,119,498,142,514,164,546,183,543,187,510,168,493,144,486,121,480,99,462,78,443,67"/>
+<area shape="poly" id="edge8_Node000006_Node000005" title=" " alt="" coords="421,62,465,74,577,121,575,125,463,79,420,68"/>
+<area shape="poly" id="edge10_Node000007_Node000002" title=" " alt="" coords="435,86,509,76,510,81,436,91"/>
+<area shape="poly" id="edge11_Node000007_Node000003" title=" " alt="" coords="380,112,513,163,569,183,567,188,511,168,378,117"/>
+<area shape="poly" id="edge12_Node000007_Node000005" title=" " alt="" coords="433,112,518,124,518,130,432,117"/>
+<area shape="poly" id="edge14_Node000008_Node000002" title=" " alt="" coords="369,188,511,114,564,87,566,91,513,119,372,193"/>
+<area shape="poly" id="edge15_Node000008_Node000003" title=" " alt="" coords="449,200,501,200,501,206,449,206"/>
+<area shape="poly" id="edge16_Node000008_Node000005" title=" " alt="" coords="402,188,547,155,548,160,403,193"/>
+<area shape="poly" id="edge19_Node000009_Node000003" title=" " alt="" coords="400,289,463,270,525,245,579,219,581,224,527,250,465,275,401,294"/>
+<area shape="rect" id="Node000010" href="$classStatusIndicator.html#aa21eb5f09c4cb5c2d5f474270459bab8" title="Convert HSV color space to RGB." alt="" coords="523,292,714,317"/>
+<area shape="poly" id="edge18_Node000009_Node000010" title=" " alt="" coords="464,302,510,302,510,307,464,307"/>
 </map>

@@ -2,10 +2,12 @@
 <area shape="rect" id="Node000001" title="Toggle the enabled state." alt="" coords="5,55,175,80"/>
 <area shape="rect" id="Node000002" href="$classStatusIndicator.html#a5e362d6679ce7bd558095d3c0381837c" title="Disable the status indicator (turns off LED)" alt="" coords="223,29,397,55"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="174,55,209,51,209,56,175,60"/>
-<area shape="rect" id="Node000005" href="$classStatusIndicator.html#a29fd180526df07fdb6cdd2055377aba4" title="Enable the status indicator." alt="" coords="224,79,396,104"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="175,74,211,78,210,83,174,79"/>
+<area shape="rect" id="Node000006" href="$classStatusIndicator.html#a29fd180526df07fdb6cdd2055377aba4" title="Enable the status indicator." alt="" coords="224,79,396,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="175,74,211,78,210,83,174,79"/>
 <area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="449,5,655,31"/>
 <area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="397,31,435,27,436,32,398,36"/>
-<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="445,55,659,80"/>
-<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="398,48,432,52,431,57,397,54"/>
+<area shape="rect" id="Node000005" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="445,55,659,80"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="398,48,432,52,431,57,397,54"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7" title="Update WS2812 LED with current RGB values." alt="" coords="707,5,933,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="656,15,693,15,693,21,656,21"/>
 </map>

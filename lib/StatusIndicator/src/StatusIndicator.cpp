@@ -27,16 +27,16 @@ StatusIndicator::StatusIndicator() {
     pulseDirection = true;
     pulseValue = 0;
     hueValue = 0;
+    currentRed = 0;
+    currentGreen = 0;
+    currentBlue = 0;
+    neoPixel = nullptr;
     
     // Set pins based on detected board type
-    if (ledType == LEDType::RGB_LED) {
-        // ESP32 DevKit-C RGB pins (common configuration)
-        redPin = 25;
-        greenPin = 26;
-        bluePin = 27;
-        redChannel = 0;
-        greenChannel = 1;
-        blueChannel = 2;
+    if (ledType == LEDType::WS2812_LED) {
+        // ESP32-S3-DevKitC-1 WS2812 RGB LED
+        rgbDataPin = 38;
+        neoPixel = new Adafruit_NeoPixel(1, rgbDataPin, NEO_GRB + NEO_KHZ800);
     } else {
         // Standard ESP32 built-in LED
         ledPin = 2;
@@ -63,24 +63,22 @@ StatusIndicator::StatusIndicator(int pin) {
     pulseDirection = true;
     pulseValue = 0;
     hueValue = 0;
+    currentRed = 0;
+    currentGreen = 0;
+    currentBlue = 0;
+    neoPixel = nullptr;
 }
 
 /**
- * @brief Constructor for RGB LED configuration
- * @param rPin GPIO pin for red component
- * @param gPin GPIO pin for green component  
- * @param bPin GPIO pin for blue component
+ * @brief Constructor for WS2812 addressable RGB LED
+ * @param dataPin GPIO pin connected to WS2812 data line
+ * @param wsLedType LED type identifier (must be WS2812_LED)
  * 
- * Initializes the StatusIndicator for an RGB LED setup with separate R, G, B pins.
+ * Initializes the StatusIndicator for a WS2812 addressable RGB LED setup.
  */
-StatusIndicator::StatusIndicator(int rPin, int gPin, int bPin) {
-    ledType = LEDType::RGB_LED;
-    redPin = rPin;
-    greenPin = gPin;
-    bluePin = bPin;
-    redChannel = 0;
-    greenChannel = 1;
-    blueChannel = 2;
+StatusIndicator::StatusIndicator(int dataPin, LEDType wsLedType) {
+    ledType = wsLedType;
+    rgbDataPin = dataPin;
     currentMode = IndicatorMode::OFF;
     currentStatus = StatusType::NORMAL;
     brightness = 128;
@@ -90,6 +88,22 @@ StatusIndicator::StatusIndicator(int rPin, int gPin, int bPin) {
     pulseDirection = true;
     pulseValue = 0;
     hueValue = 0;
+    currentRed = 0;
+    currentGreen = 0;
+    currentBlue = 0;
+    neoPixel = new Adafruit_NeoPixel(1, rgbDataPin, NEO_GRB + NEO_KHZ800);
+}
+
+/**
+ * @brief Destructor
+ * 
+ * Cleans up allocated NeoPixel object to prevent memory leaks.
+ */
+StatusIndicator::~StatusIndicator() {
+    if (neoPixel) {
+        delete neoPixel;
+        neoPixel = nullptr;
+    }
 }
 
 /**
@@ -110,47 +124,37 @@ void StatusIndicator::begin() {
  */
 void StatusIndicator::begin(uint8_t initialBrightness) {
     brightness = initialBrightness;
-    setupPWMChannels();
-    setMode(IndicatorMode::OFF);
     
-    Serial.printf("✓ StatusIndicator initialized: %s mode\n", 
-                  ledType == LEDType::RGB_LED ? "RGB" : "Single LED");
-    
-    if (ledType == LEDType::RGB_LED) {
-        Serial.printf("  RGB Pins: R=%d, G=%d, B=%d\n", redPin, greenPin, bluePin);
+    if (ledType == LEDType::WS2812_LED) {
+        // Initialize NeoPixel
+        if (neoPixel) {
+            neoPixel->begin();
+            neoPixel->setBrightness(brightness);
+            neoPixel->clear();
+            neoPixel->show();
+        }
+        Serial.printf("✓ StatusIndicator initialized: WS2812 mode\n");
+        Serial.printf("  WS2812 Data Pin: %d\n", rgbDataPin);
     } else {
+        setupPWMChannels();
+        Serial.printf("✓ StatusIndicator initialized: Single LED mode\n");
         Serial.printf("  LED Pin: %d\n", ledPin);
     }
+    
+    setMode(IndicatorMode::OFF);
 }
 
 /**
  * @brief Setup PWM channels for LED control
  * 
- * Configures the appropriate PWM channels based on the LED type.
- * For single LEDs, configures one channel. For RGB LEDs, configures three channels.
- * Also attaches the pins to their respective PWM channels and initializes them to off.
+ * Configures PWM channel for single LED control.
+ * Also attaches the pin to the PWM channel and initializes it to off.
  */
 void StatusIndicator::setupPWMChannels() {
-    if (ledType == LEDType::RGB_LED) {
-        // Setup RGB channels
-        ledcSetup(redChannel, PWM_FREQ, PWM_RESOLUTION);
-        ledcSetup(greenChannel, PWM_FREQ, PWM_RESOLUTION);
-        ledcSetup(blueChannel, PWM_FREQ, PWM_RESOLUTION);
-        
-        ledcAttachPin(redPin, redChannel);
-        ledcAttachPin(greenPin, greenChannel);
-        ledcAttachPin(bluePin, blueChannel);
-        
-        // Initialize to off
-        ledcWrite(redChannel, 0);
-        ledcWrite(greenChannel, 0);
-        ledcWrite(blueChannel, 0);
-    } else {
-        // Setup single LED channel
-        ledcSetup(ledChannel, PWM_FREQ, PWM_RESOLUTION);
-        ledcAttachPin(ledPin, ledChannel);
-        ledcWrite(ledChannel, 0);
-    }
+    // Setup single LED channel
+    ledcSetup(ledChannel, PWM_FREQ, PWM_RESOLUTION);
+    ledcAttachPin(ledPin, ledChannel);
+    ledcWrite(ledChannel, 0);
 }
 
 /**
@@ -165,7 +169,7 @@ void StatusIndicator::setMode(IndicatorMode mode) {
     lastUpdate = millis();
     
     if (mode == IndicatorMode::OFF) {
-        if (ledType == LEDType::RGB_LED) {
+        if (ledType == LEDType::WS2812_LED) {
             setLEDColor(0, 0, 0);
         } else {
             setSingleLED(0);
@@ -192,7 +196,7 @@ void StatusIndicator::enable() {
 
 void StatusIndicator::disable() {
     enabled = false;
-    if (ledType == LEDType::RGB_LED) {
+    if (ledType == LEDType::WS2812_LED) {
         setLEDColor(0, 0, 0);
     } else {
         setSingleLED(0);
@@ -224,7 +228,7 @@ void StatusIndicator::update() {
     switch (currentMode) {
         case IndicatorMode::SOLID:
             // Set solid color based on status
-            if (ledType == LEDType::RGB_LED) {
+            if (ledType == LEDType::WS2812_LED) {
                 uint8_t r, g, b;
                 getStatusColor(currentStatus, r, g, b);
                 setLEDColor(r, g, b);
@@ -262,7 +266,7 @@ void StatusIndicator::update() {
             break;
             
         case IndicatorMode::RGB_CYCLE:
-            if (ledType == LEDType::RGB_LED && currentTime - lastUpdate >= 50) {
+            if (ledType == LEDType::WS2812_LED && currentTime - lastUpdate >= 50) {
                 updateRGBCycle();
                 lastUpdate = currentTime;
             }
@@ -276,7 +280,7 @@ void StatusIndicator::update() {
 void StatusIndicator::updatePulse() {
     static bool pulseState = false;
     
-    if (ledType == LEDType::RGB_LED) {
+    if (ledType == LEDType::WS2812_LED) {
         uint8_t r, g, b;
         getStatusColor(currentStatus, r, g, b);
         if (pulseState) {
@@ -294,7 +298,7 @@ void StatusIndicator::updatePulse() {
 void StatusIndicator::updateBlink() {
     static bool blinkState = false;
     
-    if (ledType == LEDType::RGB_LED) {
+    if (ledType == LEDType::WS2812_LED) {
         uint8_t r, g, b;
         getStatusColor(currentStatus, r, g, b);
         if (blinkState) {
@@ -361,11 +365,13 @@ void StatusIndicator::updateRGBCycle() {
  * Has no effect on single LED configurations.
  */
 void StatusIndicator::setLEDColor(uint8_t red, uint8_t green, uint8_t blue) {
-    if (ledType != LEDType::RGB_LED) return;
-    
-    ledcWrite(redChannel, red);
-    ledcWrite(greenChannel, green);
-    ledcWrite(blueChannel, blue);
+    if (ledType == LEDType::WS2812_LED && neoPixel) {
+        // Store current colors and update WS2812
+        currentRed = red;
+        currentGreen = green;
+        currentBlue = blue;
+        updateWS2812();
+    }
 }
 
 /**
@@ -379,6 +385,24 @@ void StatusIndicator::setSingleLED(uint8_t brightness) {
     if (ledType != LEDType::SINGLE_LED) return;
     
     ledcWrite(ledChannel, brightness);
+}
+
+/**
+ * @brief Set custom RGB color for WS2812 LED
+ * @param red Red component (0-255)
+ * @param green Green component (0-255) 
+ * @param blue Blue component (0-255)
+ * 
+ * Sets custom RGB color for WS2812 addressable LEDs.
+ * Has no effect on other LED types.
+ */
+void StatusIndicator::setRGBColor(uint8_t red, uint8_t green, uint8_t blue) {
+    if (ledType != LEDType::WS2812_LED) return;
+    
+    currentRed = red;
+    currentGreen = green;
+    currentBlue = blue;
+    updateWS2812();
 }
 
 /**
@@ -506,15 +530,15 @@ void StatusIndicator::hsvToRgb(uint16_t hue, uint8_t sat, uint8_t val, uint8_t& 
  * Currently uses board name detection, but can be enhanced with hardware probing.
  */
 LEDType StatusIndicator::detectBoardLEDType() {
-    // For now, default to single LED
-    // This can be enhanced with actual board detection logic
     String boardType = getBoardTypeName();
     
-    if (boardType.indexOf("DevKit") >= 0 || boardType.indexOf("DEVKIT") >= 0) {
-        // DevKit boards often have RGB capabilities
-        return LEDType::RGB_LED;
-    } else {
-        // Standard ESP32 boards typically have a single LED
+    // Check for ESP32-S3-DevKitC-1 specifically (has WS2812 RGB LED on GPIO38)
+    if (boardType.indexOf("ESP32-S3") >= 0 && 
+        (boardType.indexOf("DevKit") >= 0 || boardType.indexOf("DEVKIT") >= 0)) {
+        return LEDType::WS2812_LED;
+    } 
+    // All other boards default to single LED
+    else {
         return LEDType::SINGLE_LED;
     }
 }
@@ -537,8 +561,9 @@ String StatusIndicator::getBoardTypeName() {
  * Includes LED type, mode, status, brightness, and enabled state.
  */
 void StatusIndicator::printStatus() {
+    String ledTypeStr = (ledType == LEDType::WS2812_LED) ? "WS2812" : "Single";
     Serial.printf("StatusIndicator: %s | Mode: %d | Status: %d | Brightness: %d | Enabled: %s\n",
-                  ledType == LEDType::RGB_LED ? "RGB" : "Single",
+                  ledTypeStr.c_str(),
                   (int)currentMode,
                   (int)currentStatus,
                   brightness,
@@ -577,9 +602,24 @@ String StatusIndicator::getStatusString() {
         case StatusType::RECOVERY: statusStr = "RECOVERY"; break;
         default: statusStr = "UNKNOWN"; break;
     }
+    String ledTypeStr = (ledType == LEDType::WS2812_LED) ? "WS2812" : "Single";
     
-    return String(ledType == LEDType::RGB_LED ? "RGB" : "Single") + 
+    return ledTypeStr + 
            " | " + modeStr + " | " + statusStr + 
            " | Brightness: " + String(brightness) + 
            " | " + (enabled ? "Enabled" : "Disabled");
+}
+
+/**
+ * @brief Update WS2812 LED with current RGB values
+ * 
+ * Uses the Adafruit NeoPixel library to update the WS2812 LED with current colors.
+ * Applies brightness scaling and shows the color on the LED.
+ */
+void StatusIndicator::updateWS2812() {
+    if (ledType != LEDType::WS2812_LED || !neoPixel) return;
+    
+    // Set the color using NeoPixel library
+    neoPixel->setPixelColor(0, neoPixel->Color(currentRed, currentGreen, currentBlue));
+    neoPixel->show();
 }

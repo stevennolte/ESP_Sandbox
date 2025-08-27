@@ -1,20 +1,23 @@
 # StatusIndicator Library
 
-A flexible status indicator library for ESP32 devices that supports both simple on/off LEDs and RGB LEDs with automatic board detection.
+A flexible status indicator library for ESP32 devices that supports single LEDs and WS2812 addressable RGB LEDs with au#### LEDType
+- `SINGLE_LED` - Simple on/off LED (single pin)
+- `WS2812_LED` - Addressable RGB LED (WS2812/NeoPixel style, single data pin)tic board detection.
 
 ## Features
 
-- **Automatic Board Detection**: Detects whether your ESP32 board has a simple LED or RGB capabilities
+- **Automatic Board Detection**: Detects whether your ESP32 board has a simple LED or WS2812 addressable LED
 - **Multiple Indicator Modes**: OFF, SOLID, PULSE, BLINK_SLOW, BLINK_FAST, BREATHE, RGB_CYCLE
 - **Status Types**: NORMAL, WARNING, ERROR, INFO, SUCCESS, CONNECTING, RECOVERY with appropriate colors
-- **Flexible Configuration**: Works with both single LEDs and RGB LEDs
+- **WS2812 Support**: Full support for addressable RGB LEDs with custom color control using Adafruit NeoPixel library
+- **Flexible Configuration**: Works with single LEDs and WS2812 addressable LEDs
 - **Easy Integration**: Simple API with convenience methods
 - **PWM Control**: Smooth brightness control and effects
 
 ## Supported Hardware
 
 - **Single LED**: Standard ESP32 boards with built-in LED (typically pin 2)
-- **RGB LED**: ESP32 DevKit-C boards or custom setups with separate R, G, B pins
+- **WS2812 LED**: ESP32-S3-DevKitC-1 boards with built-in WS2812 addressable RGB LED (GPIO38)
 
 ## Installation
 
@@ -79,6 +82,30 @@ indicator.setBrightness(128);  // Medium brightness
 indicator.setBrightness(32);   // Low brightness
 ```
 
+### WS2812 Addressable RGB LED
+
+For boards with WS2812 addressable RGB LEDs (like ESP32-S3-DevKitC-1):
+
+```cpp
+// Automatic detection (recommended)
+StatusIndicator indicator;  // Will detect WS2812 on ESP32-S3-DevKitC-1
+
+// Manual configuration  
+StatusIndicator indicator(38, LEDType::WS2812_LED);  // GPIO38 for ESP32-S3-DevKitC-1
+
+void setup() {
+    indicator.begin();
+    
+    // Custom colors (WS2812 only)
+    indicator.setRGBColor(255, 0, 0);    // Red
+    indicator.setRGBColor(0, 255, 0);    // Green
+    indicator.setRGBColor(0, 0, 255);    // Blue
+    indicator.setRGBColor(255, 255, 0);  // Yellow
+    indicator.setRGBColor(255, 0, 255);  // Magenta
+    indicator.setRGBColor(0, 255, 255);  // Cyan
+}
+```
+
 ### Advanced Features
 
 ```cpp
@@ -119,6 +146,11 @@ String status = indicator.getStatusString();
 - `CONNECTING` - Cyan (connecting to network)
 - `RECOVERY` - Red (recovery mode)
 
+#### LEDType
+- `SINGLE_LED` - Simple on/off LED (single pin)
+- `RGB_LED` - RGB LED with separate R, G, B pins (PWM-controlled)
+- `WS2812_LED` - Addressable RGB LED (WS2812/NeoPixel, single data pin)
+
 ### Methods
 
 #### Initialization
@@ -155,7 +187,7 @@ String status = indicator.getStatusString();
 - `IndicatorMode getMode()` - Get current mode
 - `StatusType getStatus()` - Get current status
 - `uint8_t getBrightness()` - Get current brightness
-- `LEDType getLEDType()` - Get LED type (SINGLE_LED or RGB_LED)
+- `LEDType getLEDType()` - Get LED type (SINGLE_LED or WS2812_LED)
 
 #### Debug
 - `void printStatus()` - Print status to Serial

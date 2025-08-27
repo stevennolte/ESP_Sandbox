@@ -154,8 +154,8 @@ $(document).ready(function(){initNavTree('BasicUsage_8ino-example.html',''); ini
 <div class="line">    indicator.begin(128);  // Medium brightness</div>
 <div class="line">    </div>
 <div class="line">    // Print detected configuration</div>
-<div class="line">    Serial.printf(&quot;Detected LED type: %s\n&quot;, </div>
-<div class="line">                  indicator.getLEDType() == LEDType::RGB_LED ? &quot;RGB LED&quot; : &quot;Single LED&quot;);</div>
+<div class="line">    String ledTypeStr = (indicator.getLEDType() == LEDType::WS2812_LED) ? &quot;WS2812 RGB LED&quot; : &quot;Single LED&quot;;</div>
+<div class="line">    Serial.printf(&quot;Detected LED type: %s\n&quot;, ledTypeStr.c_str());</div>
 <div class="line">    </div>
 <div class="line">    Serial.println(&quot;Starting status demonstration...\n&quot;);</div>
 <div class="line">}</div>
@@ -213,9 +213,15 @@ $(document).ready(function(){initNavTree('BasicUsage_8ino-example.html',''); ini
 <div class="line">                break;</div>
 <div class="line">                </div>
 <div class="line">            case 7:</div>
-<div class="line">                if (indicator.getLEDType() == LEDType::RGB_LED) {</div>
-<div class="line">                    Serial.println(&quot;Showing RGB CYCLE (rainbow effect)&quot;);</div>
-<div class="line">                    indicator.setStatusWithMode(StatusType::NORMAL, IndicatorMode::RGB_CYCLE);</div>
+<div class="line">                if (indicator.getLEDType() == LEDType::WS2812_LED) {</div>
+<div class="line">                    Serial.println(&quot;Showing custom WS2812 colors (cycling through RGB)&quot;);</div>
+<div class="line">                    static int colorDemo = 0;</div>
+<div class="line">                    switch (colorDemo % 3) {</div>
+<div class="line">                        case 0: indicator.setRGBColor(255, 0, 0); break;    // Red</div>
+<div class="line">                        case 1: indicator.setRGBColor(0, 255, 0); break;    // Green  </div>
+<div class="line">                        case 2: indicator.setRGBColor(0, 0, 255); break;    // Blue</div>
+<div class="line">                    }</div>
+<div class="line">                    colorDemo++;</div>
 <div class="line">                } else {</div>
 <div class="line">                    Serial.println(&quot;Showing BREATHE effect&quot;);</div>
 <div class="line">                    indicator.setStatusWithMode(StatusType::NORMAL, IndicatorMode::BREATHE);</div>

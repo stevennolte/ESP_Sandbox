@@ -116,9 +116,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a586851fb496575dfc97a2690c98501bc" id="r_a586851fb496575dfc97a2690c98501bc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a586851fb496575dfc97a2690c98501bc">StatusIndicator</a> (int pin)</td></tr>
 <tr class="memdesc:a586851fb496575dfc97a2690c98501bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for single LED configuration.  <br /></td></tr>
 <tr class="separator:a586851fb496575dfc97a2690c98501bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea3bf5f2221aeeede06be860ad17b424" id="r_aea3bf5f2221aeeede06be860ad17b424"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#aea3bf5f2221aeeede06be860ad17b424">StatusIndicator</a> (int <a class="el" href="classStatusIndicator.html#a8ffc7cadfa2334d44a7834ba3666102d">redPin</a>, int <a class="el" href="classStatusIndicator.html#a3d549ab7a63bdb100ce3192cd8a4b0b3">greenPin</a>, int <a class="el" href="classStatusIndicator.html#ac49e1cb46e253cc407e40187859afda4">bluePin</a>)</td></tr>
-<tr class="memdesc:aea3bf5f2221aeeede06be860ad17b424"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for RGB LED configuration.  <br /></td></tr>
-<tr class="separator:aea3bf5f2221aeeede06be860ad17b424"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a20f78e5aeb274b8eac534dc028e1456e" id="r_a20f78e5aeb274b8eac534dc028e1456e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a20f78e5aeb274b8eac534dc028e1456e">StatusIndicator</a> (int dataPin, <a class="el" href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">LEDType</a> wsLedType)</td></tr>
+<tr class="memdesc:a20f78e5aeb274b8eac534dc028e1456e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for WS2812 addressable RGB LED.  <br /></td></tr>
+<tr class="separator:a20f78e5aeb274b8eac534dc028e1456e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16bd4ff6f34da093e820bf549d68f753" id="r_a16bd4ff6f34da093e820bf549d68f753"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a16bd4ff6f34da093e820bf549d68f753">~StatusIndicator</a> ()</td></tr>
+<tr class="memdesc:a16bd4ff6f34da093e820bf549d68f753"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <br /></td></tr>
+<tr class="separator:a16bd4ff6f34da093e820bf549d68f753"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a623f18b34d5f995fe83d171ab168db99" id="r_a623f18b34d5f995fe83d171ab168db99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a623f18b34d5f995fe83d171ab168db99">begin</a> ()</td></tr>
 <tr class="memdesc:a623f18b34d5f995fe83d171ab168db99"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the status indicator with default brightness.  <br /></td></tr>
 <tr class="separator:a623f18b34d5f995fe83d171ab168db99"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,12 +191,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2b860e78c232539231749ed4ceb6df87" id="r_a2b860e78c232539231749ed4ceb6df87"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a2b860e78c232539231749ed4ceb6df87">off</a> ()</td></tr>
 <tr class="memdesc:a2b860e78c232539231749ed4ceb6df87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Turn off the indicator.  <br /></td></tr>
 <tr class="separator:a2b860e78c232539231749ed4ceb6df87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a767b2a39258c8905bd2da49156237166" id="r_a767b2a39258c8905bd2da49156237166"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">setRGBColor</a> (uint8_t red, uint8_t green, uint8_t blue)</td></tr>
+<tr class="memdesc:a767b2a39258c8905bd2da49156237166"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set custom RGB color for WS2812 LED.  <br /></td></tr>
+<tr class="separator:a767b2a39258c8905bd2da49156237166"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae418b1419d48662197422b9a17a3c0db" id="r_ae418b1419d48662197422b9a17a3c0db"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#ae418b1419d48662197422b9a17a3c0db">printStatus</a> ()</td></tr>
 <tr class="memdesc:ae418b1419d48662197422b9a17a3c0db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print current status to Serial.  <br /></td></tr>
 <tr class="separator:ae418b1419d48662197422b9a17a3c0db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae68c2a48d9051fe0c4b293fb07af8c13" id="r_ae68c2a48d9051fe0c4b293fb07af8c13"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#ae68c2a48d9051fe0c4b293fb07af8c13">getStatusString</a> ()</td></tr>
 <tr class="memdesc:ae68c2a48d9051fe0c4b293fb07af8c13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get status information as a formatted string.  <br /></td></tr>
 <tr class="separator:ae68c2a48d9051fe0c4b293fb07af8c13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a7c8b372f664dbca2702c8d8a33076b" id="r_a7a7c8b372f664dbca2702c8d8a33076b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">LEDType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a7a7c8b372f664dbca2702c8d8a33076b">getLEDType</a> () const</td></tr>
+<tr class="memdesc:a7a7c8b372f664dbca2702c8d8a33076b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current LED type.  <br /></td></tr>
+<tr class="separator:a7a7c8b372f664dbca2702c8d8a33076b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -233,6 +242,9 @@ Private Member Functions</h2></td></tr>
 <tr class="memitem:a994a62e16454b236b935167e35bae9f0" id="r_a994a62e16454b236b935167e35bae9f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a994a62e16454b236b935167e35bae9f0">updateRGBCycle</a> ()</td></tr>
 <tr class="memdesc:a994a62e16454b236b935167e35bae9f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update RGB color cycling animation.  <br /></td></tr>
 <tr class="separator:a994a62e16454b236b935167e35bae9f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08bafebea822193abdf2bacc3fefadb7" id="r_a08bafebea822193abdf2bacc3fefadb7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7">updateWS2812</a> ()</td></tr>
+<tr class="memdesc:a08bafebea822193abdf2bacc3fefadb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update WS2812 LED with current RGB values.  <br /></td></tr>
+<tr class="separator:a08bafebea822193abdf2bacc3fefadb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pri-attribs" name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -242,27 +254,15 @@ Private Attributes</h2></td></tr>
 <tr class="memitem:af88224ad840e34e91fceb1cb260a3e3c" id="r_af88224ad840e34e91fceb1cb260a3e3c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#af88224ad840e34e91fceb1cb260a3e3c">ledPin</a></td></tr>
 <tr class="memdesc:af88224ad840e34e91fceb1cb260a3e3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pin number for single LED configuration.  <br /></td></tr>
 <tr class="separator:af88224ad840e34e91fceb1cb260a3e3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ffc7cadfa2334d44a7834ba3666102d" id="r_a8ffc7cadfa2334d44a7834ba3666102d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a8ffc7cadfa2334d44a7834ba3666102d">redPin</a></td></tr>
-<tr class="memdesc:a8ffc7cadfa2334d44a7834ba3666102d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Red pin for RGB LED configuration.  <br /></td></tr>
-<tr class="separator:a8ffc7cadfa2334d44a7834ba3666102d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d549ab7a63bdb100ce3192cd8a4b0b3" id="r_a3d549ab7a63bdb100ce3192cd8a4b0b3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a3d549ab7a63bdb100ce3192cd8a4b0b3">greenPin</a></td></tr>
-<tr class="memdesc:a3d549ab7a63bdb100ce3192cd8a4b0b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Green pin for RGB LED configuration.  <br /></td></tr>
-<tr class="separator:a3d549ab7a63bdb100ce3192cd8a4b0b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac49e1cb46e253cc407e40187859afda4" id="r_ac49e1cb46e253cc407e40187859afda4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#ac49e1cb46e253cc407e40187859afda4">bluePin</a></td></tr>
-<tr class="memdesc:ac49e1cb46e253cc407e40187859afda4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Blue pin for RGB LED configuration.  <br /></td></tr>
-<tr class="separator:ac49e1cb46e253cc407e40187859afda4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52549c3e0a24f789df33a6ab4b44d427" id="r_a52549c3e0a24f789df33a6ab4b44d427"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a52549c3e0a24f789df33a6ab4b44d427">rgbDataPin</a></td></tr>
+<tr class="memdesc:a52549c3e0a24f789df33a6ab4b44d427"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data pin for WS2812 RGB LED configuration.  <br /></td></tr>
+<tr class="separator:a52549c3e0a24f789df33a6ab4b44d427"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c50b7212c4edc8d3ae1a07e82bbf96b" id="r_a8c50b7212c4edc8d3ae1a07e82bbf96b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a8c50b7212c4edc8d3ae1a07e82bbf96b">ledChannel</a></td></tr>
 <tr class="memdesc:a8c50b7212c4edc8d3ae1a07e82bbf96b"><td class="mdescLeft">&#160;</td><td class="mdescRight">PWM channel for single LED.  <br /></td></tr>
 <tr class="separator:a8c50b7212c4edc8d3ae1a07e82bbf96b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38db4fa98a748a65608223d30a0155af" id="r_a38db4fa98a748a65608223d30a0155af"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a38db4fa98a748a65608223d30a0155af">redChannel</a></td></tr>
-<tr class="memdesc:a38db4fa98a748a65608223d30a0155af"><td class="mdescLeft">&#160;</td><td class="mdescRight">PWM channel for RGB red component.  <br /></td></tr>
-<tr class="separator:a38db4fa98a748a65608223d30a0155af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a079aa41f353b859da7638983a575b779" id="r_a079aa41f353b859da7638983a575b779"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a079aa41f353b859da7638983a575b779">greenChannel</a></td></tr>
-<tr class="memdesc:a079aa41f353b859da7638983a575b779"><td class="mdescLeft">&#160;</td><td class="mdescRight">PWM channel for RGB green component.  <br /></td></tr>
-<tr class="separator:a079aa41f353b859da7638983a575b779"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f94cbc546d60b74a029ae9068b2a8d9" id="r_a5f94cbc546d60b74a029ae9068b2a8d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a5f94cbc546d60b74a029ae9068b2a8d9">blueChannel</a></td></tr>
-<tr class="memdesc:a5f94cbc546d60b74a029ae9068b2a8d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">PWM channel for RGB blue component.  <br /></td></tr>
-<tr class="separator:a5f94cbc546d60b74a029ae9068b2a8d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7b84e191862742fde0a46daaa8d26cb" id="r_aa7b84e191862742fde0a46daaa8d26cb"><td class="memItemLeft" align="right" valign="top">Adafruit_NeoPixel *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#aa7b84e191862742fde0a46daaa8d26cb">neoPixel</a></td></tr>
+<tr class="memdesc:aa7b84e191862742fde0a46daaa8d26cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">NeoPixel object for WS2812 LED control.  <br /></td></tr>
+<tr class="separator:aa7b84e191862742fde0a46daaa8d26cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6ae8ef76a3205a4b7d361bb0118d5b6" id="r_aa6ae8ef76a3205a4b7d361bb0118d5b6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__StatusIndicator.html#ga06ff0f8af5988d61790f23273ff3f61e">IndicatorMode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#aa6ae8ef76a3205a4b7d361bb0118d5b6">currentMode</a></td></tr>
 <tr class="memdesc:aa6ae8ef76a3205a4b7d361bb0118d5b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current animation mode.  <br /></td></tr>
 <tr class="separator:aa6ae8ef76a3205a4b7d361bb0118d5b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -275,6 +275,15 @@ Private Attributes</h2></td></tr>
 <tr class="memitem:a3a387f97b6613abbd4911f9d9769c4b2" id="r_a3a387f97b6613abbd4911f9d9769c4b2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a3a387f97b6613abbd4911f9d9769c4b2">enabled</a></td></tr>
 <tr class="memdesc:a3a387f97b6613abbd4911f9d9769c4b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the indicator is enabled.  <br /></td></tr>
 <tr class="separator:a3a387f97b6613abbd4911f9d9769c4b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32c39ee7b9da3843116625dc1a526d76" id="r_a32c39ee7b9da3843116625dc1a526d76"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a32c39ee7b9da3843116625dc1a526d76">currentRed</a></td></tr>
+<tr class="memdesc:a32c39ee7b9da3843116625dc1a526d76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current red value for WS2812.  <br /></td></tr>
+<tr class="separator:a32c39ee7b9da3843116625dc1a526d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a519ea5b2f3d4c2d2ff82454bf23d4c4a" id="r_a519ea5b2f3d4c2d2ff82454bf23d4c4a"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a519ea5b2f3d4c2d2ff82454bf23d4c4a">currentGreen</a></td></tr>
+<tr class="memdesc:a519ea5b2f3d4c2d2ff82454bf23d4c4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current green value for WS2812.  <br /></td></tr>
+<tr class="separator:a519ea5b2f3d4c2d2ff82454bf23d4c4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10acc8960440f82cebd1c9959fadc5f4" id="r_a10acc8960440f82cebd1c9959fadc5f4"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a10acc8960440f82cebd1c9959fadc5f4">currentBlue</a></td></tr>
+<tr class="memdesc:a10acc8960440f82cebd1c9959fadc5f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current blue value for WS2812.  <br /></td></tr>
+<tr class="separator:a10acc8960440f82cebd1c9959fadc5f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c94c4f96cdc274e335093dd851f4c60" id="r_a7c94c4f96cdc274e335093dd851f4c60"><td class="memItemLeft" align="right" valign="top">unsigned long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classStatusIndicator.html#a7c94c4f96cdc274e335093dd851f4c60">lastUpdate</a></td></tr>
 <tr class="memdesc:a7c94c4f96cdc274e335093dd851f4c60"><td class="mdescLeft">&#160;</td><td class="mdescRight">Last update timestamp for animations.  <br /></td></tr>
 <tr class="separator:a7c94c4f96cdc274e335093dd851f4c60"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -305,7 +314,7 @@ Static Private Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00108">108</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00109">109</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ad53e6e6b48f8523fa4d3f54059f9fa70" name="ad53e6e6b48f8523fa4d3f54059f9fa70"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad53e6e6b48f8523fa4d3f54059f9fa70">&#9670;&#160;</a></span>StatusIndicator() <span class="overload">[1/3]</span></h2>
@@ -365,8 +374,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="aea3bf5f2221aeeede06be860ad17b424" name="aea3bf5f2221aeeede06be860ad17b424"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea3bf5f2221aeeede06be860ad17b424">&#9670;&#160;</a></span>StatusIndicator() <span class="overload">[3/3]</span></h2>
+<a id="a20f78e5aeb274b8eac534dc028e1456e" name="a20f78e5aeb274b8eac534dc028e1456e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a20f78e5aeb274b8eac534dc028e1456e">&#9670;&#160;</a></span>StatusIndicator() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -375,19 +384,13 @@ Here is the call graph for this function:</div>
           <td class="memname">StatusIndicator::StatusIndicator </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>rPin</em>, </td>
+          <td class="paramname"><em>dataPin</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>gPin</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>bPin</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">LEDType</a>&#160;</td>
+          <td class="paramname"><em>wsLedType</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -397,22 +400,48 @@ Here is the call graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Constructor for RGB LED configuration. </p>
+<p>Constructor for WS2812 addressable RGB LED. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">redPin</td><td>GPIO pin for red component </td></tr>
-    <tr><td class="paramname">greenPin</td><td>GPIO pin for green component </td></tr>
-    <tr><td class="paramname">bluePin</td><td>GPIO pin for blue component</td></tr>
-    <tr><td class="paramname">rPin</td><td>GPIO pin for red component </td></tr>
-    <tr><td class="paramname">gPin</td><td>GPIO pin for green component <br  />
- </td></tr>
-    <tr><td class="paramname">bPin</td><td>GPIO pin for blue component</td></tr>
+    <tr><td class="paramname">dataPin</td><td>GPIO pin connected to WS2812 data line </td></tr>
+    <tr><td class="paramname">wsLedType</td><td>LED type identifier (must be WS2812_LED)</td></tr>
   </table>
   </dd>
 </dl>
-<p>Initializes the <a class="el" href="classStatusIndicator.html">StatusIndicator</a> for an RGB LED setup with separate R, G, B pins. </p>
+<p>Creates a status indicator using a WS2812 addressable RGB LED. The LED is controlled via a single data pin using the WS2812 protocol.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">dataPin</td><td>GPIO pin connected to WS2812 data line </td></tr>
+    <tr><td class="paramname">wsLedType</td><td>LED type identifier (must be WS2812_LED)</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Initializes the <a class="el" href="classStatusIndicator.html">StatusIndicator</a> for a WS2812 addressable RGB LED setup. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00076">76</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00079">79</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a16bd4ff6f34da093e820bf549d68f753" name="a16bd4ff6f34da093e820bf549d68f753"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16bd4ff6f34da093e820bf549d68f753">&#9670;&#160;</a></span>~StatusIndicator()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">StatusIndicator::~StatusIndicator </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destructor. </p>
+<p>Cleans up NeoPixel object if allocated</p>
+<p>Cleans up allocated NeoPixel object to prevent memory leaks. </p>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00102">102</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 
 </div>
 </div>
@@ -437,7 +466,7 @@ Here is the call graph for this function:</div>
 <p>Sets up PWM channels and initializes the LED to OFF state. Must be called before using other methods.</p>
 <p>Calls <a class="el" href="classStatusIndicator.html#a623f18b34d5f995fe83d171ab168db99" title="Initialize the status indicator with default brightness.">begin()</a> with the current brightness setting. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00100">100</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00114">114</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -478,7 +507,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <p>Sets up PWM channels, configures pins, and initializes the LED system. This method must be called before using any other <a class="el" href="classStatusIndicator.html">StatusIndicator</a> methods. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00111">111</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00125">125</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -516,7 +545,7 @@ Here is the call graph for this function:</div>
 Detected LEDType (SINGLE_LED or RGB_LED)</dd></dl>
 <p>Attempts to detect the board type and determine whether it has RGB capabilities. Currently uses board name detection, but can be enhanced with hardware probing. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00508">508</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00532">532</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -547,11 +576,11 @@ Here is the caller graph for this function:</div>
 
 <p>Disable the status indicator (turns off LED) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00193">193</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00197">197</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a5e362d6679ce7bd558095d3c0381837c_cgraph.svg" width="447" height="86"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a5e362d6679ce7bd558095d3c0381837c_cgraph.svg" width="100%" height="364"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -578,7 +607,7 @@ Here is the caller graph for this function:</div>
 
 <p>Enable the status indicator. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00189">189</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00193">193</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -616,7 +645,7 @@ Here is the caller graph for this function:</div>
 String containing board type information</dd></dl>
 <p>Returns a string representation of the board type for debugging and logging. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00528">528</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00552">552</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -651,12 +680,12 @@ Here is the caller graph for this function:</div>
 <p>Get the current brightness level. </p>
 <dl class="section return"><dt>Returns</dt><dd>Current brightness (0-255) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00318">318</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00335">335</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
 <a id="a7a7c8b372f664dbca2702c8d8a33076b" name="a7a7c8b372f664dbca2702c8d8a33076b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a7c8b372f664dbca2702c8d8a33076b">&#9670;&#160;</a></span>getLEDType()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a7c8b372f664dbca2702c8d8a33076b">&#9670;&#160;</a></span>getLEDType() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -681,7 +710,37 @@ Here is the caller graph for this function:</div>
 <p>Get the LED hardware type. </p>
 <dl class="section return"><dt>Returns</dt><dd>LEDType (SINGLE_LED or RGB_LED) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00324">324</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00341">341</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+
+</div>
+</div>
+<a id="a7a7c8b372f664dbca2702c8d8a33076b" name="a7a7c8b372f664dbca2702c8d8a33076b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a7c8b372f664dbca2702c8d8a33076b">&#9670;&#160;</a></span>getLEDType() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">LEDType</a> StatusIndicator::getLEDType </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the current LED type. </p>
+<dl class="section return"><dt>Returns</dt><dd>LEDType enumeration value </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00425">425</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -711,7 +770,7 @@ Here is the caller graph for this function:</div>
 <p>Get the current animation mode. </p>
 <dl class="section return"><dt>Returns</dt><dd>Current IndicatorMode </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00306">306</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00323">323</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -741,7 +800,7 @@ Here is the caller graph for this function:</div>
 <p>Get the current status type. </p>
 <dl class="section return"><dt>Returns</dt><dd>Current StatusType </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00312">312</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00329">329</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -814,7 +873,7 @@ Here is the caller graph for this function:</div>
 <li>CONNECTING: Cyan </li>
 </ul>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00398">398</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00422">422</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -844,7 +903,7 @@ Here is the caller graph for this function:</div>
 String containing current status information</dd></dl>
 <p>Returns a formatted string with current status information including LED type, animation mode, status type, brightness, and enabled state. Useful for web interfaces and logging. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00556">556</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00581">581</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 
 </div>
 </div>
@@ -926,7 +985,7 @@ String containing current status information</dd></dl>
 </dl>
 <p>Converts HSV (Hue, Saturation, Value) color representation to RGB. Used primarily for RGB color cycling animations. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00465">465</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00489">489</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -961,7 +1020,7 @@ Here is the caller graph for this function:</div>
 <p>Check if the indicator is enabled. </p>
 <dl class="section return"><dt>Returns</dt><dd>true if enabled, false otherwise </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00300">300</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00317">317</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -990,11 +1049,11 @@ Here is the caller graph for this function:</div>
 
 <p>Turn off the indicator. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00366">366</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00383">383</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a2b860e78c232539231749ed4ceb6df87_cgraph.svg" width="650" height="86"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a2b860e78c232539231749ed4ceb6df87_cgraph.svg" width="100%" height="364"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 
 </div>
@@ -1017,7 +1076,7 @@ Here is the call graph for this function:</div>
 <p>Print current status to Serial. </p>
 <p>Outputs detailed status information to the Serial console for debugging purposes. Includes LED type, mode, status, brightness, and enabled state. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00539">539</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00563">563</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 
 </div>
 </div>
@@ -1045,7 +1104,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00185">185</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00189">189</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 
 </div>
 </div>
@@ -1103,7 +1162,12 @@ Here is the call graph for this function:</div>
 </dl>
 <p>Directly sets the RGB values for RGB LED configurations. Has no effect on single LED configurations. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00363">363</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00367">367</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a7aec954d98b786c46431ea428253afba_cgraph.svg" width="492" height="36"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -1138,16 +1202,77 @@ Here is the caller graph for this function:</div>
 </dl>
 <p>Changes the current animation mode and resets timing variables. If mode is OFF, immediately turns off all LEDs. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00163">163</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00167">167</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_af7c7d79d91d4ff1f7364cf5d9c664e51_cgraph.svg" width="456" height="86"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_af7c7d79d91d4ff1f7364cf5d9c664e51_cgraph.svg" width="100%" height="364"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_af7c7d79d91d4ff1f7364cf5d9c664e51_icgraph.svg" width="100%" height="549"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+</div>
+
+</div>
+</div>
+<a id="a767b2a39258c8905bd2da49156237166" name="a767b2a39258c8905bd2da49156237166"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a767b2a39258c8905bd2da49156237166">&#9670;&#160;</a></span>setRGBColor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void StatusIndicator::setRGBColor </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>red</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>green</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>blue</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set custom RGB color for WS2812 LED. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">red</td><td>Red component (0-255) </td></tr>
+    <tr><td class="paramname">green</td><td>Green component (0-255) </td></tr>
+    <tr><td class="paramname">blue</td><td>Blue component (0-255)</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Only effective for WS2812_LED type. For other LED types, use status-based methods.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">red</td><td>Red component (0-255) </td></tr>
+    <tr><td class="paramname">green</td><td>Green component (0-255) </td></tr>
+    <tr><td class="paramname">blue</td><td>Blue component (0-255)</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Sets custom RGB color for WS2812 addressable LEDs. Has no effect on other LED types. </p>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00399">399</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a767b2a39258c8905bd2da49156237166_cgraph.svg" width="496" height="36"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -1186,7 +1311,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <p>Sets the brightness for single LED configurations. Has no effect on RGB LED configurations. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00378">378</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00384">384</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -1219,7 +1344,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00176">176</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00180">180</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 
 </div>
 </div>
@@ -1258,7 +1383,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00180">180</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00184">184</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1297,9 +1422,9 @@ Here is the caller graph for this function:</div>
 
 <p>Setup PWM channels for LED control. </p>
 <p>Configures the appropriate PWM channels based on the LED type. For single LEDs, configures one channel. For RGB LEDs, configures three channels.</p>
-<p>Configures the appropriate PWM channels based on the LED type. For single LEDs, configures one channel. For RGB LEDs, configures three channels. Also attaches the pins to their respective PWM channels and initializes them to off. </p>
+<p>Configures PWM channel for single LED control. Also attaches the pin to the PWM channel and initializes it to off. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00133">133</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00153">153</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -1333,7 +1458,7 @@ Here is the caller graph for this function:</div>
 
 <p>Show connecting status (cyan breathing) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00356">356</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00373">373</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1367,7 +1492,7 @@ Here is the call graph for this function:</div>
 
 <p>Show error status (red fast blinking) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00341">341</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00358">358</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1401,7 +1526,7 @@ Here is the call graph for this function:</div>
 
 <p>Show info status (blue solid) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00346">346</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00363">363</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1435,7 +1560,7 @@ Here is the call graph for this function:</div>
 
 <p>Show normal status (green pulsing) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00331">331</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00348">348</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1469,7 +1594,7 @@ Here is the call graph for this function:</div>
 
 <p>Show recovery status (red fast blinking) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00361">361</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00378">378</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1503,7 +1628,7 @@ Here is the call graph for this function:</div>
 
 <p>Show success status (bright green solid) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00351">351</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00368">368</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1537,7 +1662,7 @@ Here is the call graph for this function:</div>
 
 <p>Show warning status (orange/yellow slow blinking) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00336">336</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00353">353</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1563,11 +1688,11 @@ Here is the call graph for this function:</div>
 
 <p>Toggle the enabled state. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00202">202</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00206">206</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_ad6d3b4809a7f6f1f6068b271ef50c152_cgraph.svg" width="664" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_ad6d3b4809a7f6f1f6068b271ef50c152_cgraph.svg" width="100%" height="382"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 
 </div>
@@ -1592,7 +1717,7 @@ Here is the call graph for this function:</div>
 <p>This method handles all animation timing and updates. It must be called regularly (typically in the main loop) for animations to work properly.</p>
 <p>This method handles all animation timing and LED updates. It must be called regularly (typically in the main loop) for animations to work properly. Different animation modes are updated at different intervals for optimal performance. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00217">217</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00221">221</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1626,11 +1751,11 @@ Here is the call graph for this function:</div>
 
 <p>Update blink animation. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00294">294</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00298">298</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a3a7ac8d902c74ac2c8c7cf8b1a0fd8bf_cgraph.svg" width="479" height="151"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a3a7ac8d902c74ac2c8c7cf8b1a0fd8bf_cgraph.svg" width="100%" height="413"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1665,11 +1790,11 @@ Here is the caller graph for this function:</div>
 
 <p>Update breathing animation. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00312">312</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00316">316</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_ae035b77033e51c7105cf8de1bbb3f58a_cgraph.svg" width="496" height="151"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_ae035b77033e51c7105cf8de1bbb3f58a_cgraph.svg" width="100%" height="413"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1704,11 +1829,11 @@ Here is the caller graph for this function:</div>
 
 <p>Update pulse animation. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00276">276</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00280">280</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_adfb76aa441c7fc7ebea9b173feaf587f_cgraph.svg" width="480" height="151"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_adfb76aa441c7fc7ebea9b173feaf587f_cgraph.svg" width="100%" height="413"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1743,11 +1868,11 @@ Here is the caller graph for this function:</div>
 
 <p>Update RGB color cycling animation. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00341">341</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00345">345</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a994a62e16454b236b935167e35bae9f0_cgraph.svg" width="503" height="86"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a994a62e16454b236b935167e35bae9f0_cgraph.svg" width="100%" height="364"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1757,59 +1882,43 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
+<a id="a08bafebea822193abdf2bacc3fefadb7" name="a08bafebea822193abdf2bacc3fefadb7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08bafebea822193abdf2bacc3fefadb7">&#9670;&#160;</a></span>updateWS2812()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void StatusIndicator::updateWS2812 </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Update WS2812 LED with current RGB values. </p>
+<p>Uses Adafruit NeoPixel library to update the WS2812 LED</p>
+<p>Uses the Adafruit NeoPixel library to update the WS2812 LED with current colors. Applies brightness scaling and shows the color on the LED. </p>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8cpp_source.html#l00619">619</a> of file <a class="el" href="StatusIndicator_8cpp_source.html">StatusIndicator.cpp</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classStatusIndicator_a08bafebea822193abdf2bacc3fefadb7_icgraph.svg" width="100%" height="574"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+</div>
+
+</div>
+</div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a5f94cbc546d60b74a029ae9068b2a8d9" name="a5f94cbc546d60b74a029ae9068b2a8d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f94cbc546d60b74a029ae9068b2a8d9">&#9670;&#160;</a></span>blueChannel</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int StatusIndicator::blueChannel</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>PWM channel for RGB blue component. </p>
-
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00119">119</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
-
-</div>
-</div>
-<a id="ac49e1cb46e253cc407e40187859afda4" name="ac49e1cb46e253cc407e40187859afda4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac49e1cb46e253cc407e40187859afda4">&#9670;&#160;</a></span>bluePin</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int StatusIndicator::bluePin</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Blue pin for RGB LED configuration. </p>
-
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00115">115</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
-
-</div>
-</div>
 <a id="a93a1d8d2984e486704b66572eff29418" name="a93a1d8d2984e486704b66572eff29418"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a93a1d8d2984e486704b66572eff29418">&#9670;&#160;</a></span>brightness</h2>
 
@@ -1832,7 +1941,59 @@ Here is the caller graph for this function:</div>
 
 <p>Current brightness level (0-255) </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00124">124</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00123">123</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+
+</div>
+</div>
+<a id="a10acc8960440f82cebd1c9959fadc5f4" name="a10acc8960440f82cebd1c9959fadc5f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10acc8960440f82cebd1c9959fadc5f4">&#9670;&#160;</a></span>currentBlue</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t StatusIndicator::currentBlue</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Current blue value for WS2812. </p>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00129">129</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+
+</div>
+</div>
+<a id="a519ea5b2f3d4c2d2ff82454bf23d4c4a" name="a519ea5b2f3d4c2d2ff82454bf23d4c4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a519ea5b2f3d4c2d2ff82454bf23d4c4a">&#9670;&#160;</a></span>currentGreen</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t StatusIndicator::currentGreen</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Current green value for WS2812. </p>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00128">128</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -1858,7 +2019,33 @@ Here is the caller graph for this function:</div>
 
 <p>Current animation mode. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00122">122</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00121">121</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+
+</div>
+</div>
+<a id="a32c39ee7b9da3843116625dc1a526d76" name="a32c39ee7b9da3843116625dc1a526d76"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32c39ee7b9da3843116625dc1a526d76">&#9670;&#160;</a></span>currentRed</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t StatusIndicator::currentRed</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Current red value for WS2812. </p>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00127">127</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -1884,7 +2071,7 @@ Here is the caller graph for this function:</div>
 
 <p>Current status type. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00123">123</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00122">122</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -1910,59 +2097,7 @@ Here is the caller graph for this function:</div>
 
 <p>Whether the indicator is enabled. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00125">125</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
-
-</div>
-</div>
-<a id="a079aa41f353b859da7638983a575b779" name="a079aa41f353b859da7638983a575b779"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a079aa41f353b859da7638983a575b779">&#9670;&#160;</a></span>greenChannel</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int StatusIndicator::greenChannel</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>PWM channel for RGB green component. </p>
-
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00118">118</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
-
-</div>
-</div>
-<a id="a3d549ab7a63bdb100ce3192cd8a4b0b3" name="a3d549ab7a63bdb100ce3192cd8a4b0b3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3d549ab7a63bdb100ce3192cd8a4b0b3">&#9670;&#160;</a></span>greenPin</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int StatusIndicator::greenPin</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Green pin for RGB LED configuration. </p>
-
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00114">114</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00124">124</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -1988,7 +2123,7 @@ Here is the caller graph for this function:</div>
 
 <p>Current hue value for RGB cycling. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00132">132</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00136">136</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2014,7 +2149,7 @@ Here is the caller graph for this function:</div>
 
 <p>Last update timestamp for animations. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00128">128</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00132">132</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2040,7 +2175,7 @@ Here is the caller graph for this function:</div>
 
 <p>PWM channel for single LED. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00116">116</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00115">115</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2066,7 +2201,7 @@ Here is the caller graph for this function:</div>
 
 <p>Pin number for single LED configuration. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00112">112</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00113">113</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2092,7 +2227,7 @@ Here is the caller graph for this function:</div>
 
 <p>Detected or configured LED type. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00111">111</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00112">112</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2118,7 +2253,33 @@ Here is the caller graph for this function:</div>
 
 <p>Maximum brightness value. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00137">137</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00141">141</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+
+</div>
+</div>
+<a id="aa7b84e191862742fde0a46daaa8d26cb" name="aa7b84e191862742fde0a46daaa8d26cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7b84e191862742fde0a46daaa8d26cb">&#9670;&#160;</a></span>neoPixel</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Adafruit_NeoPixel* StatusIndicator::neoPixel</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>NeoPixel object for WS2812 LED control. </p>
+
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00118">118</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2144,7 +2305,7 @@ Here is the caller graph for this function:</div>
 
 <p>Direction flag for pulse animations. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00130">130</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00134">134</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2170,7 +2331,7 @@ Here is the caller graph for this function:</div>
 
 <p>Interval for pulse animations. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00129">129</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00133">133</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2196,7 +2357,7 @@ Here is the caller graph for this function:</div>
 
 <p>Current pulse brightness value. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00131">131</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00135">135</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2222,7 +2383,7 @@ Here is the caller graph for this function:</div>
 
 <p>PWM frequency in Hz. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00135">135</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00139">139</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -2248,12 +2409,12 @@ Here is the caller graph for this function:</div>
 
 <p>PWM resolution in bits. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00136">136</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00140">140</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
-<a id="a38db4fa98a748a65608223d30a0155af" name="a38db4fa98a748a65608223d30a0155af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38db4fa98a748a65608223d30a0155af">&#9670;&#160;</a></span>redChannel</h2>
+<a id="a52549c3e0a24f789df33a6ab4b44d427" name="a52549c3e0a24f789df33a6ab4b44d427"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52549c3e0a24f789df33a6ab4b44d427">&#9670;&#160;</a></span>rgbDataPin</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2262,7 +2423,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int StatusIndicator::redChannel</td>
+          <td class="memname">int StatusIndicator::rgbDataPin</td>
         </tr>
       </table>
   </td>
@@ -2272,35 +2433,9 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>PWM channel for RGB red component. </p>
+<p>Data pin for WS2812 RGB LED configuration. </p>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00117">117</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
-
-</div>
-</div>
-<a id="a8ffc7cadfa2334d44a7834ba3666102d" name="a8ffc7cadfa2334d44a7834ba3666102d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8ffc7cadfa2334d44a7834ba3666102d">&#9670;&#160;</a></span>redPin</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int StatusIndicator::redPin</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Red pin for RGB LED configuration. </p>
-
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00113">113</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00114">114</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>

@@ -46,9 +46,9 @@
   </g>
 </defs>
 <script type="application/ecmascript">
-var viewWidth = 520;
+var viewWidth = 726;
 var viewHeight = 64;
-var sectionId = 'dynsection-18';
+var sectionId = 'dynsection-20';
 </script>
 <script type="application/ecmascript" xlink:href="svg.min.js"/>
 <svg id="graph" class="graph">
@@ -100,21 +100,39 @@ var sectionId = 'dynsection-18';
 </a>
 </g>
 </g>
-<!-- Node4 -->
-<g id="Node000004" class="node">
-<title>Node4</title>
-<g id="a_Node000004"><a xlink:href="classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" target="_top" xlink:title="Set single LED brightness.">
+<!-- Node5 -->
+<g id="Node000005" class="node">
+<title>Node5</title>
+<g id="a_Node000005"><a xlink:href="classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" target="_top" xlink:title="Set single LED brightness.">
 <polygon fill="white" stroke="#666666" points="512,-19 352,-19 352,0 512,0 512,-19"/>
 <text text-anchor="middle" x="432" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">StatusIndicator::setSingleLED</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node4 -->
-<g id="edge3_Node000002_Node000004" class="edge">
-<title>Node2&#45;&gt;Node4</title>
-<g id="a_edge3_Node000002_Node000004"><a xlink:title=" ">
+<!-- Node2&#45;&gt;Node5 -->
+<g id="edge4_Node000002_Node000005" class="edge">
+<title>Node2&#45;&gt;Node5</title>
+<g id="a_edge4_Node000002_Node000005"><a xlink:title=" ">
 <path fill="none" stroke="#63b8ff" d="M316.14,-20.8C324.47,-19.98 333.07,-19.13 341.65,-18.29"/>
 <polygon fill="#63b8ff" stroke="#63b8ff" points="342.08,-21.76 351.69,-17.3 341.4,-14.8 342.08,-21.76"/>
+</a>
+</g>
+</g>
+<!-- Node4 -->
+<g id="Node000004" class="node">
+<title>Node4</title>
+<g id="a_Node000004"><a xlink:href="classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7" target="_top" xlink:title="Update WS2812 LED with current RGB values.">
+<polygon fill="white" stroke="#666666" points="718,-56 548,-56 548,-37 718,-37 718,-56"/>
+<text text-anchor="middle" x="633" y="-44" font-family="Helvetica,sans-Serif" font-size="10.00">StatusIndicator::updateWS2812</text>
+</a>
+</g>
+</g>
+<!-- Node3&#45;&gt;Node4 -->
+<g id="edge3_Node000003_Node000004" class="edge">
+<title>Node3&#45;&gt;Node4</title>
+<g id="a_edge3_Node000003_Node000004"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M509.65,-46.5C518.82,-46.5 528.26,-46.5 537.64,-46.5"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="537.78,-50 547.78,-46.5 537.78,-43 537.78,-50"/>
 </a>
 </g>
 </g>

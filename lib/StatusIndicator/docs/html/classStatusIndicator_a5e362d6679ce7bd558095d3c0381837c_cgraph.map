@@ -2,6 +2,8 @@
 <area shape="rect" id="Node000001" title="Disable the status indicator (turns off LED)" alt="" coords="5,31,180,56"/>
 <area shape="rect" id="Node000002" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="231,5,438,31"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="180,32,218,28,218,33,180,37"/>
-<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="228,55,441,80"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="180,49,214,53,214,58,180,55"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a887ac9f319ab8b2610a480416e4534f8" title="Set single LED brightness." alt="" coords="228,55,441,80"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="180,49,214,53,214,58,180,55"/>
+<area shape="rect" id="Node000003" href="$classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7" title="Update WS2812 LED with current RGB values." alt="" coords="489,5,716,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="438,15,476,15,476,21,438,21"/>
 </map>

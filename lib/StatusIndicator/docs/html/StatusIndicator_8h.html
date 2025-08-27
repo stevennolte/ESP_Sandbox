@@ -97,13 +97,14 @@ $(document).ready(function(){initNavTree('StatusIndicator_8h.html',''); initResi
 </div><!--header-->
 <div class="contents">
 
-<p>Status indicator library for ESP32 devices with LED and RGB support.  
+<p>Status indicator library for ESP32 devices with LED and WS2812 support.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;Arduino.h&gt;</code><br />
+<code>#include &lt;Adafruit_NeoPixel.h&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for StatusIndicator.h:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="StatusIndicator_8h__incl.svg" width="166" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="StatusIndicator_8h__incl.svg" width="270" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
@@ -147,17 +148,17 @@ Enumerations</h2></td></tr>
 <tr class="memdesc:ga90549f45cfc442187c1d769596107d3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status types with associated colors and meanings.  <a href="group__StatusIndicator.html#ga90549f45cfc442187c1d769596107d3e">More...</a><br /></td></tr>
 <tr class="separator:ga90549f45cfc442187c1d769596107d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5f99aa5077acffebe451d1268c69db58" id="r_ga5f99aa5077acffebe451d1268c69db58"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">LEDType</a> { <a class="el" href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58ad2d819130af7b2a815f8574a602b4fd8">LEDType::SINGLE_LED</a>
-, <a class="el" href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58a66285e076734747ee05eed2b9e73e409">LEDType::RGB_LED</a>
+, <a class="el" href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58a3af918a570a8047edfaab3187b0ab108">LEDType::WS2812_LED</a>
  }</td></tr>
 <tr class="memdesc:ga5f99aa5077acffebe451d1268c69db58"><td class="mdescLeft">&#160;</td><td class="mdescRight">LED hardware type detection.  <a href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">More...</a><br /></td></tr>
 <tr class="separator:ga5f99aa5077acffebe451d1268c69db58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Status indicator library for ESP32 devices with LED and RGB support. </p>
+<div class="textblock"><p>Status indicator library for ESP32 devices with LED and WS2812 support. </p>
 <dl class="section author"><dt>Author</dt><dd>ESP_Sandbox Project </dd></dl>
-<dl class="section version"><dt>Version</dt><dd>1.0.0 </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2025-08-26</dd></dl>
-<p>Provides a unified interface for status indication on ESP32 devices, supporting both simple on/off LEDs and RGB LEDs with automatic board detection. </p>
+<dl class="section version"><dt>Version</dt><dd>1.1.0 </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2025-08-27</dd></dl>
+<p>Provides a unified interface for status indication on ESP32 devices, supporting both simple on/off LEDs and WS2812 addressable RGB LEDs with automatic board detection. </p>
 
 <p class="definition">Definition in file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 </div></div><!-- contents -->

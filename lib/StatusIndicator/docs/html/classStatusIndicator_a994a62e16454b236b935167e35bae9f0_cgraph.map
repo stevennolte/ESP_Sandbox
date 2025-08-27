@@ -4,4 +4,6 @@
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="243,30,285,26,285,31,243,35"/>
 <area shape="rect" id="Node000003" href="$classStatusIndicator.html#a7aec954d98b786c46431ea428253afba" title="Set RGB LED color values." alt="" coords="291,55,497,80"/>
 <area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="243,51,277,54,277,60,243,57"/>
+<area shape="rect" id="Node000004" href="$classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7" title="Update WS2812 LED with current RGB values." alt="" coords="545,55,772,80"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="497,65,532,65,532,70,497,70"/>
 </map>

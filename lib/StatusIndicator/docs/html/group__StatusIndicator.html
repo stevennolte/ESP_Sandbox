@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('group__StatusIndicator.html',''); init
 </div><!--header-->
 <div class="contents">
 
-<p>ESP32 Status Indicator with LED and RGB support.  
+<p>ESP32 Status Indicator with LED and WS2812 support.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
@@ -134,14 +134,14 @@ Enumerations</h2></td></tr>
 <tr class="memdesc:ga90549f45cfc442187c1d769596107d3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status types with associated colors and meanings.  <a href="group__StatusIndicator.html#ga90549f45cfc442187c1d769596107d3e">More...</a><br /></td></tr>
 <tr class="separator:ga90549f45cfc442187c1d769596107d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5f99aa5077acffebe451d1268c69db58" id="r_ga5f99aa5077acffebe451d1268c69db58"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">LEDType</a> { <a class="el" href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58ad2d819130af7b2a815f8574a602b4fd8">LEDType::SINGLE_LED</a>
-, <a class="el" href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58a66285e076734747ee05eed2b9e73e409">LEDType::RGB_LED</a>
+, <a class="el" href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58a3af918a570a8047edfaab3187b0ab108">LEDType::WS2812_LED</a>
  }</td></tr>
 <tr class="memdesc:ga5f99aa5077acffebe451d1268c69db58"><td class="mdescLeft">&#160;</td><td class="mdescRight">LED hardware type detection.  <a href="group__StatusIndicator.html#ga5f99aa5077acffebe451d1268c69db58">More...</a><br /></td></tr>
 <tr class="separator:ga5f99aa5077acffebe451d1268c69db58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>ESP32 Status Indicator with LED and RGB support. </p>
-<p>This module provides comprehensive status indication capabilities for ESP32 devices. It supports both simple single LEDs and RGB LEDs with automatic hardware detection, multiple animation modes, and predefined status types with appropriate colors. </p>
+<p>ESP32 Status Indicator with LED and WS2812 support. </p>
+<p>This module provides comprehensive status indication capabilities for ESP32 devices. It supports both simple single LEDs and WS2812 addressable RGB LEDs with automatic hardware detection, multiple animation modes, and predefined status types with appropriate colors. </p>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
 <a id="ga06ff0f8af5988d61790f23273ff3f61e" name="ga06ff0f8af5988d61790f23273ff3f61e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga06ff0f8af5988d61790f23273ff3f61e">&#9670;&#160;</a></span>IndicatorMode</h2>
@@ -182,7 +182,7 @@ Enumerations</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00034">34</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00035">35</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -207,15 +207,15 @@ Enumerations</h2></td></tr>
 </div><div class="memdoc">
 
 <p>LED hardware type detection. </p>
-<p>Specifies whether the hardware uses a single LED or RGB LED configuration. This affects how colors and animations are rendered. </p>
+<p>Specifies whether the hardware uses a single LED or WS2812 addressable LED. This affects how colors and animations are rendered. </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga5f99aa5077acffebe451d1268c69db58ad2d819130af7b2a815f8574a602b4fd8" name="gga5f99aa5077acffebe451d1268c69db58ad2d819130af7b2a815f8574a602b4fd8"></a>SINGLE_LED&#160;</td><td class="fielddoc"><p>Simple on/off LED (single pin) </p>
 </td></tr>
-<tr><td class="fieldname"><a id="gga5f99aa5077acffebe451d1268c69db58a66285e076734747ee05eed2b9e73e409" name="gga5f99aa5077acffebe451d1268c69db58a66285e076734747ee05eed2b9e73e409"></a>RGB_LED&#160;</td><td class="fielddoc"><p>RGB LED with separate R, G, B pins. </p>
+<tr><td class="fieldname"><a id="gga5f99aa5077acffebe451d1268c69db58a3af918a570a8047edfaab3187b0ab108" name="gga5f99aa5077acffebe451d1268c69db58a3af918a570a8047edfaab3187b0ab108"></a>WS2812_LED&#160;</td><td class="fielddoc"><p>Addressable RGB LED (WS2812/NeoPixel style, single data pin) </p>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00070">70</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00071">71</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>
@@ -258,7 +258,7 @@ Enumerations</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00052">52</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="StatusIndicator_8h_source.html#l00053">53</a> of file <a class="el" href="StatusIndicator_8h_source.html">StatusIndicator.h</a>.</p>
 
 </div>
 </div>

@@ -1,18 +1,18 @@
 /**
  * @file StatusIndicator.h
- * @brief Status indicator library for ESP32 devices with LED and RGB support
+ * @brief Status indicator library for ESP32 devices with LED and WS2812 support
  * @author ESP_Sandbox Project
- * @version 1.0.0
- * @date 2025-08-26
+ * @version 1.1.0
+ * @date 2025-08-27
  * 
  * Provides a unified interface for status indication on ESP32 devices, supporting both 
- * simple on/off LEDs and RGB LEDs with automatic board detection.
+ * simple on/off LEDs and WS2812 addressable RGB LEDs with automatic board detection.
  * 
  * @defgroup StatusIndicator StatusIndicator Library
- * @brief ESP32 Status Indicator with LED and RGB support
+ * @brief ESP32 Status Indicator with LED and WS2812 support
  * 
  * This module provides comprehensive status indication capabilities for ESP32 devices.
- * It supports both simple single LEDs and RGB LEDs with automatic hardware detection,
+ * It supports both simple single LEDs and WS2812 addressable RGB LEDs with automatic hardware detection,
  * multiple animation modes, and predefined status types with appropriate colors.
  * 
  * @{
@@ -22,6 +22,7 @@
 #define STATUS_INDICATOR_H
 
 #include <Arduino.h>
+#include "Adafruit_NeoPixel.h"
 
 /**
  * @brief Status indicator animation modes
@@ -62,14 +63,14 @@ enum class StatusType {
 /**
  * @brief LED hardware type detection
  * 
- * Specifies whether the hardware uses a single LED or RGB LED configuration.
+ * Specifies whether the hardware uses a single LED or WS2812 addressable LED.
  * This affects how colors and animations are rendered.
  * 
  * @ingroup StatusIndicator
  */
 enum class LEDType {
     SINGLE_LED,  ///< Simple on/off LED (single pin)
-    RGB_LED      ///< RGB LED with separate R, G, B pins
+    WS2812_LED   ///< Addressable RGB LED (WS2812/NeoPixel style, single data pin)
 };
 
 /**
@@ -110,19 +111,22 @@ private:
     // Hardware configuration
     LEDType ledType;         ///< Detected or configured LED type
     int ledPin;              ///< Pin number for single LED configuration
-    int redPin;              ///< Red pin for RGB LED configuration
-    int greenPin;            ///< Green pin for RGB LED configuration
-    int bluePin;             ///< Blue pin for RGB LED configuration
+    int rgbDataPin;          ///< Data pin for WS2812 RGB LED configuration
     int ledChannel;          ///< PWM channel for single LED
-    int redChannel;          ///< PWM channel for RGB red component
-    int greenChannel;        ///< PWM channel for RGB green component
-    int blueChannel;         ///< PWM channel for RGB blue component
+    
+    // NeoPixel object for WS2812 control
+    Adafruit_NeoPixel* neoPixel; ///< NeoPixel object for WS2812 LED control
     
     // Current state
     IndicatorMode currentMode;   ///< Current animation mode
     StatusType currentStatus;    ///< Current status type
     uint8_t brightness;          ///< Current brightness level (0-255)
     bool enabled;                ///< Whether the indicator is enabled
+    
+    // Current RGB values for WS2812
+    uint8_t currentRed;          ///< Current red value for WS2812
+    uint8_t currentGreen;        ///< Current green value for WS2812
+    uint8_t currentBlue;         ///< Current blue value for WS2812
     
     // Timing variables
     unsigned long lastUpdate;    ///< Last update timestamp for animations
@@ -200,6 +204,12 @@ private:
      */
     void updateRGBCycle();
     
+    /**
+     * @brief Update WS2812 LED with current RGB values
+     * @details Uses Adafruit NeoPixel library to update the WS2812 LED
+     */
+    void updateWS2812();
+    
 public:
     // Constructors
     
@@ -218,12 +228,19 @@ public:
     StatusIndicator(int pin);
     
     /**
-     * @brief Constructor for RGB LED configuration
-     * @param redPin GPIO pin for red component
-     * @param greenPin GPIO pin for green component
-     * @param bluePin GPIO pin for blue component
+     * @brief Constructor for WS2812 addressable RGB LED
+     * @param dataPin GPIO pin connected to WS2812 data line
+     * @param wsLedType LED type identifier (must be WS2812_LED)
+     * @details Creates a status indicator using a WS2812 addressable RGB LED.
+     * The LED is controlled via a single data pin using the WS2812 protocol.
      */
-    StatusIndicator(int redPin, int greenPin, int bluePin);
+    StatusIndicator(int dataPin, LEDType wsLedType);
+    
+    /**
+     * @brief Destructor
+     * @details Cleans up NeoPixel object if allocated
+     */
+    ~StatusIndicator();
     
     // Initialization
     
@@ -365,6 +382,15 @@ public:
      */
     void off() { setMode(IndicatorMode::OFF); }
     
+    /**
+     * @brief Set custom RGB color for WS2812 LED
+     * @param red Red component (0-255)
+     * @param green Green component (0-255) 
+     * @param blue Blue component (0-255)
+     * @details Only effective for WS2812_LED type. For other LED types, use status-based methods.
+     */
+    void setRGBColor(uint8_t red, uint8_t green, uint8_t blue);
+    
     // Board detection
     
     /**
@@ -391,6 +417,12 @@ public:
      * @return String containing current status information
      */
     String getStatusString();
+    
+    /**
+     * @brief Get the current LED type
+     * @return LEDType enumeration value
+     */
+    LEDType getLEDType() const { return ledType; }
 };
 
 /** @} */ // end of StatusIndicator group

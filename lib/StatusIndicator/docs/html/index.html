@@ -93,14 +93,18 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
   <div class="headertitle"><div class="title"><a class="el" href="classStatusIndicator.html">StatusIndicator</a> Library </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_README"></a> A flexible status indicator library for ESP32 devices that supports both simple on/off LEDs and RGB LEDs with automatic board detection.</p>
+<div class="textblock"><p><a class="anchor" id="md_README"></a> A flexible status indicator library for ESP32 devices that supports single LEDs and WS2812 addressable RGB LEDs with au#### LEDType</p><ul>
+<li><code>SINGLE_LED</code> - Simple on/off LED (single pin)</li>
+<li><code>WS2812_LED</code> - Addressable RGB LED (WS2812/NeoPixel style, single data pin)tic board detection.</li>
+</ul>
 <h1><a class="anchor" id="autotoc_md1"></a>
 Features</h1>
 <ul>
-<li><b>Automatic Board Detection</b>: Detects whether your ESP32 board has a simple LED or RGB capabilities</li>
+<li><b>Automatic Board Detection</b>: Detects whether your ESP32 board has a simple LED or WS2812 addressable LED</li>
 <li><b>Multiple Indicator Modes</b>: OFF, SOLID, PULSE, BLINK_SLOW, BLINK_FAST, BREATHE, RGB_CYCLE</li>
 <li><b>Status Types</b>: NORMAL, WARNING, ERROR, INFO, SUCCESS, CONNECTING, RECOVERY with appropriate colors</li>
-<li><b>Flexible Configuration</b>: Works with both single LEDs and RGB LEDs</li>
+<li><b>WS2812 Support</b>: Full support for addressable RGB LEDs with custom color control using Adafruit NeoPixel library</li>
+<li><b>Flexible Configuration</b>: Works with single LEDs and WS2812 addressable LEDs</li>
 <li><b>Easy Integration</b>: Simple API with convenience methods</li>
 <li><b>PWM Control</b>: Smooth brightness control and effects</li>
 </ul>
@@ -108,7 +112,7 @@ Features</h1>
 Supported Hardware</h1>
 <ul>
 <li><b>Single LED</b>: Standard ESP32 boards with built-in LED (typically pin 2)</li>
-<li><b>RGB LED</b>: ESP32 DevKit-C boards or custom setups with separate R, G, B pins</li>
+<li><b>WS2812 LED</b>: ESP32-S3-DevKitC-1 boards with built-in WS2812 addressable RGB LED (GPIO38)</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md3"></a>
 Installation</h1>
@@ -130,11 +134,11 @@ Basic Usage (Auto-detection)</h2>
 <div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a15fe973ce9d9a1a838df26e98204c5ff">update</a>();  <span class="comment">// Call this in your main loop</span></div>
 <div class="line">    delay(50);</div>
 <div class="line">}</div>
-<div class="ttc" id="aStatusIndicator_8h_html"><div class="ttname"><a href="StatusIndicator_8h.html">StatusIndicator.h</a></div><div class="ttdoc">Status indicator library for ESP32 devices with LED and RGB support.</div></div>
-<div class="ttc" id="aclassStatusIndicator_html"><div class="ttname"><a href="classStatusIndicator.html">StatusIndicator</a></div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00108">StatusIndicator.h:108</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a11fa21d9e416009d7cfa7760f79bff15"><div class="ttname"><a href="classStatusIndicator.html#a11fa21d9e416009d7cfa7760f79bff15">StatusIndicator::showNormal</a></div><div class="ttdeci">void showNormal()</div><div class="ttdoc">Show normal status (green pulsing)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00331">StatusIndicator.h:331</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a15fe973ce9d9a1a838df26e98204c5ff"><div class="ttname"><a href="classStatusIndicator.html#a15fe973ce9d9a1a838df26e98204c5ff">StatusIndicator::update</a></div><div class="ttdeci">void update()</div><div class="ttdoc">Update animations - must be called regularly in main loop.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00217">StatusIndicator.cpp:217</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a623f18b34d5f995fe83d171ab168db99"><div class="ttname"><a href="classStatusIndicator.html#a623f18b34d5f995fe83d171ab168db99">StatusIndicator::begin</a></div><div class="ttdeci">void begin()</div><div class="ttdoc">Initialize the status indicator with default brightness.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00100">StatusIndicator.cpp:100</a></div></div>
+<div class="ttc" id="aStatusIndicator_8h_html"><div class="ttname"><a href="StatusIndicator_8h.html">StatusIndicator.h</a></div><div class="ttdoc">Status indicator library for ESP32 devices with LED and WS2812 support.</div></div>
+<div class="ttc" id="aclassStatusIndicator_html"><div class="ttname"><a href="classStatusIndicator.html">StatusIndicator</a></div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00109">StatusIndicator.h:109</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a11fa21d9e416009d7cfa7760f79bff15"><div class="ttname"><a href="classStatusIndicator.html#a11fa21d9e416009d7cfa7760f79bff15">StatusIndicator::showNormal</a></div><div class="ttdeci">void showNormal()</div><div class="ttdoc">Show normal status (green pulsing)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00348">StatusIndicator.h:348</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a15fe973ce9d9a1a838df26e98204c5ff"><div class="ttname"><a href="classStatusIndicator.html#a15fe973ce9d9a1a838df26e98204c5ff">StatusIndicator::update</a></div><div class="ttdeci">void update()</div><div class="ttdoc">Update animations - must be called regularly in main loop.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00221">StatusIndicator.cpp:221</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a623f18b34d5f995fe83d171ab168db99"><div class="ttname"><a href="classStatusIndicator.html#a623f18b34d5f995fe83d171ab168db99">StatusIndicator::begin</a></div><div class="ttdeci">void begin()</div><div class="ttdoc">Initialize the status indicator with default brightness.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00114">StatusIndicator.cpp:114</a></div></div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md6"></a>
 Manual Configuration</h2>
 <div class="fragment"><div class="line"><span class="comment">// Single LED on pin 2</span></div>
@@ -160,16 +164,16 @@ Status Indication</h2>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Or combined</span></div>
 <div class="line">indicator.<a class="code hl_function" href="classStatusIndicator.html#a565ca4b4a5c27816e073708e3a067ece">setStatusWithMode</a>(<a class="code hl_enumvalue" href="group__StatusIndicator.html#gga90549f45cfc442187c1d769596107d3eabb1ca97ec761fc37101737ba0aa2e7c5">StatusType::ERROR</a>, <a class="code hl_enumvalue" href="group__StatusIndicator.html#gga06ff0f8af5988d61790f23273ff3f61eab6991ea3d8f6a06d33f474813a682d86">IndicatorMode::BLINK_FAST</a>);</div>
-<div class="ttc" id="aclassStatusIndicator_html_a0b5d29aa9ab2b5902829d49ec0f43698"><div class="ttname"><a href="classStatusIndicator.html#a0b5d29aa9ab2b5902829d49ec0f43698">StatusIndicator::showWarning</a></div><div class="ttdeci">void showWarning()</div><div class="ttdoc">Show warning status (orange/yellow slow blinking)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00336">StatusIndicator.h:336</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a2b860e78c232539231749ed4ceb6df87"><div class="ttname"><a href="classStatusIndicator.html#a2b860e78c232539231749ed4ceb6df87">StatusIndicator::off</a></div><div class="ttdeci">void off()</div><div class="ttdoc">Turn off the indicator.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00366">StatusIndicator.h:366</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a32203370e0a8c6c82aaa8c5498199357"><div class="ttname"><a href="classStatusIndicator.html#a32203370e0a8c6c82aaa8c5498199357">StatusIndicator::showError</a></div><div class="ttdeci">void showError()</div><div class="ttdoc">Show error status (red fast blinking)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00341">StatusIndicator.h:341</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a4b102485727038932f9a8c1b3a669d9d"><div class="ttname"><a href="classStatusIndicator.html#a4b102485727038932f9a8c1b3a669d9d">StatusIndicator::showInfo</a></div><div class="ttdeci">void showInfo()</div><div class="ttdoc">Show info status (blue solid)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00346">StatusIndicator.h:346</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a565ca4b4a5c27816e073708e3a067ece"><div class="ttname"><a href="classStatusIndicator.html#a565ca4b4a5c27816e073708e3a067ece">StatusIndicator::setStatusWithMode</a></div><div class="ttdeci">void setStatusWithMode(StatusType status, IndicatorMode mode)</div><div class="ttdoc">Set both status type and animation mode.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00180">StatusIndicator.cpp:180</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a59139509e89a55f7368586f97c65093e"><div class="ttname"><a href="classStatusIndicator.html#a59139509e89a55f7368586f97c65093e">StatusIndicator::showRecovery</a></div><div class="ttdeci">void showRecovery()</div><div class="ttdoc">Show recovery status (red fast blinking)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00361">StatusIndicator.h:361</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a7d8985f8923c2b35ce1eb603073bdbf0"><div class="ttname"><a href="classStatusIndicator.html#a7d8985f8923c2b35ce1eb603073bdbf0">StatusIndicator::setStatus</a></div><div class="ttdeci">void setStatus(StatusType status)</div><div class="ttdoc">Set the status type (affects color)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00176">StatusIndicator.cpp:176</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_aa352696f746ce7c38dfb92e45953009f"><div class="ttname"><a href="classStatusIndicator.html#aa352696f746ce7c38dfb92e45953009f">StatusIndicator::showConnecting</a></div><div class="ttdeci">void showConnecting()</div><div class="ttdoc">Show connecting status (cyan breathing)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00356">StatusIndicator.h:356</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_ab17492a890febb127c2aee37f026c560"><div class="ttname"><a href="classStatusIndicator.html#ab17492a890febb127c2aee37f026c560">StatusIndicator::showSuccess</a></div><div class="ttdeci">void showSuccess()</div><div class="ttdoc">Show success status (bright green solid)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00351">StatusIndicator.h:351</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_af7c7d79d91d4ff1f7364cf5d9c664e51"><div class="ttname"><a href="classStatusIndicator.html#af7c7d79d91d4ff1f7364cf5d9c664e51">StatusIndicator::setMode</a></div><div class="ttdeci">void setMode(IndicatorMode mode)</div><div class="ttdoc">Set the animation mode.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00163">StatusIndicator.cpp:163</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a0b5d29aa9ab2b5902829d49ec0f43698"><div class="ttname"><a href="classStatusIndicator.html#a0b5d29aa9ab2b5902829d49ec0f43698">StatusIndicator::showWarning</a></div><div class="ttdeci">void showWarning()</div><div class="ttdoc">Show warning status (orange/yellow slow blinking)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00353">StatusIndicator.h:353</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a2b860e78c232539231749ed4ceb6df87"><div class="ttname"><a href="classStatusIndicator.html#a2b860e78c232539231749ed4ceb6df87">StatusIndicator::off</a></div><div class="ttdeci">void off()</div><div class="ttdoc">Turn off the indicator.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00383">StatusIndicator.h:383</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a32203370e0a8c6c82aaa8c5498199357"><div class="ttname"><a href="classStatusIndicator.html#a32203370e0a8c6c82aaa8c5498199357">StatusIndicator::showError</a></div><div class="ttdeci">void showError()</div><div class="ttdoc">Show error status (red fast blinking)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00358">StatusIndicator.h:358</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a4b102485727038932f9a8c1b3a669d9d"><div class="ttname"><a href="classStatusIndicator.html#a4b102485727038932f9a8c1b3a669d9d">StatusIndicator::showInfo</a></div><div class="ttdeci">void showInfo()</div><div class="ttdoc">Show info status (blue solid)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00363">StatusIndicator.h:363</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a565ca4b4a5c27816e073708e3a067ece"><div class="ttname"><a href="classStatusIndicator.html#a565ca4b4a5c27816e073708e3a067ece">StatusIndicator::setStatusWithMode</a></div><div class="ttdeci">void setStatusWithMode(StatusType status, IndicatorMode mode)</div><div class="ttdoc">Set both status type and animation mode.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00184">StatusIndicator.cpp:184</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a59139509e89a55f7368586f97c65093e"><div class="ttname"><a href="classStatusIndicator.html#a59139509e89a55f7368586f97c65093e">StatusIndicator::showRecovery</a></div><div class="ttdeci">void showRecovery()</div><div class="ttdoc">Show recovery status (red fast blinking)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00378">StatusIndicator.h:378</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a7d8985f8923c2b35ce1eb603073bdbf0"><div class="ttname"><a href="classStatusIndicator.html#a7d8985f8923c2b35ce1eb603073bdbf0">StatusIndicator::setStatus</a></div><div class="ttdeci">void setStatus(StatusType status)</div><div class="ttdoc">Set the status type (affects color)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00180">StatusIndicator.cpp:180</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_aa352696f746ce7c38dfb92e45953009f"><div class="ttname"><a href="classStatusIndicator.html#aa352696f746ce7c38dfb92e45953009f">StatusIndicator::showConnecting</a></div><div class="ttdeci">void showConnecting()</div><div class="ttdoc">Show connecting status (cyan breathing)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00373">StatusIndicator.h:373</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_ab17492a890febb127c2aee37f026c560"><div class="ttname"><a href="classStatusIndicator.html#ab17492a890febb127c2aee37f026c560">StatusIndicator::showSuccess</a></div><div class="ttdeci">void showSuccess()</div><div class="ttdoc">Show success status (bright green solid)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00368">StatusIndicator.h:368</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_af7c7d79d91d4ff1f7364cf5d9c664e51"><div class="ttname"><a href="classStatusIndicator.html#af7c7d79d91d4ff1f7364cf5d9c664e51">StatusIndicator::setMode</a></div><div class="ttdeci">void setMode(IndicatorMode mode)</div><div class="ttdoc">Set the animation mode.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00167">StatusIndicator.cpp:167</a></div></div>
 <div class="ttc" id="agroup__StatusIndicator_html_gga06ff0f8af5988d61790f23273ff3f61eab6991ea3d8f6a06d33f474813a682d86"><div class="ttname"><a href="group__StatusIndicator.html#gga06ff0f8af5988d61790f23273ff3f61eab6991ea3d8f6a06d33f474813a682d86">IndicatorMode::BLINK_FAST</a></div><div class="ttdeci">@ BLINK_FAST</div><div class="ttdoc">Fast blinking animation (150ms intervals)</div></div>
 <div class="ttc" id="agroup__StatusIndicator_html_gga06ff0f8af5988d61790f23273ff3f61ead18ff521ca089a1006291009092d7039"><div class="ttname"><a href="group__StatusIndicator.html#gga06ff0f8af5988d61790f23273ff3f61ead18ff521ca089a1006291009092d7039">IndicatorMode::BLINK_SLOW</a></div><div class="ttdeci">@ BLINK_SLOW</div><div class="ttdoc">Slow blinking animation (500ms intervals)</div></div>
 <div class="ttc" id="agroup__StatusIndicator_html_gga90549f45cfc442187c1d769596107d3ea059e9861e0400dfbe05c98a841f3f96b"><div class="ttname"><a href="group__StatusIndicator.html#gga90549f45cfc442187c1d769596107d3ea059e9861e0400dfbe05c98a841f3f96b">StatusType::WARNING</a></div><div class="ttdeci">@ WARNING</div><div class="ttdoc">Orange/Yellow - Warning condition.</div></div>
@@ -179,8 +183,30 @@ Brightness Control</h2>
 <div class="fragment"><div class="line">indicator.<a class="code hl_function" href="classStatusIndicator.html#af0306642cd5a581e3d486711df2ae6e3">setBrightness</a>(255);  <span class="comment">// Maximum brightness</span></div>
 <div class="line">indicator.<a class="code hl_function" href="classStatusIndicator.html#af0306642cd5a581e3d486711df2ae6e3">setBrightness</a>(128);  <span class="comment">// Medium brightness</span></div>
 <div class="line">indicator.<a class="code hl_function" href="classStatusIndicator.html#af0306642cd5a581e3d486711df2ae6e3">setBrightness</a>(32);   <span class="comment">// Low brightness</span></div>
-<div class="ttc" id="aclassStatusIndicator_html_af0306642cd5a581e3d486711df2ae6e3"><div class="ttname"><a href="classStatusIndicator.html#af0306642cd5a581e3d486711df2ae6e3">StatusIndicator::setBrightness</a></div><div class="ttdeci">void setBrightness(uint8_t brightness)</div><div class="ttdoc">Set the brightness level.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00185">StatusIndicator.cpp:185</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_af0306642cd5a581e3d486711df2ae6e3"><div class="ttname"><a href="classStatusIndicator.html#af0306642cd5a581e3d486711df2ae6e3">StatusIndicator::setBrightness</a></div><div class="ttdeci">void setBrightness(uint8_t brightness)</div><div class="ttdoc">Set the brightness level.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00189">StatusIndicator.cpp:189</a></div></div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md9"></a>
+WS2812 Addressable RGB LED</h2>
+<p>For boards with WS2812 addressable RGB LEDs (like ESP32-S3-DevKitC-1):</p>
+<div class="fragment"><div class="line"><span class="comment">// Automatic detection (recommended)</span></div>
+<div class="line"><a class="code hl_class" href="classStatusIndicator.html">StatusIndicator</a> indicator;  <span class="comment">// Will detect WS2812 on ESP32-S3-DevKitC-1</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Manual configuration  </span></div>
+<div class="line"><a class="code hl_class" href="classStatusIndicator.html">StatusIndicator</a> indicator(38, <a class="code hl_enumvalue" href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58a3af918a570a8047edfaab3187b0ab108">LEDType::WS2812_LED</a>);  <span class="comment">// GPIO38 for ESP32-S3-DevKitC-1</span></div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">void</span> setup() {</div>
+<div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a623f18b34d5f995fe83d171ab168db99">begin</a>();</div>
+<div class="line">    </div>
+<div class="line">    <span class="comment">// Custom colors (WS2812 only)</span></div>
+<div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">setRGBColor</a>(255, 0, 0);    <span class="comment">// Red</span></div>
+<div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">setRGBColor</a>(0, 255, 0);    <span class="comment">// Green</span></div>
+<div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">setRGBColor</a>(0, 0, 255);    <span class="comment">// Blue</span></div>
+<div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">setRGBColor</a>(255, 255, 0);  <span class="comment">// Yellow</span></div>
+<div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">setRGBColor</a>(255, 0, 255);  <span class="comment">// Magenta</span></div>
+<div class="line">    indicator.<a class="code hl_function" href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">setRGBColor</a>(0, 255, 255);  <span class="comment">// Cyan</span></div>
+<div class="line">}</div>
+<div class="ttc" id="aclassStatusIndicator_html_a767b2a39258c8905bd2da49156237166"><div class="ttname"><a href="classStatusIndicator.html#a767b2a39258c8905bd2da49156237166">StatusIndicator::setRGBColor</a></div><div class="ttdeci">void setRGBColor(uint8_t red, uint8_t green, uint8_t blue)</div><div class="ttdoc">Set custom RGB color for WS2812 LED.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00399">StatusIndicator.cpp:399</a></div></div>
+<div class="ttc" id="agroup__StatusIndicator_html_gga5f99aa5077acffebe451d1268c69db58a3af918a570a8047edfaab3187b0ab108"><div class="ttname"><a href="group__StatusIndicator.html#gga5f99aa5077acffebe451d1268c69db58a3af918a570a8047edfaab3187b0ab108">LEDType::WS2812_LED</a></div><div class="ttdeci">@ WS2812_LED</div><div class="ttdoc">Addressable RGB LED (WS2812/NeoPixel style, single data pin)</div></div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
 Advanced Features</h2>
 <div class="fragment"><div class="line"><span class="comment">// Enable/disable</span></div>
 <div class="line">indicator.<a class="code hl_function" href="classStatusIndicator.html#a29fd180526df07fdb6cdd2055377aba4">enable</a>();</div>
@@ -195,17 +221,17 @@ Advanced Features</h2>
 <div class="line"><span class="comment">// Debug information</span></div>
 <div class="line">indicator.<a class="code hl_function" href="classStatusIndicator.html#ae418b1419d48662197422b9a17a3c0db">printStatus</a>();</div>
 <div class="line">String status = indicator.<a class="code hl_function" href="classStatusIndicator.html#ae68c2a48d9051fe0c4b293fb07af8c13">getStatusString</a>();</div>
-<div class="ttc" id="aclassStatusIndicator_html_a29fd180526df07fdb6cdd2055377aba4"><div class="ttname"><a href="classStatusIndicator.html#a29fd180526df07fdb6cdd2055377aba4">StatusIndicator::enable</a></div><div class="ttdeci">void enable()</div><div class="ttdoc">Enable the status indicator.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00189">StatusIndicator.cpp:189</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a401131b5a57ea41911a0ee4cabd92f8c"><div class="ttname"><a href="classStatusIndicator.html#a401131b5a57ea41911a0ee4cabd92f8c">StatusIndicator::isEnabled</a></div><div class="ttdeci">bool isEnabled() const</div><div class="ttdoc">Check if the indicator is enabled.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00300">StatusIndicator.h:300</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_a5e362d6679ce7bd558095d3c0381837c"><div class="ttname"><a href="classStatusIndicator.html#a5e362d6679ce7bd558095d3c0381837c">StatusIndicator::disable</a></div><div class="ttdeci">void disable()</div><div class="ttdoc">Disable the status indicator (turns off LED)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00193">StatusIndicator.cpp:193</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_ad6d3b4809a7f6f1f6068b271ef50c152"><div class="ttname"><a href="classStatusIndicator.html#ad6d3b4809a7f6f1f6068b271ef50c152">StatusIndicator::toggle</a></div><div class="ttdeci">void toggle()</div><div class="ttdoc">Toggle the enabled state.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00202">StatusIndicator.cpp:202</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_ae418b1419d48662197422b9a17a3c0db"><div class="ttname"><a href="classStatusIndicator.html#ae418b1419d48662197422b9a17a3c0db">StatusIndicator::printStatus</a></div><div class="ttdeci">void printStatus()</div><div class="ttdoc">Print current status to Serial.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00539">StatusIndicator.cpp:539</a></div></div>
-<div class="ttc" id="aclassStatusIndicator_html_ae68c2a48d9051fe0c4b293fb07af8c13"><div class="ttname"><a href="classStatusIndicator.html#ae68c2a48d9051fe0c4b293fb07af8c13">StatusIndicator::getStatusString</a></div><div class="ttdeci">String getStatusString()</div><div class="ttdoc">Get status information as a formatted string.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00556">StatusIndicator.cpp:556</a></div></div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md10"></a>
+<div class="ttc" id="aclassStatusIndicator_html_a29fd180526df07fdb6cdd2055377aba4"><div class="ttname"><a href="classStatusIndicator.html#a29fd180526df07fdb6cdd2055377aba4">StatusIndicator::enable</a></div><div class="ttdeci">void enable()</div><div class="ttdoc">Enable the status indicator.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00193">StatusIndicator.cpp:193</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a401131b5a57ea41911a0ee4cabd92f8c"><div class="ttname"><a href="classStatusIndicator.html#a401131b5a57ea41911a0ee4cabd92f8c">StatusIndicator::isEnabled</a></div><div class="ttdeci">bool isEnabled() const</div><div class="ttdoc">Check if the indicator is enabled.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8h_source.html#l00317">StatusIndicator.h:317</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_a5e362d6679ce7bd558095d3c0381837c"><div class="ttname"><a href="classStatusIndicator.html#a5e362d6679ce7bd558095d3c0381837c">StatusIndicator::disable</a></div><div class="ttdeci">void disable()</div><div class="ttdoc">Disable the status indicator (turns off LED)</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00197">StatusIndicator.cpp:197</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_ad6d3b4809a7f6f1f6068b271ef50c152"><div class="ttname"><a href="classStatusIndicator.html#ad6d3b4809a7f6f1f6068b271ef50c152">StatusIndicator::toggle</a></div><div class="ttdeci">void toggle()</div><div class="ttdoc">Toggle the enabled state.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00206">StatusIndicator.cpp:206</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_ae418b1419d48662197422b9a17a3c0db"><div class="ttname"><a href="classStatusIndicator.html#ae418b1419d48662197422b9a17a3c0db">StatusIndicator::printStatus</a></div><div class="ttdeci">void printStatus()</div><div class="ttdoc">Print current status to Serial.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00563">StatusIndicator.cpp:563</a></div></div>
+<div class="ttc" id="aclassStatusIndicator_html_ae68c2a48d9051fe0c4b293fb07af8c13"><div class="ttname"><a href="classStatusIndicator.html#ae68c2a48d9051fe0c4b293fb07af8c13">StatusIndicator::getStatusString</a></div><div class="ttdeci">String getStatusString()</div><div class="ttdoc">Get status information as a formatted string.</div><div class="ttdef"><b>Definition</b> <a href="StatusIndicator_8cpp_source.html#l00581">StatusIndicator.cpp:581</a></div></div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md11"></a>
 API Reference</h1>
-<h2><a class="anchor" id="autotoc_md11"></a>
+<h2><a class="anchor" id="autotoc_md12"></a>
 Enums</h2>
-<h3><a class="anchor" id="autotoc_md12"></a>
+<h3><a class="anchor" id="autotoc_md13"></a>
 IndicatorMode</h3>
 <ul>
 <li><code>OFF</code> - LED is off</li>
@@ -216,7 +242,7 @@ IndicatorMode</h3>
 <li><code>BREATHE</code> - Smooth breathing effect</li>
 <li><code>RGB_CYCLE</code> - Color cycling (RGB only)</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md13"></a>
+<h3><a class="anchor" id="autotoc_md14"></a>
 StatusType</h3>
 <ul>
 <li><code>NORMAL</code> - Green (normal operation)</li>
@@ -227,9 +253,16 @@ StatusType</h3>
 <li><code>CONNECTING</code> - Cyan (connecting to network)</li>
 <li><code>RECOVERY</code> - Red (recovery mode)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md14"></a>
-Methods</h2>
 <h3><a class="anchor" id="autotoc_md15"></a>
+LEDType</h3>
+<ul>
+<li><code>SINGLE_LED</code> - Simple on/off LED (single pin)</li>
+<li><code>RGB_LED</code> - RGB LED with separate R, G, B pins (PWM-controlled)</li>
+<li><code>WS2812_LED</code> - Addressable RGB LED (WS2812/NeoPixel, single data pin)</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md16"></a>
+Methods</h2>
+<h3><a class="anchor" id="autotoc_md17"></a>
 Initialization</h3>
 <ul>
 <li><code><a class="el" href="classStatusIndicator.html">StatusIndicator()</a></code> - Auto-detect board type</li>
@@ -238,7 +271,7 @@ Initialization</h3>
 <li><code>void begin()</code> - Initialize with default brightness</li>
 <li><code>void begin(uint8_t brightness)</code> - Initialize with specific brightness</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md16"></a>
+<h3><a class="anchor" id="autotoc_md18"></a>
 Control</h3>
 <ul>
 <li><code>void setMode(IndicatorMode mode)</code> - Set indicator mode</li>
@@ -247,14 +280,14 @@ Control</h3>
 <li><code>void setBrightness(uint8_t brightness)</code> - Set brightness (0-255)</li>
 <li><code>void update()</code> - Update indicator (call in main loop)</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md17"></a>
+<h3><a class="anchor" id="autotoc_md19"></a>
 State Management</h3>
 <ul>
 <li><code>void enable()</code> - Enable indicator</li>
 <li><code>void disable()</code> - Disable indicator</li>
 <li><code>void toggle()</code> - Toggle enabled state</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md18"></a>
+<h3><a class="anchor" id="autotoc_md20"></a>
 Convenience Methods</h3>
 <ul>
 <li><code>void showNormal()</code> - Show normal status</li>
@@ -266,37 +299,37 @@ Convenience Methods</h3>
 <li><code>void showRecovery()</code> - Show recovery status</li>
 <li><code>void off()</code> - Turn off indicator</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md19"></a>
+<h3><a class="anchor" id="autotoc_md21"></a>
 Status Query</h3>
 <ul>
 <li><code>bool isEnabled()</code> - Check if enabled</li>
 <li><code>IndicatorMode getMode()</code> - Get current mode</li>
 <li><code>StatusType getStatus()</code> - Get current status</li>
 <li><code>uint8_t getBrightness()</code> - Get current brightness</li>
-<li><code>LEDType getLEDType()</code> - Get LED type (SINGLE_LED or RGB_LED)</li>
+<li><code>LEDType getLEDType()</code> - Get LED type (SINGLE_LED or WS2812_LED)</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md20"></a>
+<h3><a class="anchor" id="autotoc_md22"></a>
 Debug</h3>
 <ul>
 <li><code>void printStatus()</code> - Print status to Serial</li>
 <li><code>String getStatusString()</code> - Get status as string</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md21"></a>
+<h1><a class="anchor" id="autotoc_md23"></a>
 Hardware Configuration</h1>
-<h2><a class="anchor" id="autotoc_md22"></a>
+<h2><a class="anchor" id="autotoc_md24"></a>
 Single LED (Default)</h2>
 <ul>
 <li>Pin 2 (built-in LED on most ESP32 boards)</li>
 <li>PWM channel 0</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md23"></a>
+<h2><a class="anchor" id="autotoc_md25"></a>
 RGB LED (DevKit-C or custom)</h2>
 <ul>
 <li>Red: Pin 25 (PWM channel 0)</li>
 <li>Green: Pin 26 (PWM channel 1)</li>
 <li>Blue: Pin 27 (PWM channel 2)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md24"></a>
+<h2><a class="anchor" id="autotoc_md26"></a>
 Custom Pin Configuration</h2>
 <p>You can specify custom pins when creating the <a class="el" href="classStatusIndicator.html">StatusIndicator</a>:</p>
 <div class="fragment"><div class="line"><span class="comment">// Custom single LED on pin 4</span></div>
@@ -304,7 +337,7 @@ Custom Pin Configuration</h2>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Custom RGB pins</span></div>
 <div class="line"><a class="code hl_class" href="classStatusIndicator.html">StatusIndicator</a> rgbIndicator(12, 13, 14);  <span class="comment">// R, G, B pins</span></div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md25"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md27"></a>
 Integration Example</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="StatusIndicator_8h.html">StatusIndicator.h</a>&gt;</span></div>
 <div class="line"> </div>
@@ -337,7 +370,7 @@ Integration Example</h1>
 <div class="line">    </div>
 <div class="line">    delay(50);</div>
 <div class="line">}</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md26"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md28"></a>
 Notes</h1>
 <ul>
 <li>Always call <code>update()</code> in your main loop for animations to work</li>
@@ -346,7 +379,7 @@ Notes</h1>
 <li>Colors are optimized for common cathode RGB LEDs</li>
 <li>For common anode RGB LEDs, you may need to invert the values in the library</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md27"></a>
+<h1><a class="anchor" id="autotoc_md29"></a>
 Documentation Generation</h1>
 <p>This library includes comprehensive Doxygen documentation with interactive diagrams. To generate the documentation:</p>
 <ol type="1">
@@ -375,7 +408,7 @@ Documentation Generation</h1>
 </div><!-- fragment --></li>
 <li><b>View Documentation</b>: Open <code>docs/html/index.html</code> in your web browser to view the generated documentation.</li>
 </ol>
-<h2><a class="anchor" id="autotoc_md28"></a>
+<h2><a class="anchor" id="autotoc_md30"></a>
 📊 Generated Diagrams</h2>
 <p>With Graphviz installed, the documentation includes various code linkage diagrams:</p>
 <ul>
@@ -393,7 +426,7 @@ Documentation Generation</h1>
 <li>View relationships between different parts of the code</li>
 <li>Understand the overall code structure visually</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md29"></a>
+<h2><a class="anchor" id="autotoc_md31"></a>
 📋 Documentation Features</h2>
 <p>The documentation includes:</p><ul>
 <li>Complete API reference with parameter descriptions</li>
@@ -404,7 +437,7 @@ Documentation Generation</h1>
 <li>Include graphs showing file dependencies</li>
 <li>Automatically generated from source code comments</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md30"></a>
+<h1><a class="anchor" id="autotoc_md32"></a>
 Contributing</h1>
 <p>When contributing to this library, please:</p><ul>
 <li>Follow the existing Doxygen comment style</li>

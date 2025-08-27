@@ -1,0 +1,5 @@
+<map id="StatusIndicator::setRGBColor" name="StatusIndicator::setRGBColor">
+<area shape="rect" id="Node000001" title="Set custom RGB color for WS2812 LED." alt="" coords="5,5,216,31"/>
+<area shape="rect" id="Node000002" href="$classStatusIndicator.html#a08bafebea822193abdf2bacc3fefadb7" title="Update WS2812 LED with current RGB values." alt="" coords="264,5,491,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="216,15,250,15,250,21,216,21"/>
+</map>
