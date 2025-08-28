@@ -1,0 +1,47 @@
+{
+  "name": "WiFiHelper",
+  "version": "1.0.0",
+  "description": "A comprehensive WiFi management library for ESP32 with Access Point fallback, web interface handlers, and template processing",
+  "keywords": [
+    "wifi",
+    "esp32",
+    "access-point",
+    "web-server",
+    "network",
+    "iot",
+    "configuration"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stevennolte/ESP_Sandbox.git"
+  },
+  "authors": [
+    {
+      "name": "Steve Nolte",
+      "email": "stevennolte@example.com",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/stevennolte/ESP_Sandbox",
+  "dependencies": {
+    "ArduinoJson": "^6.21.0"
+  },
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "espressif32"
+  ],
+  "build": {
+    "libCompatMode": 2
+  },
+  "export": {
+    "include": [
+      "src/*",
+      "examples/*",
+      "README.md",
+      "library.json"
+    ]
+  }
+}

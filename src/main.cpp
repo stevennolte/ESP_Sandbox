@@ -3,7 +3,6 @@
  * Features: LED control, Web interface, OTA updates, Recovery mode
  */
 
-#include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
 #include <WebServer.h>
@@ -33,7 +32,6 @@ unsigned long lastWatchdogFeed = 0;
 // --- Object Instances ---
 Preferences preferences;
 WebServer server(80);
-WiFiClient espClient;
 ESPOTAUpdater otaUpdater(ConfigConstants::Firmware::GITHUB_REPO, ConfigConstants::Firmware::VERSION);
 
 // --- Function Declarations ---
@@ -47,7 +45,6 @@ void handleFirmwareUploadComplete();
 void handleRoot();
 void handleSetClientId();
 void handleBrightness();
-void handleWiFiModeToggle();
 void handleReboot();
 void setupWebServer();
 void loadClientId();
@@ -153,7 +150,7 @@ void enterRecoveryMode() {
     html += "This occurred due to a watchdog timer reset, indicating the device may have frozen.</div>";
     html += "<h3>Device Information:</h3>";
     html += "<p><strong>Device ID:</strong> " + String(config.getClientId()) + "</p>";
-    html += "<p><strong>IP Address:</strong> " + WiFi.localIP().toString() + "</p>";
+    html += "<p><strong>IP Address:</strong> " + WiFiHelper::getLocalIP() + "</p>";
     html += "<p><strong>Uptime:</strong> " + String(millis() / 1000) + " seconds</p>";
     html += "<p><strong>Reset Reason:</strong> " + String(esp_reset_reason()) + "</p>";
     html += "<h3>Available Actions:</h3>";
@@ -194,13 +191,10 @@ String loadHTMLTemplate(const char* filename) {
   
   // Replace placeholders with actual values
   html.replace("{{CLIENT_ID}}", config.client_id);
-  html.replace("{{IP_ADDRESS}}", WiFi.localIP().toString());
   html.replace("{{LED_BRIGHTNESS}}", String(config.led_brightness));
-  html.replace("{{WIFI_RSSI}}", String(WiFi.RSSI()));
-  html.replace("{{WIFI_STATUS}}", WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
-  html.replace("{{WIFI_MODE}}", config.wifi.force_ap_mode ? "Access Point" : "Station");
-  html.replace("{{WIFI_MODE_TOGGLE}}", config.wifi.force_ap_mode ? "station" : "ap");
-  html.replace("{{WIFI_MODE_BUTTON}}", config.wifi.force_ap_mode ? "Switch to Station Mode" : "Switch to Access Point Mode");
+  
+  // Use WiFiHelper for WiFi-related template variables
+  html = WiFiHelper::processWiFiTemplateVariables(html);
   
   // Add template version info
   preferences.begin("esp-config", true);
@@ -267,23 +261,6 @@ void handleBrightness() {
     }
   } else {
     server.send(400, "text/plain", "Missing brightness parameter");
-  }
-}
-
-void handleWiFiModeToggle() {
-  if (server.hasArg("mode")) {
-    String mode = server.arg("mode");
-    bool apMode = (mode == "ap");
-    config.saveApMode(apMode);
-    
-    String html = loadTemplate("simple_response.html");
-    html.replace("{{TITLE}}", "WiFi Mode Updated");
-    html.replace("{{HEADER}}", "WiFi Mode Updated");
-    html.replace("{{MESSAGE}}", "WiFi mode set to: <strong>" + String(apMode ? "Access Point" : "Station") + "</strong>");
-    html.replace("{{EXTRA_CONTENT}}", "<p><em>Changes will take effect after reboot.</em></p>");
-    server.send(200, "text/html", html);
-  } else {
-    server.send(400, "text/plain", "Missing mode parameter");
   }
 }
 
@@ -455,7 +432,7 @@ void handleDebug() {
   float cpuTemp = SystemUtils::readCPUTemperature();
   debugSections += "<div class='debug-item'><span class='debug-label'>CPU Temperature:</span><span class='debug-value' data-id='sensor-cpu-temp'>" + String(cpuTemp, 1) + "°C</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>LED Brightness:</span><span class='debug-value' data-id='sensor-led-brightness'>" + String(config.led_brightness) + "/255</span></div>";
-  debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Type:</span><span class='debug-value'>" + String(statusLED.getLEDType() == LEDType::RGB_LED ? "RGB LED" : "Single LED") + "</span></div>";
+  debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Type:</span><span class='debug-value'>" + String(statusLED.getLEDType() == LEDType::WS2812_LED ? "RGB LED" : "Single LED") + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Mode:</span><span class='debug-value' data-id='sensor-led-mode'>" + String((int)statusLED.getMode()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Status:</span><span class='debug-value' data-id='sensor-led-status'>" + String((int)statusLED.getStatus()) + "</span></div>";
   debugSections += "<div class='debug-item'><span class='debug-label'>Status LED Enabled:</span><span class='debug-value' data-id='sensor-led-enabled'>" + String(statusLED.isEnabled() ? "Yes" : "No") + "</span></div>";
@@ -530,19 +507,19 @@ void handleDebugData() {
   doc["system"]["resetReason"] = esp_reset_reason();
   
   // Network Information
-  doc["network"]["wifiStatus"] = WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected";
-  doc["network"]["wifiConnected"] = WiFi.status() == WL_CONNECTED;
-  doc["network"]["ssid"] = WiFi.SSID();
-  doc["network"]["ipAddress"] = WiFi.localIP().toString();
-  doc["network"]["gateway"] = WiFi.gatewayIP().toString();
-  doc["network"]["dns"] = WiFi.dnsIP().toString();
-  doc["network"]["macAddress"] = WiFi.macAddress();
-  doc["network"]["rssi"] = WiFi.RSSI();
+  doc["network"]["wifiStatus"] = WiFiHelper::getWiFiStatus();
+  doc["network"]["wifiConnected"] = WiFiHelper::isWiFiConnected();
+  doc["network"]["ssid"] = WiFiHelper::getSSID();
+  doc["network"]["ipAddress"] = WiFiHelper::getLocalIP();
+  doc["network"]["gateway"] = WiFiHelper::getGatewayIP();
+  doc["network"]["dns"] = WiFiHelper::getDNSIP();
+  doc["network"]["macAddress"] = WiFiHelper::getMACAddress();
+  doc["network"]["rssi"] = WiFiHelper::getRSSI();
   
   // Sensor Information
   doc["sensors"]["cpuTemp"] = SystemUtils::readCPUTemperature();
   doc["sensors"]["ledBrightness"] = config.led_brightness;
-  doc["sensors"]["statusLedType"] = statusLED.getLEDType() == LEDType::RGB_LED ? "RGB" : "Single";
+  doc["sensors"]["statusLedType"] = statusLED.getLEDType() == LEDType::WS2812_LED ? "RGB" : "Single";
   doc["sensors"]["statusLedMode"] = (int)statusLED.getMode();
   doc["sensors"]["statusLedStatus"] = (int)statusLED.getStatus();
   doc["sensors"]["statusLedEnabled"] = statusLED.isEnabled();
@@ -882,7 +859,7 @@ void setupWebServer() {
   server.on("/wifi", []() { WiFiHelper::handleConfig(server); });
   server.on("/wifi-update", HTTP_POST, []() { WiFiHelper::handleUpdate(server); });
   server.on("/scan-networks", []() { WiFiHelper::handleNetworkScan(server); });
-  server.on("/wifi-mode", HTTP_POST, handleWiFiModeToggle);
+  server.on("/wifi-mode", HTTP_POST, []() { WiFiHelper::handleWiFiModeToggle(server); });
   
   // Template update routes
   server.on("/update-template", []() {
@@ -930,7 +907,7 @@ void setupWebServer() {
     html += "<style>body{font-family:Arial,sans-serif;max-width:600px;margin:50px auto;padding:20px}";
     html += ".button{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;margin:5px;text-decoration:none;display:inline-block}</style></head><body>";
     html += "<h1>Status LED Test</h1>";
-    html += "<p>Current LED Type: <strong>" + String(statusLED.getLEDType() == LEDType::RGB_LED ? "RGB LED" : "Single LED") + "</strong></p>";
+    html += "<p>Current LED Type: <strong>" + String(statusLED.getLEDType() == LEDType::WS2812_LED ? "RGB LED" : "Single LED") + "</strong></p>";
     html += "<p>Current Status: <strong>" + statusLED.getStatusString() + "</strong></p>";
     html += "<div>";
     html += "<a href='/led-normal' class='button'>Normal</a>";
@@ -940,7 +917,7 @@ void setupWebServer() {
     html += "<a href='/led-success' class='button'>Success</a>";
     html += "<a href='/led-connecting' class='button'>Connecting</a>";
     html += "<a href='/led-recovery' class='button'>Recovery</a>";
-    if (statusLED.getLEDType() == LEDType::RGB_LED) {
+    if (statusLED.getLEDType() == LEDType::WS2812_LED) {
       html += "<a href='/led-cycle' class='button'>RGB Cycle</a>";
     }
     html += "<a href='/led-off' class='button'>Off</a>";
@@ -958,7 +935,7 @@ void setupWebServer() {
   server.on("/led-connecting", []() { statusLED.showConnecting(); server.send(200, "text/plain", "LED: Connecting"); });
   server.on("/led-recovery", []() { statusLED.showRecovery(); server.send(200, "text/plain", "LED: Recovery"); });
   server.on("/led-cycle", []() { 
-    if (statusLED.getLEDType() == LEDType::RGB_LED) {
+    if (statusLED.getLEDType() == LEDType::WS2812_LED) {
       statusLED.setStatusWithMode(StatusType::NORMAL, IndicatorMode::RGB_CYCLE);
       server.send(200, "text/plain", "LED: RGB Cycle");
     } else {
@@ -968,7 +945,7 @@ void setupWebServer() {
   server.on("/led-off", []() { statusLED.off(); server.send(200, "text/plain", "LED: Off"); });
   
   server.begin();
-  Serial.printf("✓ Web server: http://%s\n", WiFi.localIP().toString().c_str());
+  Serial.printf("✓ Web server: http://%s\n", WiFiHelper::getLocalIP().c_str());
 }
 
 // --- Configuration Management ---
@@ -998,19 +975,9 @@ void setup() {
     Serial.println("⚠ Device is in recovery mode - limited functionality");
     statusLED.showRecovery();
     
-    // Basic WiFi setup for recovery
-    WiFi.begin(ConfigConstants::WiFi::DEFAULT_SSID, ConfigConstants::WiFi::DEFAULT_PASSWORD);
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 10) {
-      delay(1000);
-      attempts++;
-      Serial.print(".");
-    }
-    
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.printf("\n✓ WiFi connected: %s\n", WiFi.localIP().toString().c_str());
-      statusLED.showWarning();  // Recovery mode connected
-    }
+    // Setup WiFi for recovery mode using WiFiHelper
+    WiFiHelper::setupRecoveryWiFi();
+    statusLED.showWarning();  // Recovery mode status
     
     enterRecoveryMode();
     return; // Skip normal setup in recovery mode

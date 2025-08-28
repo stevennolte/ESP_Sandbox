@@ -1,0 +1,138 @@
+/**
+ * @mainpage ESP_Sandbox Project Documentation
+ * 
+ * @section intro_sec Introduction
+ * 
+ * Welcome to the ESP_Sandbox project documentation. This is a comprehensive ESP32-based
+ * IoT platform featuring system utilities, WiFi management, watchdog protection, and 
+ * web-based configuration interfaces.
+ * 
+ * @section features_sec Key Features
+ * 
+ * - **System Utilities**: Hardware information, temperature monitoring, memory diagnostics
+ * - **WiFi Management**: Station mode with Access Point fallback capability  
+ * - **Watchdog Protection**: Software-based recovery system for system reliability
+ * - **Web Interface**: Configuration and monitoring through web browser
+ * - **LED Status Indication**: Visual feedback using single LED or WS2812 RGB strips
+ * - **OTA Updates**: Over-the-air firmware update capability
+ * - **Preferences Storage**: Persistent configuration using ESP32 NVS
+ * 
+ * @section architecture_sec Project Architecture
+ * 
+ * The project is organized into several key components:
+ * 
+ * ### Core Application (`main.cpp`)
+ * The main application handles:
+ * - System initialization and configuration
+ * - Web server setup and request handling  
+ * - Watchdog timer management
+ * - Device status monitoring and LED control
+ * - WiFi mode toggle functionality
+ * 
+ * ### SystemUtils Library
+ * A dedicated utility library providing:
+ * - Hardware information retrieval
+ * - CPU temperature monitoring
+ * - Memory usage statistics
+ * - Time and size formatting utilities
+ * 
+ * @see SystemUtils
+ * 
+ * ### WiFi Helper Class
+ * Manages network connectivity:
+ * - WiFi station mode connection
+ * - Access Point fallback mode
+ * - Configuration web interface
+ * - Template variable handling
+ * 
+ * ### Configuration Management
+ * Persistent settings storage:
+ * - Device identification (client_id)
+ * - WiFi credentials and mode selection
+ * - System preferences using ESP32 NVS
+ * 
+ * @section hardware_sec Hardware Requirements
+ * 
+ * - **MCU**: ESP32 (tested with ESP32-DOIT-DEVKIT-V1)
+ * - **Flash**: Minimum 4MB for OTA functionality
+ * - **LED**: Optional single LED or WS2812 RGB strip for status indication
+ * - **Power**: 5V USB or 3.3V regulated supply
+ * 
+ * @section build_sec Building the Project
+ * 
+ * This project uses PlatformIO for build management:
+ * 
+ * ```bash
+ * # Clean build
+ * pio run --target clean
+ * 
+ * # Compile project
+ * pio run
+ * 
+ * # Upload to device
+ * pio run --target upload
+ * 
+ * # Monitor serial output
+ * pio device monitor
+ * ```
+ * 
+ * @section config_sec Configuration
+ * 
+ * ### WiFi Setup
+ * 1. Device creates access point on first boot: `ESP_Sandbox_XXXXXX`
+ * 2. Connect to AP and navigate to `http://192.168.4.1`
+ * 3. Configure WiFi credentials and device settings
+ * 4. Device will connect to specified network or fall back to AP mode
+ * 
+ * ### Web Interface Features
+ * - **Device Configuration**: Set client ID and preferences
+ * - **WiFi Management**: Configure network credentials and mode
+ * - **System Information**: View hardware specs and status
+ * - **LED Control**: Test status indicators
+ * - **OTA Updates**: Upload firmware over WiFi
+ * 
+ * @section recovery_sec Recovery Features
+ * 
+ * ### Watchdog Protection
+ * - 30-second software watchdog timer
+ * - Automatic reboot if system becomes unresponsive
+ * - Recovery mode web interface for troubleshooting
+ * 
+ * ### Access Point Fallback
+ * - Automatic AP mode if WiFi connection fails
+ * - Uses device client_id as network name
+ * - Web-based toggle between Station and AP modes
+ * 
+ * @section api_sec API Reference
+ * 
+ * ### Main Classes
+ * - SystemUtils - Hardware information and utilities
+ * - WiFiHelper - Network management (static class)
+ * - StatusIndicator - LED status indication
+ * 
+ * ### Key Functions
+ * - `initWatchdog()` - Initialize watchdog protection
+ * - `feedWatchdog()` - Reset watchdog timer
+ * - `handleWiFiModeToggle()` - Process WiFi mode changes
+ * - `handleConfig()` - Process device configuration
+ * 
+ * @section version_sec Version Information
+ * 
+ * - **Version**: 1.0.0
+ * - **Platform**: PlatformIO + Arduino Framework
+ * - **Target**: ESP32 (Espressif 32 platform)
+ * - **Build Date**: August 2025
+ * 
+ * @section license_sec License
+ * 
+ * ESP_Sandbox Project - Educational and development use
+ * 
+ * @section contact_sec Contact
+ * 
+ * **Repository**: ESP_Sandbox  
+ * **Owner**: stevennolte  
+ * **Branch**: Minimal  
+ * 
+ * For issues, feature requests, or contributions, please use the project 
+ * repository's issue tracking system.
+ */

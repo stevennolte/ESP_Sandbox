@@ -1,0 +1,9 @@
+# Doxygen generated documentation
+docs/html/
+docs/latex/
+docs/xml/
+docs/rtf/
+docs/man/
+
+# Doxygen log files
+doxygen_warn.log

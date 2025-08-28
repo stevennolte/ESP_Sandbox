@@ -336,7 +336,7 @@ public:
     
     /**
      * @brief Get the LED hardware type
-     * @return LEDType (SINGLE_LED or RGB_LED)
+     * @return LEDType (SINGLE_LED or WS2812_LED)
      */
     LEDType getLEDType() const { return ledType; }
     
@@ -417,12 +417,6 @@ public:
      * @return String containing current status information
      */
     String getStatusString();
-    
-    /**
-     * @brief Get the current LED type
-     * @return LEDType enumeration value
-     */
-    LEDType getLEDType() const { return ledType; }
 };
 
 /** @} */ // end of StatusIndicator group

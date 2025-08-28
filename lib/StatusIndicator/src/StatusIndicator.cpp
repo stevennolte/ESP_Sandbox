@@ -329,7 +329,7 @@ void StatusIndicator::updateBreathe() {
         }
     }
     
-    if (ledType == LEDType::RGB_LED) {
+    if (ledType == LEDType::WS2812_LED) {
         uint8_t r, g, b;
         getStatusColor(currentStatus, r, g, b);
         // Scale colors by pulse value
@@ -343,7 +343,7 @@ void StatusIndicator::updateBreathe() {
 }
 
 void StatusIndicator::updateRGBCycle() {
-    if (ledType != LEDType::RGB_LED) return;
+    if (ledType != LEDType::WS2812_LED) return;
     
     uint8_t r, g, b;
     hsvToRgb(hueValue, 255, brightness, r, g, b);
@@ -524,7 +524,7 @@ void StatusIndicator::hsvToRgb(uint16_t hue, uint8_t sat, uint8_t val, uint8_t& 
 
 /**
  * @brief Detect the LED type based on board configuration
- * @return Detected LEDType (SINGLE_LED or RGB_LED)
+ * @return Detected LEDType (SINGLE_LED or WS2812_LED)
  * 
  * Attempts to detect the board type and determine whether it has RGB capabilities.
  * Currently uses board name detection, but can be enhanced with hardware probing.

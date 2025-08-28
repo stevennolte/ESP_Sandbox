@@ -239,3 +239,136 @@ String WiFiHelper::loadTemplate(const char* templatePath) {
     file.close();
     return html;
 }
+
+void WiFiHelper::setupRecoveryWiFi() {
+    Serial.println("Setting up WiFi for recovery mode...");
+    
+    // Basic WiFi setup for recovery
+    WiFi.begin(ConfigConstants::WiFi::DEFAULT_SSID, ConfigConstants::WiFi::DEFAULT_PASSWORD);
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 10) {
+        delay(1000);
+        attempts++;
+        Serial.print(".");
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.printf("\n✓ WiFi connected: %s\n", WiFi.localIP().toString().c_str());
+        accessPointMode = false;
+    } else {
+        Serial.println("\n✗ Failed to connect to WiFi in recovery mode");
+        // Try to start AP mode as fallback
+        if (startAccessPoint()) {
+            accessPointMode = true;
+            Serial.println("✓ Access Point started for recovery mode");
+        }
+    }
+}
+
+void WiFiHelper::handleWiFiModeToggle(WebServer& server) {
+    if (server.hasArg("mode")) {
+        String mode = server.arg("mode");
+        bool apMode = (mode == "ap");
+        config.saveApMode(apMode);
+        
+        String html = loadTemplate("simple_response.html");
+        html.replace("{{TITLE}}", "WiFi Mode Updated");
+        html.replace("{{HEADER}}", "WiFi Mode Updated");
+        html.replace("{{MESSAGE}}", "WiFi mode set to: <strong>" + String(apMode ? "Access Point" : "Station") + "</strong>");
+        html.replace("{{EXTRA_CONTENT}}", "<p><em>Changes will take effect after reboot.</em></p>");
+        server.send(200, "text/html", html);
+    } else {
+        server.send(400, "text/plain", "Missing mode parameter");
+    }
+}
+
+String WiFiHelper::processWiFiTemplateVariables(String html) {
+    // Replace WiFi-specific template variables
+    html.replace("{{IP_ADDRESS}}", getLocalIP());
+    html.replace("{{WIFI_RSSI}}", String(getRSSI()));
+    html.replace("{{WIFI_STATUS}}", getWiFiStatus());
+    html.replace("{{WIFI_MODE}}", config.wifi.force_ap_mode ? "Access Point" : "Station");
+    html.replace("{{WIFI_MODE_TOGGLE}}", config.wifi.force_ap_mode ? "station" : "ap");
+    html.replace("{{WIFI_MODE_BUTTON}}", config.wifi.force_ap_mode ? "Switch to Station Mode" : "Switch to Access Point Mode");
+    
+    return html;
+}
+
+String WiFiHelper::getWiFiStatusInfo() {
+    String info = "";
+    if (accessPointMode) {
+        info += "Mode: Access Point\n";
+        info += "SSID: " + getAccessPointName() + "\n";
+        info += "IP: " + WiFi.softAPIP().toString() + "\n";
+        info += "Clients: " + String(WiFi.softAPgetStationNum()) + "\n";
+    } else {
+        info += "Mode: Station\n";
+        info += "Status: " + getWiFiStatus() + "\n";
+        if (WiFi.status() == WL_CONNECTED) {
+            info += "SSID: " + WiFi.SSID() + "\n";
+            info += "IP: " + getLocalIP() + "\n";
+            info += "RSSI: " + String(getRSSI()) + " dBm\n";
+        }
+    }
+    return info;
+}
+
+String WiFiHelper::getLocalIP() {
+    if (accessPointMode) {
+        return WiFi.softAPIP().toString();
+    } else {
+        return WiFi.localIP().toString();
+    }
+}
+
+int WiFiHelper::getRSSI() {
+    if (accessPointMode) {
+        return 0; // No RSSI in AP mode
+    } else {
+        return WiFi.RSSI();
+    }
+}
+
+String WiFiHelper::getWiFiStatus() {
+    if (accessPointMode) {
+        return "Access Point";
+    } else {
+        return WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected";
+    }
+}
+
+String WiFiHelper::getSSID() {
+    if (accessPointMode) {
+        return getAccessPointName();
+    } else {
+        return WiFi.SSID();
+    }
+}
+
+String WiFiHelper::getGatewayIP() {
+    if (accessPointMode) {
+        return WiFi.softAPIP().toString(); // In AP mode, we are the gateway
+    } else {
+        return WiFi.gatewayIP().toString();
+    }
+}
+
+String WiFiHelper::getDNSIP() {
+    if (accessPointMode) {
+        return WiFi.softAPIP().toString(); // In AP mode, we act as DNS
+    } else {
+        return WiFi.dnsIP().toString();
+    }
+}
+
+String WiFiHelper::getMACAddress() {
+    if (accessPointMode) {
+        return WiFi.softAPmacAddress();
+    } else {
+        return WiFi.macAddress();
+    }
+}
+
+bool WiFiHelper::isWiFiConnected() {
+    return WiFi.status() == WL_CONNECTED;
+}
